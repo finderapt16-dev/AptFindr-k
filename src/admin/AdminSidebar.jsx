@@ -1,50 +1,93 @@
 import { LogoutConfirmation } from "@/components/LogoutConfirmation";
-import { LogOut, Shield } from "lucide-react";
-import { NAV_ACCOUNT, NAV_MAIN } from './adminDashboardHelpers';
-export function AdminSidebar({ activeSection, user, pendingReports, activeAppealsCount, pendingCount, unreadNotifsCount, navigateToAdminModule, handleLogout, }) {
-    const navItemClass = (section) => `app-sidebar-nav-item ${activeSection === section
-        ? "admin-sidebar-nav-active"
-        : "admin-sidebar-nav-idle"}`;
-    const countBadge = "app-sidebar-badge";
-    return (<div className="app-sidebar">
-      <div className="app-sidebar-brand">
-        <div className="admin-sidebar-row">
-          <span className="admin-sidebar-card">
-            <img src="/icon.svg" alt="" className="admin-sidebar-image" aria-hidden="true"/>
-          </span>
-          <span><strong className="admin-sidebar-apt-findr">AptFindr</strong><small className="admin-sidebar-small">{"Admin Portal"}</small></span>
-        </div>
+import {
+  Bell,
+  Building2,
+  CircleHelp,
+  Flag,
+  Gavel,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+} from "lucide-react";
+
+const MAIN_ITEMS = [
+  { icon: LayoutDashboard, label: "Dashboard", section: "landlords" },
+  { icon: Building2, label: "Apartments", section: "apartments" },
+  { icon: Bell, label: "Notifications", section: "notifications" },
+];
+
+const MANAGEMENT_ITEMS = [
+  { icon: Flag, label: "Reports", section: "reports" },
+  { icon: Gavel, label: "Appeals", section: "appeals" },
+];
+
+const ACCOUNT_ITEMS = [
+  { icon: Settings, label: "Settings", section: "admininfo" },
+  { icon: CircleHelp, label: "Help & Support", section: "admininfo" },
+];
+
+export function AdminSidebar({
+  activeSection,
+  pendingReports,
+  activeAppealsCount,
+  unreadNotifsCount,
+  navigateToAdminModule,
+  handleLogout,
+}) {
+  const countFor = (section) => {
+    if (section === "reports") return pendingReports;
+    if (section === "appeals") return activeAppealsCount;
+    if (section === "notifications") return unreadNotifsCount;
+    return 0;
+  };
+
+  const renderGroup = (label, items) => (
+    <nav aria-label={label} className="admin-figma-sidebar-group">
+      <p>{label}</p>
+      {items.map(({ icon: Icon, label: itemLabel, section }) => {
+        const count = countFor(section);
+        const isCurrent =
+          activeSection === section && itemLabel !== "Help & Support";
+
+        return (
+          <button
+            aria-current={isCurrent ? "page" : undefined}
+            className={`admin-figma-sidebar-item ${isCurrent ? "is-active" : ""}`}
+            key={itemLabel}
+            onClick={() => navigateToAdminModule(section)}
+            type="button"
+          >
+            <Icon aria-hidden="true" />
+            <span>{itemLabel}</span>
+            {count > 0 && <small>{count}</small>}
+          </button>
+        );
+      })}
+    </nav>
+  );
+
+  return (
+    <div className="app-sidebar admin-figma-sidebar">
+      <div className="admin-figma-sidebar-brand">
+        <img alt="" aria-hidden="true" src="/icon.svg" />
+        <span>
+          <strong>aptfindr</strong>
+          <small>La Paz, Iloilo City</small>
+        </span>
       </div>
-      <div className="admin-sidebar-panel">
-        <div className="app-sidebar-profile">
-          <div className="admin-sidebar-row-2">{user?.name?.[0]?.toUpperCase() ?? "A"}</div>
-          <div className="admin-sidebar-panel-2"><p className="admin-sidebar-text">{user?.name ?? ("Admin")}</p><p className="admin-sidebar-text-2">{user?.email ?? ""}</p></div>
-          <Shield className="admin-sidebar-shield-icon" aria-label={"Administrator account"}/>
-        </div>
-      </div>
-      <nav className="admin-sidebar-nav">
-        <p className="admin-sidebar-text-3"><span>Main</span><span className="admin-sidebar-span"/></p>
-        {(NAV_MAIN).map(({ icon: Icon, label, section }) => {
-            const count = label === "Reports" ? pendingReports : label === "Appeals" ? activeAppealsCount : label === "Landlords" ? pendingCount : label === "Notifications" ? unreadNotifsCount : 0;
-            return (<button key={section} aria-current={activeSection === section ? "page" : undefined} onClick={() => navigateToAdminModule(section)} className={navItemClass(section)}>
-              <Icon className="admin-sidebar-icon-icon"/><span className="admin-sidebar-span-2">{label}</span>
-              {count > 0 && <span className={countBadge}>{count}</span>}
-            </button>);
-        })}
-      </nav>
-      <nav className="admin-sidebar-nav-2">
-        <p className="admin-sidebar-text-3"><span>Account</span><span className="admin-sidebar-span"/></p>
-        {NAV_ACCOUNT.map(({ icon: Icon, label, section }) => (<button key={section} aria-current={activeSection === section ? "page" : undefined} onClick={() => navigateToAdminModule(section)} className={navItemClass(section)}>
-            <Icon className="admin-sidebar-icon-icon"/><span className="admin-sidebar-span-2">{label}</span>
-          </button>))}
-      </nav>
-      <div className="admin-sidebar-panel-3"/>
-      <div className="admin-sidebar-panel-4">
+
+      {renderGroup("Main", MAIN_ITEMS)}
+      {renderGroup("Management", MANAGEMENT_ITEMS)}
+      {renderGroup("Account", ACCOUNT_ITEMS)}
+
+      <div className="admin-figma-sidebar-logout">
         <LogoutConfirmation onConfirm={handleLogout}>
-          <button className="app-sidebar-logout">
-            <LogOut className="admin-sidebar-log-out-icon"/><span>Log Out</span>
+          <button type="button">
+            <LogOut aria-hidden="true" />
+            <span>Log Out</span>
           </button>
         </LogoutConfirmation>
       </div>
-    </div>);
+    </div>
+  );
 }

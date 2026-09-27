@@ -10,12 +10,9 @@ export default function ProtectedRoute({ children, allowedRoles, preserveReturnD
       </div>);
     }
     if (!isAuthenticated) {
-        if (!preserveReturnDestination) {
-            return <Navigate to="/login" replace/>;
-        }
-        const returnDestination = `${location.pathname}${location.search}${location.hash}`;
-        const loginPath = `/login?redirect=${encodeURIComponent(returnDestination)}`;
-        return <Navigate to={loginPath} replace state={loginMessage ? { message: loginMessage } : undefined}/>;
+        // Returning to a protected browser-history entry after sign-out should
+        // always recover to the public landing page, never a bare sign-in page.
+        return <Navigate to="/" replace/>;
     }
     if (!user?.role) {
         return (<div className="auth-status-page">

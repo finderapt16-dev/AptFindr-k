@@ -6,6 +6,17 @@
   color: var(--color-red-600, #e40014);
 }
 
+/* Add Property is a focused standalone page, matching Edit Property. */
+.add-apartment-page {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.add-apartment-page-content {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 @supports (color: lab(0% 0 0)) {
   .add-apartment-text {
     color: var(--color-red-600, lab(48.4493% 77.4328 61.5452));
@@ -939,7 +950,7 @@
 }
 
 .add-apartment-button-4 {
-  background-image: #16a5e1;
+  background-color: #16a5e1;
   color: var(--color-white, #fff);
 }
 
@@ -971,7 +982,7 @@
 }
 
 .add-apartment-panel-6 {
-  background-image: #16a5e1;
+  background-color: #16a5e1;
 }
 
 .add-apartment-panel-7 {

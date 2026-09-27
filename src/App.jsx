@@ -9,7 +9,6 @@ import { Root } from "./components/Root";
 const Landing = lazy(() => import("./landing/Landing").then((module) => ({ default: module.Landing })));
 const NotFound = lazy(() => import("./landing/NotFound").then((module) => ({ default: module.NotFound })));
 // Authentication and shared account pages
-const Login = lazy(() => import("./auth/Signin").then((module) => ({ default: module.Login })));
 const Signup = lazy(() => import("./auth/Signup").then((module) => ({ default: module.Signup })));
 const ForgotPassword = lazy(() => import("./auth/ForgotPassword").then((module) => ({ default: module.ForgotPassword })));
 const ResetPassword = lazy(() => import("./auth/ResetPassword").then((module) => ({ default: module.ResetPassword })));
@@ -24,6 +23,7 @@ const Favorites = lazy(() => import("./tenant/Favorites").then((module) => ({ de
 // Landlord
 const LandlordDashboard = lazy(() => import("@/landlord/LandlordDashboard").then((module) => ({ default: module.LandlordDashboard })));
 const AddApartment = lazy(() => import("./landlord/AddApartment").then((module) => ({ default: module.AddApartment })));
+const EditProperty = lazy(() => import("./landlord/EditProperty").then((module) => ({ default: module.EditProperty })));
 const ManageRooms = lazy(() => import("./landlord/ManageRooms").then((module) => ({ default: module.ManageRooms })));
 // Admin
 const AdminDashboard = lazy(() => import("@/admin/AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
@@ -38,6 +38,9 @@ function PublicLandingRoute() {
 export const router = createBrowserRouter([
     // Public landing and standalone authentication pages
     { path: "/", element: <PublicLandingRoute /> },
+    // Keep direct login links on the landing page so they use the same modal
+    // experience as the Sign In button on the home screen.
+    { path: "/login", element: <PublicLandingRoute /> },
     { path: "/auth/callback", element: <PageLoader><AuthCallback /></PageLoader> },
     { path: "/reset-password", element: <PageLoader><ResetPassword /></PageLoader> },
     // Main app wrapped in Root layout
@@ -54,6 +57,8 @@ export const router = createBrowserRouter([
             { path: "admin/apartment/:id", element: <ProtectedRoute allowedRoles={["admin"]}><PageLoader><AdminApartmentDetail /></PageLoader></ProtectedRoute> },
             // Landlord property management.
             { path: "add-apartment", element: <ProtectedRoute allowedRoles={["landlord"]}><PageLoader><AddApartment /></PageLoader></ProtectedRoute> },
+            { path: "landlord/properties/:id/edit", element: <ProtectedRoute allowedRoles={["landlord"]}><PageLoader><EditProperty /></PageLoader></ProtectedRoute> },
+            { path: "landlord/properties/:id/rooms/:roomId/edit", element: <ProtectedRoute allowedRoles={["landlord"]}><PageLoader><ManageRooms /></PageLoader></ProtectedRoute> },
             { path: "landlord/properties/:id/rooms", element: <ProtectedRoute allowedRoles={["landlord"]}><PageLoader><ManageRooms /></PageLoader></ProtectedRoute> },
             // Tenant favorites and shared account settings.
             { path: "favorites", element: <ProtectedRoute allowedRoles={["tenant"]}><PageLoader><Favorites /></PageLoader></ProtectedRoute> },
@@ -65,7 +70,6 @@ export const router = createBrowserRouter([
             { path: "dashboard", element: <ProtectedRoute><PageLoader>{roleDashboard}</PageLoader></ProtectedRoute> },
             { path: "admin", element: <ProtectedRoute allowedRoles={["admin"]}><PageLoader>{roleDashboard}</PageLoader></ProtectedRoute> },
             // Authentication.
-            { path: "login", element: <PageLoader><Login /></PageLoader> },
             { path: "signup", element: <PageLoader><Signup /></PageLoader> },
             { path: "forgot-password", element: <PageLoader><ForgotPassword /></PageLoader> },
             { path: "*", element: <PageLoader><NotFound /></PageLoader> },

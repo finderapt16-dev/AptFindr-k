@@ -1,0 +1,236 @@
+.admin-verification-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 26px;
+  color: #334155;
+}
+
+.admin-verification-header,
+.admin-verification-table-panel,
+.admin-verification-stat {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.admin-verification-header {
+  min-height: 55px;
+  padding: 12px 14px;
+}
+
+.admin-verification-header h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.admin-verification-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.admin-verification-controls {
+  display: flex;
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.admin-verification-search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  gap: 8px;
+  border: 1px solid #dbe4ed;
+  border-radius: 5px;
+  background: #ffffff;
+}
+
+.admin-verification-search:focus-within {
+  border-color: #7dd3fc;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.admin-verification-search svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: #94a3b8;
+}
+
+.admin-verification-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #334155;
+  font: inherit;
+  font-size: 9px;
+}
+
+.admin-verification-search input::placeholder { color: #94a3b8; }
+
+.admin-verification-status-filter { position: relative; flex: 0 0 120px; }
+
+.admin-verification-status-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #dbe4ed;
+  border-radius: 5px;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.admin-verification-status-trigger svg { width: 14px; height: 14px; color: #64748b; }
+
+.admin-verification-status-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  width: 100%;
+  padding: 4px;
+  border: 1px solid #dbe4ed;
+  border-radius: 5px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.admin-verification-status-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 30px;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #475569;
+  font: inherit;
+  font-size: 9px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-verification-status-menu button:hover,
+.admin-verification-status-menu button[aria-selected="true"] { background: #f0f9ff; color: #0369a1; }
+.admin-verification-status-menu svg { width: 13px; height: 13px; }
+
+.admin-verification-statistics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.admin-verification-stat {
+  display: flex;
+  min-height: 106px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  text-align: center;
+}
+
+.admin-verification-stat-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 4px;
+  place-items: center;
+  border-radius: 999px;
+}
+
+.admin-verification-stat-icon svg { width: 14px; height: 14px; }
+.admin-verification-stat-icon.total { background: #e0f2fe; color: #0ea5e9; }
+.admin-verification-stat-icon.pending { background: #fef3c7; color: #f59e0b; }
+.admin-verification-stat-icon.verified { background: #dcfce7; color: #16a34a; }
+.admin-verification-stat-icon.rejected { background: #fee2e2; color: #ef4444; }
+
+.admin-verification-stat strong { color: #334155; font-size: 12px; line-height: 1.25; font-weight: 700; }
+.admin-verification-stat > span:last-child { margin-top: 1px; color: #94a3b8; font-size: 8px; line-height: 1.25; }
+
+.admin-verification-table-panel { overflow: hidden; }
+.admin-verification-table-scroll { overflow-x: auto; }
+
+.admin-verification-table-panel table {
+  width: 100%;
+  min-width: 770px;
+  border-collapse: collapse;
+  font-size: 9px;
+}
+
+.admin-verification-table-panel th {
+  height: 33px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 8px;
+  line-height: 1.2;
+  font-weight: 600;
+  text-align: left;
+}
+
+.admin-verification-table-panel td {
+  height: 46px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #edf2f7;
+  color: #64748b;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.admin-verification-table-panel tbody tr:last-child td { border-bottom: 0; }
+.admin-verification-table-panel tbody tr:hover { background: #f8fafc; }
+
+.admin-verification-landlord { display: flex; align-items: center; min-width: 160px; gap: 7px; }
+.admin-verification-avatar { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 999px; background: #f3e8ff; color: #9333ea; font-size: 9px; font-weight: 700; }
+.admin-verification-landlord > span:last-child { display: grid; gap: 2px; }
+.admin-verification-landlord strong { color: #334155; font-size: 9px; line-height: 1.2; font-weight: 600; }
+.admin-verification-landlord small { color: #94a3b8; font-size: 8px; line-height: 1.2; }
+
+.admin-verification-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 52px; min-height: 18px; padding: 3px 8px; border-radius: 999px; font-size: 7px; font-weight: 700; }
+.admin-verification-badge.verified { background: #dcfce7; color: #16a34a; }
+.admin-verification-badge.pending { background: #fef3c7; color: #d97706; }
+.admin-verification-badge.rejected { background: #fee2e2; color: #ef4444; }
+
+.admin-verification-view-button { min-width: 96px; height: 28px; padding: 0 12px; border: 1px solid #38bdf8; border-radius: 4px; background: #ffffff; color: #0284c7; font: inherit; font-size: 8px; font-weight: 700; cursor: pointer; }
+.admin-verification-view-button:hover { background: #f0f9ff; }
+.admin-verification-view-button.pending { border-color: #0ea5e9; background: #0ea5e9; color: #ffffff; }
+.admin-verification-view-button.pending:hover { background: #0284c7; }
+
+.admin-verification-empty { margin: 0; padding: 30px 16px; color: #64748b; font-size: 11px; text-align: center; }
+
+.admin-verification-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 5px; padding: 8px 10px; border-top: 1px solid #edf2f7; }
+.admin-verification-pagination button { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid #e2e8f0; border-radius: 4px; background: #ffffff; color: #64748b; font: inherit; font-size: 9px; cursor: pointer; }
+.admin-verification-pagination button[aria-current="page"] { border-color: #e0f2fe; background: #e0f2fe; color: #0284c7; }
+.admin-verification-pagination button:disabled { cursor: not-allowed; opacity: 0.45; }
+.admin-verification-pagination svg { width: 13px; height: 13px; }
+
+@media (max-width: 760px) {
+  .admin-verification-page { padding: 16px; }
+  .admin-verification-controls { flex-direction: column; gap: 8px; }
+  .admin-verification-status-filter { flex-basis: auto; width: 100%; }
+  .admin-verification-statistics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 420px) {
+  .admin-verification-statistics { grid-template-columns: 1fr; }
+}

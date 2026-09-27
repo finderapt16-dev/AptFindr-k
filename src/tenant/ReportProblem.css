@@ -468,21 +468,6 @@
   display: flex;
 }
 
-.report-step-row-2 {
-  height: calc(var(--spacing, .25rem) * 12);
-  width: calc(var(--spacing, .25rem) * 12);
-  border-radius: var(--radius-lg, .5rem);
-  flex-shrink: 0;
-  justify-content: center;
-  align-items: center;
-  display: flex;
-}
-
-.report-step-icon-icon {
-  height: calc(var(--spacing, .25rem) * 5);
-  width: calc(var(--spacing, .25rem) * 5);
-}
-
 .report-step-panel {
   min-width: 0;
 }

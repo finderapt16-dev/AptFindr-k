@@ -14,7 +14,7 @@ export function Dashboard({ tenant, landlord, admin }) {
     }
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace/>;
+        return <Navigate to="/" replace/>;
     }
     // Show appropriate dashboard based on role
     if (user?.role === "admin") {

@@ -10,9 +10,14 @@ export function AuthCallback() {
             const params = new URLSearchParams(window.location.search);
             const callbackError = params.get("error_description") || params.get("error");
             if (callbackError) {
-                console.error("Email verification callback was rejected:", callbackError);
+                console.error("Authentication callback was rejected:", callbackError);
                 if (active)
-                    setError("This verification link is invalid or has expired. Request a new verification email and try again.");
+                    navigate("/login", {
+                        replace: true,
+                        state: {
+                            error: "Google could not create your account. The Supabase database profile setup needs to be fixed before you can continue.",
+                        },
+                    });
                 return;
             }
             const code = params.get("code");
@@ -37,6 +42,12 @@ export function AuthCallback() {
                 const profile = await getCurrentAuthenticatedUser();
                 if (!profile)
                     throw new Error("The verified account profile is not available.");
+                const isGoogleAuth = data.user.app_metadata?.provider === "google";
+                if (isGoogleAuth) {
+                    if (active)
+                        navigate("/dashboard", { replace: true });
+                    return;
+                }
                 await signOutAuthSession();
                 if (active)
                     navigate("/login", { replace: true, state: { message: "Email verified successfully. You can now sign in." } });

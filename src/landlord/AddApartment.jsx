@@ -1,6 +1,6 @@
 import "./AddApartment.css";
 import { PropertyLocationPicker } from "@/landlord/PropertyLocationPicker";
-import { LandlordSidebar } from "@/landlord/LandlordSidebar";
+import { PropertyGuidelines } from "@/landlord/PropertyGuidelines";
 import { MultiImageUploader } from "@/components/MultiImageUploader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { VERIFICATION_DOCUMENT_TYPES, uploadVerificationDocuments, validateVerif
 import { deletePropertyDraft, fetchPropertyDraft, savePropertyDraft, } from "@/services/propertyDraftService";
 import { DEFAULT_LA_PAZ_MAP_CENTER, hasValidApartmentCoordinates, } from "@/utils/mapCoordinates";
 import { supabase } from "@/services/supabaseClient";
-import { AlertCircle, ArrowLeft, ArrowRight, Building2, Camera, Check, Cloud, CloudUpload, FileText, Home, ListChecks, MapPin, Menu, Plus, RotateCcw, ShieldCheck, Trash2, Upload, X, } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Building2, Camera, Check, Cloud, CloudUpload, FileText, Home, ListChecks, MapPin, Plus, RotateCcw, ShieldCheck, Trash2, Upload, X, } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -92,7 +92,7 @@ const INITIAL_VERIFICATION_DATA = {
 export function AddApartment() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [guidelinesOpen, setGuidelinesOpen] = useState(true);
     const { refreshApartments } = useApartmentsContext();
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -619,57 +619,8 @@ export function AddApartment() {
     if (user?.role !== "landlord") {
         return <Navigate to="/dashboard" replace/>;
     }
-    return (<div className="app-shell landlord-shell landlord-add-property">
-      <div className="app-shell-frame">
-        <aside className="app-shell-sidebar">
-          <LandlordSidebar
-            user={user}
-            verified={Boolean(user?.isVerified)}
-            activeSection="add-property"
-            onSectionChange={(section) => {
-              navigate(`/dashboard?section=${section}`);
-            }}
-            onLogout={() => {
-              logout?.();
-              navigate("/");
-            }}
-          />
-        </aside>
-
-        {sidebarOpen && (
-          <div
-            className="app-sidebar-overlay"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        <aside className={`app-sidebar-drawer ${sidebarOpen ? "add-apartment-aside" : "add-apartment-aside-2"}`}>
-          <LandlordSidebar
-            user={user}
-            verified={Boolean(user?.isVerified)}
-            activeSection="add-property"
-            onSectionChange={(section) => {
-              navigate(`/dashboard?section=${section}`);
-            }}
-            onClose={() => setSidebarOpen(false)}
-            onLogout={() => {
-              logout?.();
-              navigate("/");
-            }}
-          />
-        </aside>
-
-        <button
-          type="button"
-          aria-label="Open navigation"
-          onClick={() => setSidebarOpen(true)}
-          className="app-sidebar-trigger"
-        >
-          <Menu className="add-apartment-menu-icon"/>
-        </button>
-
-        <main className="app-shell-main">
-      <div className="app-shell-content app-shell-content-mobile-nav">
+    return (<main className="landlord-add-property add-apartment-page">
+      <div className="app-shell-content add-apartment-page-content">
         <div className="add-apartment-panel-4">
           <h1 className="add-apartment-add-property">Add Property</h1>
           <p className="add-apartment-text-4">Submit property information for review, then manage individual rooms separately.</p>
@@ -1056,8 +1007,6 @@ export function AddApartment() {
           </CardContent>
         </Card>
       </div>
-        </main>
-      </div>
 
       {pendingDraft && (<div className="add-apartment-overlay" role="dialog" aria-modal="true" aria-labelledby="draft-dialog-title">
           <div className="add-apartment-card-10">
@@ -1086,5 +1035,11 @@ export function AddApartment() {
             </div>
           </div>
         </div>)}
-    </div>);
+      {guidelinesOpen && draftReady && !pendingDraft && (
+        <PropertyGuidelines
+          onAccept={() => setGuidelinesOpen(false)}
+          onClose={() => navigate("/dashboard?section=overview")}
+        />
+      )}
+    </main>);
 }

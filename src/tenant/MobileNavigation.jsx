@@ -33,7 +33,7 @@ export function MobileNavigation({ active = "apartments", unreadCount = 0 }) {
     const handleLogout = () => {
         setOpen(false);
         logout?.();
-        navigate("/");
+        navigate("/", { replace: true });
     };
     const navItemClass = (key) => `app-sidebar-nav-item ${active === key
         ? "tenant-mobile-nav-active"
@@ -53,7 +53,7 @@ export function MobileNavigation({ active = "apartments", unreadCount = 0 }) {
 
       {open && (<div className="tenant-mobile-navigation-overlay">
           <button aria-label="Close navigation" className="tenant-mobile-navigation-close-navigation" onClick={() => setOpen(false)}/>
-          <aside className="app-sidebar-drawer">
+          <aside className="app-sidebar-drawer is-open">
             <button aria-label="Close navigation" onClick={() => setOpen(false)} className="app-sidebar-close">
               <X className="tenant-mobile-navigation-x-icon"/>
             </button>

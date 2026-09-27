@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Bell, Building2, Flag, LayoutDashboard, RefreshCw, Shield, Users } from "lucide-react";
 export const NAV_MAIN = [
-    { icon: LayoutDashboard, label: "Dashboard", section: "overview" },
+    { icon: LayoutDashboard, label: "Dashboard", section: "landlords" },
     { icon: Bell, label: "Notifications", section: "notifications" },
     { icon: Users, label: "Landlords", section: "landlords" },
     { icon: Building2, label: "Apartments", section: "apartments" },
@@ -33,7 +33,7 @@ export const NOTICE_TYPES = [
     "Account suspended pending review",
     "Permit re-verification required",
 ];
-export const ADMIN_DASHBOARD_SECTIONS = new Set(["overview", "notifications", "landlords", "apartments", "reports", "appeals", "admininfo"]);
+export const ADMIN_DASHBOARD_SECTIONS = new Set(["notifications", "landlords", "apartments", "reports", "appeals", "admininfo"]);
 export const isAdminModule = (value) => ADMIN_DASHBOARD_SECTIONS.has(value);
 export function toAdminProfileState(source) {
     const name = String(source?.name ?? "").trim();

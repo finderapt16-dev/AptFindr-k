@@ -497,6 +497,39 @@ export async function signupUser(input) {
         profileSetupError,
     };
 }
+export async function signupWithGoogle({ termsAccepted }) {
+    if (termsAccepted !== true) {
+        throw new SignupFlowError('You must agree to the Terms of Use and Privacy Policy to continue.', 'validation', 'terms_required');
+    }
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+                role: 'tenant',
+                // The profile trigger also serves password users, where a
+                // username is mandatory. Google does not provide one, so send
+                // a valid, collision-resistant account username up front.
+                username: `google_${safeRandomId().replace(/-/g, '').slice(0, 23)}`,
+                termsAccepted: true,
+            },
+        },
+    });
+    if (error) {
+        throw new SignupFlowError('We could not continue with Google. Please try again.', 'auth', 'google_oauth', { cause: error });
+    }
+}
+export async function loginWithGoogle() {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+        },
+    });
+    if (error) {
+        throw new Error('We could not continue with Google. Please try again.');
+    }
+}
 export async function loginUser(credentials) {
     const username = credentials.username?.trim().toLowerCase();
     const password = credentials.password;

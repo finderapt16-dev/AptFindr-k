@@ -5,6 +5,8 @@ import { resolveAppUserId } from "./apartmentsService";
 export const defaultTenantPreferences = {
     hasSavedPreferences: false,
     preferredArea: "",
+    preferredLat: null,
+    preferredLng: null,
     minBudget: 0,
     maxBudget: 0,
     minBedrooms: "any",
@@ -543,6 +545,12 @@ function getPositiveNumberValue(value, fallback) {
     const parsed = getNumberValue(value);
     return parsed >= 0 ? parsed : fallback;
 }
+function getNullableCoordinate(value, fallback = null) {
+    if (value === null || value === undefined || value === "")
+        return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+}
 function isTenantPreferenceSortOption(value) {
     return value === "recommended" || value === "price_low" || value === "price_high" || value === "newest" || value === "popular";
 }
@@ -553,6 +561,8 @@ function normalizeTenantPreferences(value, fallback = defaultTenantPreferences) 
     return {
         hasSavedPreferences: getOptionalBooleanValue(source.hasSavedPreferences, fallback.hasSavedPreferences),
         preferredArea: typeof source.preferredArea === "string" ? source.preferredArea : fallback.preferredArea,
+        preferredLat: getNullableCoordinate(source.preferredLat, fallback.preferredLat),
+        preferredLng: getNullableCoordinate(source.preferredLng, fallback.preferredLng),
         maxBudget: getPositiveNumberValue(source.maxBudget, fallback.maxBudget),
         minBudget: getPositiveNumberValue(source.minBudget, fallback.minBudget),
         minBedrooms,

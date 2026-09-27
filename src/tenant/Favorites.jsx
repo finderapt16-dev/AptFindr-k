@@ -80,16 +80,33 @@ export function Favorites() {
             return true;
         })
             .sort((a, b) => {
-            if (sort === "price-low")
-                return (getLowestAvailableRoomPrice(a) ?? Number.MAX_SAFE_INTEGER) - (getLowestAvailableRoomPrice(b) ?? Number.MAX_SAFE_INTEGER);
-            if (sort === "price-high")
-                return (getLowestAvailableRoomPrice(b) ?? -1) - (getLowestAvailableRoomPrice(a) ?? -1);
-            if (sort === "name")
-                return a.title.localeCompare(b.title);
-            const bDate = new Date(b.updatedAt || b.createdAt || b.availableDate).getTime();
-            const aDate = new Date(a.updatedAt || a.createdAt || a.availableDate).getTime();
-            return (Number.isNaN(bDate) ? 0 : bDate) - (Number.isNaN(aDate) ? 0 : aDate);
-        });
+    if (sort === "price-low") {
+        return (
+            (getLowestAvailableRoomPrice(a) ?? Number.MAX_SAFE_INTEGER) -
+            (getLowestAvailableRoomPrice(b) ?? Number.MAX_SAFE_INTEGER)
+        );
+    }
+
+    if (sort === "price-high") {
+        return (
+            (getLowestAvailableRoomPrice(b) ?? -1) -
+            (getLowestAvailableRoomPrice(a) ?? -1)
+        );
+    }
+
+    if (sort === "name") {
+        return a.title.localeCompare(b.title);
+    }
+
+    if (sort === "newest") {
+        const aDate = new Date(a.favoritedAt || 0).getTime();
+        const bDate = new Date(b.favoritedAt || 0).getTime();
+
+        return bDate - aDate;
+    }
+
+    return 0;
+});
     }, [favoriteApartments, filter, sort]);
     const favoriteCount = favoriteApartments.length;
     const removeFavorite = async (apartmentId) => {

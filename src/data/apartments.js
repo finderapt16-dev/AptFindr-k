@@ -40,6 +40,13 @@ const toNumber = (value, fallback = 0) => {
     }
     return fallback;
 };
+const toNullableNumber = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+};
 const toBoolean = (value) => value === true;
 const toString = (value, fallback = '') => {
     if (typeof value === 'string') {
@@ -138,8 +145,10 @@ export const apartmentRowToApartment = (row) => {
         parking: toBoolean(row.parking),
         furnished: toBoolean(row.furnished),
         utilities: row.utilities ?? [],
-        lat: toNumber(row.lat),
-        lng: toNumber(row.lng),
+        // Missing coordinates must remain missing. Coercing them to 0,0 would
+        // create a false geographic location for nearby search and ranking.
+        lat: toNullableNumber(row.lat),
+        lng: toNullableNumber(row.lng),
         landlordId: row.landlord_id ?? undefined,
         isPublished: row.is_published ?? undefined,
         approvalStatus: row.approval_status === 'approved' || row.approval_status === 'rejected' ? row.approval_status : 'pending',

@@ -595,7 +595,7 @@ export function AdminApartmentDetail() {
         { label: "Documents", target: "admin-verification", icon: FileSearch },
     ];
     const adminNavItems = [
-        { label: "Dashboard", section: "overview", icon: LayoutDashboard },
+        { label: "Dashboard", section: "landlords", icon: LayoutDashboard },
         { label: "Notifications", section: "notifications", icon: Bell },
         { label: "Landlords", section: "landlords", icon: Users },
         { label: "Apartments", section: "apartments", icon: Building2 },

@@ -1,28 +1,27 @@
 import "./ManageRooms.css";
-import { ArrowLeft, Bath, BedDouble, CalendarDays, CheckCircle2, DoorOpen, Edit3, MapPin, Menu, MoreVertical, Plus, Tag, Trash2, TrendingUp, Users, Wind, Wrench, X, } from "lucide-react";
+import { ArrowLeft, BedDouble, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, DoorOpen, ImagePlus, MapPin, Menu, MoreVertical, Pencil, Plus, Star, Upload, Users, Wrench, X, } from "lucide-react";
 import { LandlordSidebar } from "@/landlord/LandlordSidebar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { MultiImageUploader } from "@/components/MultiImageUploader";
 import { safeRandomId } from "@/utils/safeRandomId";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { useApartmentsContext } from "@/contexts/ApartmentsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/services/supabaseClient";
 import { createApartmentRoom, deleteApartmentRoom, fetchApartmentRooms, fetchApartmentWithImages, updateApartmentRoom, updateApartmentRoomStatus, uploadApartmentRoomImage, } from "@/data/apartments";
+
 const ROOM_TYPES = ["Bedroom", "Studio", "Shared room", "Suite", "Loft", "Other"];
 const ROOM_STATUS_OPTIONS = [
     { value: "available", label: "Available", className: "manage-rooms-badge" },
     { value: "occupied", label: "Occupied", className: "manage-rooms-badge-2" },
     { value: "maintenance", label: "Under Maintenance", className: "manage-rooms-badge-3" },
 ];
+const MAX_ROOM_IMAGES = 10;
+const MAX_ROOM_IMAGE_MB = 8;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 const emptyRoomForm = () => ({
     name: "",
     type: "Bedroom",
@@ -52,14 +51,20 @@ const roomToForm = (room) => ({
 });
 const statusForRoom = (room) => room.status ?? (room.isOccupied ? "occupied" : "available");
 const getStatusOption = (status) => ROOM_STATUS_OPTIONS.find((option) => option.value === status) ?? ROOM_STATUS_OPTIONS[0];
-const formatDate = (value) => {
-    if (!value)
-        return "Not recorded";
-    const date = new Date(value);
-    return Number.isNaN(date.getTime())
-        ? "Not recorded"
-        : new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(date);
-};
+
+// Cover photo is always the first image; keep isPrimary / sortOrder in sync with the order.
+const normalizeImages = (list) => list.map((image, index) => ({ ...image, isPrimary: index === 0, sortOrder: index }));
+const imagesFromRoom = (room) => normalizeImages((room?.images ?? []).filter(Boolean).map((url, index) => ({ id: `existing-${index}`, url })));
+const revokeIfBlob = (url) => { if (typeof url === "string" && url.startsWith("blob:"))
+    URL.revokeObjectURL(url); };
+
+// Used to tell whether a card has unsaved edits (status is excluded: it is saved by its own buttons).
+const DIRTY_FIELDS = ["name", "type", "price", "maxOccupants", "sqft", "description", "hasPrivateBath", "bathroomType", "sharedBathLocation", "hasAC", "status"];
+const snapshotOf = (form, images) => JSON.stringify([
+    DIRTY_FIELDS.map((key) => form[key] ?? ""),
+    images.map((image) => (image.file ? `file:${image.id}` : image.url)),
+]);
+
 const compressRoomImage = async (source) => {
     if (source.size <= 1.5 * 1024 * 1024 || typeof createImageBitmap !== "function")
         return source;
@@ -77,28 +82,388 @@ const compressRoomImage = async (source) => {
         return source;
     }
 };
-export function ManageRooms() {
-    const { id } = useParams();
+
+// Uploads new files (keeps already-uploaded URLs) and returns the final ordered URL list.
+const uploadPendingRoomImages = async (propertyId, roomId, images, onProgress) => {
+    const ordered = [...images].sort((a, b) => {
+        if (a.isPrimary !== b.isPrimary)
+            return a.isPrimary ? -1 : 1;
+        return a.sortOrder - b.sortOrder;
+    });
+    const roomUploadId = roomId || safeRandomId();
+    const urls = [];
+    const pendingCount = ordered.filter((image) => image.file || image.url.startsWith("data:")).length;
+    let completedUploads = 0;
+    onProgress(pendingCount > 0 ? 0 : null);
+    for (let index = 0; index < ordered.length; index += 1) {
+        const image = ordered[index];
+        if (!image.file && !image.url.startsWith("data:")) {
+            urls.push(image.url);
+        }
+        else {
+            const source = image.file ?? await (await fetch(image.url)).blob();
+            const compressed = await compressRoomImage(source);
+            const originalName = image.file instanceof File ? image.file.name : `room-image-${index}.webp`;
+            const uploadName = compressed !== source && compressed.type === "image/webp"
+                ? `${originalName.replace(/\.[^.]+$/, "")}.webp`
+                : originalName;
+            urls.push(await uploadApartmentRoomImage(propertyId, roomUploadId, compressed, uploadName));
+            completedUploads += 1;
+            onProgress((completedUploads / pendingCount) * 100);
+        }
+    }
+    return urls;
+};
+
+const buildRoomPayload = (form, imageUrls, status) => ({
+    id: form.id,
+    name: form.name.trim(),
+    type: form.type,
+    price: Number(form.price) || 0,
+    maxOccupants: Number(form.maxOccupants) || 1,
+    sqft: Number(form.sqft) || 0,
+    description: form.description.trim(),
+    hasPrivateBath: form.hasPrivateBath,
+    bathroomType: form.hasPrivateBath ? form.bathroomType || "en-suite" : "",
+    sharedBathLocation: form.hasPrivateBath ? "" : form.sharedBathLocation.trim(),
+    hasAC: form.hasAC,
+    status,
+    isOccupied: status === "occupied",
+    images: imageUrls,
+});
+
+/* -------------------------------------------------------------------------- */
+/* Small building blocks                                                       */
+/* -------------------------------------------------------------------------- */
+
+// A boxed field (label + control + pencil). Wrapping in <label> means clicking
+// anywhere on the box, including the pencil, focuses the input.
+function Field({ label, prefix, suffix, chevron = false, className = "", children }) {
+    return (<label className={`mr-field ${className}`}>
+      <span className="mr-field-label">{label}</span>
+      <span className="mr-field-control">
+        {prefix ? <span className="mr-affix">{prefix}</span> : null}
+        {children}
+        {suffix ? <span className="mr-affix">{suffix}</span> : null}
+        {chevron ? <ChevronDown className="mr-chevron" aria-hidden="true"/> : null}
+        <Pencil className="mr-pencil" aria-hidden="true"/>
+      </span>
+    </label>);
+}
+
+/* -------------------------------------------------------------------------- */
+/* One room = one inline-editable card                                         */
+/* -------------------------------------------------------------------------- */
+
+// room === null means "new room" (unsaved draft card).
+function RoomEditorCard({ room, busy, onSave, onDelete, onChangeStatus, onCancelNew }) {
+    const isNew = room === null;
+    const [draft, setDraft] = useState(() => (room ? roomToForm(room) : emptyRoomForm()));
+    const [images, setImages] = useState(() => imagesFromRoom(room));
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(null);
+    const [selectedAmenities, setSelectedAmenities] = useState(() => new Set([
+        ...(room?.hasAC ? ["Air Conditioning"] : []),
+        ...(room?.hasPrivateBath ? ["Private Bathroom"] : []),
+    ]));
+    const [selectedUtilities, setSelectedUtilities] = useState(() => new Set(["Water", "Electricity", "Internet"]));
+    const fileInputRef = useRef(null);
+    const nameInputRef = useRef(null);
+    const menuRef = useRef(null);
+    const mountedRef = useRef(true);
+    const imagesRef = useRef(images);
+    imagesRef.current = images;
+
+    const status = draft.status;
+    const statusOption = getStatusOption(status);
+    const controlsLocked = busy || isSaving;
+
+    // ---- keep the card in sync with the server without wiping unsaved edits ----
+    const baseSnapshot = snapshotOf(room ? roomToForm(room) : emptyRoomForm(), imagesFromRoom(room));
+    const currentSnapshot = snapshotOf(draft, images);
+    const isDirty = currentSnapshot !== baseSnapshot;
+    const previousBaseRef = useRef(baseSnapshot);
+    const currentSnapshotRef = useRef(currentSnapshot);
+    currentSnapshotRef.current = currentSnapshot;
+    useEffect(() => {
+        if (previousBaseRef.current === baseSnapshot)
+            return;
+        const wasClean = currentSnapshotRef.current === previousBaseRef.current;
+        previousBaseRef.current = baseSnapshot;
+        if (wasClean && room) {
+            setDraft(roomToForm(room));
+            setImages(imagesFromRoom(room));
+        }
+    }, [baseSnapshot, room]);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            imagesRef.current.forEach((image) => revokeIfBlob(image.url));
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!menuOpen)
+            return;
+        const closeOnOutsideClick = (event) => {
+            if (!menuRef.current?.contains(event.target))
+                setMenuOpen(false);
+        };
+        document.addEventListener("mousedown", closeOnOutsideClick);
+        return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+    }, [menuOpen]);
+
+    const setField = (key) => (event) => {
+        const { value } = event.target;
+        setDraft((current) => ({ ...current, [key]: value }));
+    };
+    const bathroomValue = !draft.hasPrivateBath ? "shared" : draft.bathroomType === "separate" ? "separate" : "en-suite";
+    const setBathroom = (event) => {
+        const { value } = event.target;
+        setDraft((current) => value === "shared"
+            ? { ...current, hasPrivateBath: false }
+            : { ...current, hasPrivateBath: true, bathroomType: value });
+    };
+    const setAirCon = (event) => {
+        const hasAC = event.target.value === "yes";
+        setDraft((current) => ({ ...current, hasAC }));
+    };
+    const toggleSelection = (setSelection, item) => setSelection((current) => {
+        const next = new Set(current);
+        next.has(item) ? next.delete(item) : next.add(item);
+        return next;
+    });
+
+    // ---- gallery ----
+    const safeActiveIndex = Math.min(activeIndex, Math.max(images.length - 1, 0));
+    const activeImage = images[safeActiveIndex];
+    const openPicker = () => fileInputRef.current?.click();
+    const showPrevious = () => setActiveIndex((safeActiveIndex - 1 + images.length) % images.length);
+    const showNext = () => setActiveIndex((safeActiveIndex + 1) % images.length);
+    const handleFiles = (event) => {
+        const files = Array.from(event.target.files ?? []);
+        event.target.value = "";
+        if (files.length === 0)
+            return;
+        const accepted = [];
+        for (const file of files) {
+            if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+                toast.error(`${file.name} is not a JPG, PNG, or WebP image.`);
+            }
+            else if (file.size > MAX_ROOM_IMAGE_MB * 1024 * 1024) {
+                toast.error(`${file.name} is larger than ${MAX_ROOM_IMAGE_MB}MB.`);
+            }
+            else {
+                accepted.push(file);
+            }
+        }
+        const slotsLeft = Math.max(MAX_ROOM_IMAGES - images.length, 0);
+        if (accepted.length > slotsLeft)
+            toast.error(`You can upload up to ${MAX_ROOM_IMAGES} photos per room.`);
+        const toAdd = accepted.slice(0, slotsLeft);
+        if (toAdd.length === 0)
+            return;
+        setImages((current) => normalizeImages([
+            ...current,
+            ...toAdd.map((file) => ({ id: safeRandomId(), url: URL.createObjectURL(file), file })),
+        ]));
+        setActiveIndex(images.length);
+    };
+    const removeImage = (index) => {
+        revokeIfBlob(images[index]?.url);
+        setImages((current) => normalizeImages(current.filter((_, position) => position !== index)));
+        setActiveIndex((current) => Math.max(0, Math.min(current, images.length - 2)));
+    };
+    const makeCover = (index) => {
+        setImages((current) => normalizeImages([current[index], ...current.filter((_, position) => position !== index)]));
+        setActiveIndex(0);
+    };
+
+    // ---- actions ----
+    const applyStatus = (next) => {
+        setMenuOpen(false);
+        setDraft((current) => ({ ...current, status: next }));
+    };
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const saved = await onSave(room, draft, images, setUploadProgress);
+            if (saved && room && mountedRef.current) {
+                const previous = images;
+                setDraft(roomToForm(saved));
+                setImages(imagesFromRoom(saved));
+                setActiveIndex(0);
+                previous.forEach((image) => revokeIfBlob(image.url));
+            }
+        }
+        finally {
+            if (mountedRef.current) {
+                setIsSaving(false);
+                setUploadProgress(null);
+            }
+        }
+    };
+
+    return (<article className="mr-reference-editor">
+      <div className="mr-reference-layout">
+        <div className="mr-reference-main">
+          <section className="mr-reference-section">
+            <h3>Room Photos</h3><p>Add or update photos of this room. You can upload multiple images.</p>
+            <div className="mr-reference-photos">
+              {images.map((image, index) => <div className="mr-reference-photo" key={image.id}><img src={image.url} alt={`Room photo ${index + 1}`}/><button type="button" aria-label="Remove photo" onClick={() => removeImage(index)}><X /></button></div>)}
+              {images.length < MAX_ROOM_IMAGES && <button type="button" className="mr-reference-add-photo" onClick={openPicker}><Plus /><span>Add Photo</span></button>}
+            </div>
+            <small>Support: JPG, PNG, WebP, Max {MAX_ROOM_IMAGE_MB}MB each. ({images.length}/{MAX_ROOM_IMAGES} photos)</small>
+            <input ref={fileInputRef} type="file" accept={ACCEPTED_IMAGE_TYPES.join(",")} multiple hidden onChange={handleFiles}/>
+          </section>
+          <section className="mr-reference-section">
+            <h3>Room Information</h3>
+            <div className="mr-reference-fields">
+              <Field label="Room Number / Name *"><input value={draft.name} onChange={setField("name")} className="mr-input" disabled={isSaving}/></Field>
+              <Field label="Capacity *" suffix="pax"><input type="number" min={1} value={draft.maxOccupants} onChange={setField("maxOccupants")} className="mr-input" disabled={isSaving}/></Field>
+              <Field label="Monthly Rent *" prefix="₱"><input type="number" min={0} value={draft.price} onChange={setField("price")} className="mr-input" disabled={isSaving}/></Field>
+              <label className="mr-field"><span className="mr-field-label">Description *</span><textarea rows={3} value={draft.description} onChange={setField("description")} className="mr-textarea" disabled={isSaving}/></label>
+            </div>
+          </section>
+          <section className="mr-reference-section">
+            <h3>Amenities</h3><p>Select the amenities available in this room.</p>
+            <div className="mr-reference-chips">{["WiFi", "Air Conditioning", "Bed", "Study Table", "Balcony", "Private Bathroom", "Hot & Cold Shower", "Window"].map((item) => <button type="button" key={item} onClick={() => toggleSelection(setSelectedAmenities, item)} className={selectedAmenities.has(item) ? "is-selected" : ""}>{item}</button>)}</div>
+          </section>
+          <section className="mr-reference-section">
+            <h3>Utilities Included</h3><p>Select which utilities are included in the monthly rent.</p>
+            <div className="mr-reference-chips mr-reference-utilities">{["Water", "Electricity", "Internet"].map((item) => <button type="button" key={item} onClick={() => toggleSelection(setSelectedUtilities, item)} className={selectedUtilities.has(item) ? "is-selected" : ""}>{item}</button>)}</div>
+          </section>
+        </div>
+        <aside className="mr-reference-side">
+          <section className="mr-reference-section"><h3>Room Status</h3><p>Set the current status of this room.</p>
+            {["available", "occupied", "maintenance"].map((value) => <button type="button" key={value} aria-pressed={status === value} onClick={() => applyStatus(value)} className={`mr-reference-status ${status === value ? "is-selected" : ""}`}><span aria-hidden="true"/><strong>{getStatusOption(value).label}</strong><small>{value === "available" ? "Room is available for rent." : value === "occupied" ? "Room is currently rented out." : "Room is temporarily unavailable."}</small></button>)}
+          </section>
+          <section className="mr-reference-section"><h3>Room Preview</h3><p>This is how room will appear to tenants.</p>
+            <div className="mr-reference-preview"><div>{activeImage && <img src={activeImage.url} alt="Room preview"/>}</div><section><b>{draft.name || "Room"}</b><span>{draft.type} &nbsp;–&nbsp; {draft.maxOccupants || 1} pax</span><strong>₱{Number(draft.price || 0).toLocaleString("en-PH")}/month</strong><div className="mr-reference-preview-tags">{[...selectedAmenities].slice(0, 4).map((item) => <em key={item}>{item}</em>)}</div></section><small>{draft.description || "No room description provided."}</small></div>
+          </section>
+        </aside>
+      </div>
+      <footer className="mr-reference-footer"><Button type="button" variant="outline" onClick={onCancelNew} disabled={isSaving}>Cancel</Button><Button type="button" onClick={() => void handleSave()} disabled={isSaving || busy || (!isNew && !isDirty)}>{isSaving ? "Saving..." : "Save Changes"}</Button></footer>
+    </article>);
+
+    const bathroomSelect = (<select value={bathroomValue} onChange={setBathroom} disabled={isSaving} className="mr-input mr-select">
+      <option value="shared">Shared</option>
+      <option value="en-suite">Private (en-suite)</option>
+      <option value="separate">Private (separate)</option>
+    </select>);
+
+    return (<article className={`mr-card${isNew ? " mr-card--new" : ""}`}>
+      <div className="mr-card-body">
+        {/* ------------------------------ gallery ------------------------------ */}
+        <div className="mr-gallery">
+          <div className="mr-stage">
+            {activeImage ? (<>
+                <img src={activeImage.url} alt={`${draft.name || "Room"} photo ${safeActiveIndex + 1}`} className="mr-stage-image"/>
+                {safeActiveIndex === 0 ? <span className="mr-cover-tag">Cover</span> : null}
+                <div className="mr-stage-tools">
+                  {safeActiveIndex > 0 ? <button type="button" className="mr-chip" onClick={() => makeCover(safeActiveIndex)} disabled={isSaving}><Star className="mr-icon-sm"/>Make cover</button> : null}
+                  <button type="button" className="mr-chip mr-chip--danger" aria-label="Remove this photo" onClick={() => removeImage(safeActiveIndex)} disabled={isSaving}><X className="mr-icon-sm"/></button>
+                </div>
+              </>) : (<button type="button" className="mr-stage-empty" onClick={openPicker} disabled={isSaving}><ImagePlus className="mr-stage-empty-icon"/><span>No photo yet</span></button>)}
+            {images.length > 1 ? (<>
+                <button type="button" className="mr-arrow mr-arrow--prev" aria-label="Previous photo" onClick={showPrevious}><ChevronLeft className="mr-icon-md"/></button>
+                <button type="button" className="mr-arrow mr-arrow--next" aria-label="Next photo" onClick={showNext}><ChevronRight className="mr-icon-md"/></button>
+              </>) : null}
+          </div>
+
+          <div className="mr-thumbs">
+            {images.map((image, index) => (<button key={image.id} type="button" aria-label={`Show photo ${index + 1}`} onClick={() => setActiveIndex(index)} className={`mr-thumb${index === safeActiveIndex ? " is-active" : ""}`}><img src={image.url} alt=""/></button>))}
+            {images.length < MAX_ROOM_IMAGES ? <button type="button" className="mr-thumb mr-thumb--add" onClick={openPicker} disabled={isSaving}><Plus className="mr-icon-md"/><span>Add Photo</span></button> : null}
+          </div>
+
+          <p className="mr-hint">Upload up to {MAX_ROOM_IMAGES} images (JPG, PNG, WebP). Max {MAX_ROOM_IMAGE_MB}MB each.</p>
+          {uploadProgress !== null ? <div className="mr-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(uploadProgress)}><span style={{ width: `${uploadProgress}%` }}/></div> : null}
+          <button type="button" className="mr-upload" onClick={openPicker} disabled={isSaving}><Upload className="mr-icon-md"/>Upload a Photo / Change Photos</button>
+          <input ref={fileInputRef} type="file" accept={ACCEPTED_IMAGE_TYPES.join(",")} multiple hidden onChange={handleFiles}/>
+        </div>
+
+        {/* ------------------------------ details ------------------------------ */}
+        <div className="mr-details">
+          <div className="mr-head">
+            <div className="mr-head-main">
+              <div className="mr-title-row">
+                <label className="mr-name">
+                  <input ref={nameInputRef} value={draft.name} onChange={setField("name")} placeholder="Room number / name" aria-label="Room number or name" className="mr-name-input" disabled={isSaving}/>
+                  <Pencil className="mr-pencil" aria-hidden="true"/>
+                </label>
+                <Badge className={`${statusOption.className} manage-rooms-badge-5`}>{statusOption.label}</Badge>
+              </div>
+              <p className="mr-muted">{(room?.description ?? "").trim() || "No room description provided."}</p>
+            </div>
+
+            <div className="mr-head-actions">
+              <div className="mr-mini">
+                {isNew ? (<button type="button" className="mr-mini-btn" onClick={onCancelNew} disabled={isSaving}>Cancel</button>) : (<>
+                    <button type="button" className="mr-mini-btn" onClick={() => nameInputRef.current?.focus()} disabled={controlsLocked}>Edit Room</button>
+                    <button type="button" className="mr-mini-btn mr-mini-btn--danger" onClick={() => void onDelete(room)} disabled={controlsLocked}>Delete Room</button>
+                  </>)}
+              </div>
+              <div className="mr-menu" ref={menuRef}>
+                <button type="button" aria-label={`Actions for ${draft.name || "room"}`} aria-expanded={menuOpen} disabled={controlsLocked} onClick={() => setMenuOpen((open) => !open)} className="mr-kebab"><MoreVertical className="mr-icon-md"/></button>
+                {menuOpen ? (<div className="mr-menu-list" role="menu">
+                    {status !== "maintenance"
+                ? <button type="button" role="menuitem" onClick={() => applyStatus("maintenance")}><Wrench className="mr-icon-sm"/>Mark as Under Maintenance</button>
+                : <button type="button" role="menuitem" onClick={() => applyStatus("occupied")}><Users className="mr-icon-sm"/>Mark as Occupied</button>}
+                  </div>) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="mr-fields">
+            <Field label="Monthly Rent" prefix="₱" className="mr-span-1"><input type="number" inputMode="decimal" min={0} step="any" value={draft.price} onChange={setField("price")} className="mr-input hide-number-spinners" placeholder="0" disabled={isSaving}/></Field>
+            <Field label="Capacity" suffix={Number(draft.maxOccupants) === 1 ? "person" : "people"} className="mr-span-1"><input type="number" min={1} value={draft.maxOccupants} onChange={setField("maxOccupants")} className="mr-input hide-number-spinners" placeholder="1" disabled={isSaving}/></Field>
+            <Field label="Room Type" chevron className="mr-span-1"><select value={draft.type} onChange={setField("type")} className="mr-input mr-select" disabled={isSaving}>{ROOM_TYPES.map((type) => <option key={type}>{type}</option>)}</select></Field>
+            <Field label="Room Size" suffix="sq ft" className="mr-span-1"><input type="number" min={0} value={draft.sqft} onChange={setField("sqft")} className="mr-input hide-number-spinners" placeholder="0" disabled={isSaving}/></Field>
+            <Field label="Bathroom" chevron className="mr-span-2">{bathroomSelect}</Field>
+            <Field label="Air Conditioning" chevron className="mr-span-2"><select value={draft.hasAC ? "yes" : "no"} onChange={setAirCon} className="mr-input mr-select" disabled={isSaving}><option value="no">No air conditioning</option><option value="yes">With air conditioning</option></select></Field>
+            {bathroomValue === "shared" ? <Field label="Shared bathroom location (optional)" className="mr-span-4"><input value={draft.sharedBathLocation} onChange={setField("sharedBathLocation")} className="mr-input" placeholder="e.g. End of the hallway" disabled={isSaving}/></Field> : null}
+          </div>
+
+          <label className="mr-desc">
+            <span className="mr-desc-label">Room description</span>
+            <span className="mr-desc-control">
+              <textarea rows={3} value={draft.description} onChange={setField("description")} placeholder="Add room description..." className="mr-textarea" disabled={isSaving}/>
+              <Pencil className="mr-pencil mr-pencil--corner" aria-hidden="true"/>
+            </span>
+          </label>
+
+          <div className="mr-footer">
+            <Button type="button" variant="outline" disabled={controlsLocked} onClick={() => applyStatus(status === "available" ? "occupied" : "available")} className="mr-btn-status">
+              {status === "available" ? <><Users className="mr-icon-sm"/>Mark as Occupied</> : <><CheckCircle2 className="mr-icon-sm"/>Mark as Available</>}
+            </Button>
+            <Button type="button" onClick={() => void handleSave()} disabled={isSaving || busy || (!isNew && !isDirty)} className="mr-btn-save">{isSaving ? "Saving..." : "Save"}</Button>
+          </div>
+        </div>
+      </div>
+    </article>);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Page                                                                        */
+/* -------------------------------------------------------------------------- */
+
+export function ManageRooms({ propertyId }) {
+    const { id: routeId, roomId } = useParams();
+    const id = propertyId ?? routeId;
     const navigate = useNavigate();
     const { user, logout } = useAuth();
     const { refreshApartments } = useApartmentsContext();
     const [property, setProperty] = useState(null);
     const [rooms, setRooms] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
     const [processingRoomId, setProcessingRoomId] = useState(null);
-    const [formOpen, setFormOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [openRoomMenuId, setOpenRoomMenuId] = useState(null);
-    const [roomImages, setRoomImages] = useState([]);
-    const [uploadProgress, setUploadProgress] = useState(null);
-    const [form, setForm] = useState(emptyRoomForm);
     const mainRef = useRef(null);
-    useEffect(() => {
-        if (formOpen) {
-            mainRef.current?.querySelector(".manage-rooms-card-2")?.scrollIntoView({ block: "start" });
-        }
-    }, [formOpen, form.id]);
     useEffect(() => {
         let active = true;
         const load = async () => {
@@ -158,100 +523,55 @@ export function ManageRooms() {
     if (user?.role !== "landlord")
         return <Navigate to="/dashboard" replace/>;
     const canManage = property && property.landlordId === user.id;
-    const resetForm = () => { setForm(emptyRoomForm()); setRoomImages([]); setUploadProgress(null); setFormOpen(false); };
-    const openAddForm = () => { setForm(emptyRoomForm()); setRoomImages([]); setUploadProgress(null); setFormOpen(true); };
-    const openEditForm = (room) => {
-        setForm(roomToForm(room));
-        setRoomImages((room.images ?? []).map((url, index) => ({ id: `existing-${index}`, url, isPrimary: index === 0, sortOrder: index })));
-        setUploadProgress(null);
-        setFormOpen(true);
-    };
-    const formToRoom = () => ({
-        id: form.id,
-        name: form.name.trim(),
-        type: form.type,
-        price: Number(form.price) || 0,
-        maxOccupants: Number(form.maxOccupants) || 1,
-        sqft: Number(form.sqft) || 0,
-        description: form.description.trim(),
-        hasPrivateBath: form.hasPrivateBath,
-        bathroomType: form.hasPrivateBath ? form.bathroomType || "en-suite" : "",
-        sharedBathLocation: form.hasPrivateBath ? "" : form.sharedBathLocation.trim(),
-        hasAC: form.hasAC,
-        status: form.status,
-        isOccupied: form.status === "occupied",
-        images: roomImages.map((image) => image.url),
-    });
-    const uploadPendingRoomImages = async () => {
+
+    // Called by a card's Save button. `existing` is the saved room, or null for a new one.
+    // Resolves to the saved room, or null if validation/saving failed.
+    const saveRoom = async (existing, form, images, onProgress) => {
         if (!id)
-            return [];
-        const ordered = [...roomImages].sort((a, b) => {
-            if (a.isPrimary !== b.isPrimary)
-                return a.isPrimary ? -1 : 1;
-            return a.sortOrder - b.sortOrder;
-        });
-        const roomUploadId = form.id || safeRandomId();
-        const urls = [];
-        const pendingCount = ordered.filter((image) => image.file || image.url.startsWith("data:")).length;
-        let completedUploads = 0;
-        setUploadProgress(pendingCount > 0 ? 0 : null);
-        for (let index = 0; index < ordered.length; index += 1) {
-            const image = ordered[index];
-            if (!image.file && !image.url.startsWith("data:")) {
-                urls.push(image.url);
-            }
-            else {
-                const source = image.file ?? await (await fetch(image.url)).blob();
-                const compressed = await compressRoomImage(source);
-                const originalName = image.file instanceof File ? image.file.name : `room-image-${index}.webp`;
-                const uploadName = compressed !== source && compressed.type === "image/webp"
-                    ? `${originalName.replace(/\.[^.]+$/, "")}.webp`
-                    : originalName;
-                urls.push(await uploadApartmentRoomImage(id, roomUploadId, compressed, uploadName));
-                completedUploads += 1;
-                setUploadProgress((completedUploads / pendingCount) * 100);
-            }
+            return null;
+        if (!form.name.trim()) {
+            toast.error("Please enter a room number or name.");
+            return null;
         }
-        return urls;
-    };
-    const saveRoom = async () => {
-        if (!id)
-            return;
-        if (!form.name.trim())
-            return void toast.error("Please enter a room number or name.");
-        if (!form.price || Number(form.price) < 0)
-            return void toast.error("Please enter a valid monthly rent.");
-        if (Number(form.maxOccupants) < 1)
-            return void toast.error("Room capacity must be at least one.");
-        setIsSaving(true);
+        if (!form.price || Number(form.price) < 0) {
+            toast.error("Please enter a valid monthly rent.");
+            return null;
+        }
+        if (Number(form.maxOccupants) < 1) {
+            toast.error("Room capacity must be at least one.");
+            return null;
+        }
         try {
-            const uploadedImageUrls = await uploadPendingRoomImages();
-            const room = { ...formToRoom(), images: uploadedImageUrls };
-            if (form.id) {
-                const updated = await updateApartmentRoom(id, form.id, room, user.id);
-                setRooms((current) => current.map((item) => item.id === form.id ? updated : item));
+            const imageUrls = await uploadPendingRoomImages(id, existing?.id, images, onProgress);
+            // Existing rooms keep their persisted status (changed by the status buttons, not by Save).
+            const payload = buildRoomPayload({ ...form, id: existing?.id }, imageUrls, form.status);
+            let saved;
+            if (existing) {
+                saved = await updateApartmentRoom(id, existing.id, payload, user.id);
+                setRooms((current) => current.map((item) => item.id === existing.id ? saved : item));
                 toast.success("Room updated");
             }
             else {
-                const created = await createApartmentRoom(id, room, user.id);
-                setRooms((current) => [...current, created]);
+                saved = await createApartmentRoom(id, payload, user.id);
+                setRooms((current) => [...current, saved]);
                 toast.success("Room added");
             }
-            await refreshApartments();
-            resetForm();
+            try {
+                await refreshApartments();
+            }
+            catch {
+                // The room itself was saved; a failed list refresh must not look like a failed save.
+            }
+            return saved;
         }
         catch (error) {
             toast.error(error instanceof Error ? error.message : "Unable to save room.");
-        }
-        finally {
-            setIsSaving(false);
-            setUploadProgress(null);
+            return null;
         }
     };
     const changeRoomStatus = async (room, status) => {
         if (!id || !room.id || processingRoomId)
             return;
-        setOpenRoomMenuId(null);
         setProcessingRoomId(room.id);
         try {
             await updateApartmentRoomStatus(id, room.id, status, user.id);
@@ -270,19 +590,21 @@ export function ManageRooms() {
     };
     const removeRoom = async (room) => {
         if (!id || !room.id || processingRoomId)
-            return;
+            return false;
         const roomName = room.name || "this room";
         if (!window.confirm(`Are you sure you want to delete ${roomName}?\n\nThis removes only this room, not the property.`))
-            return;
+            return false;
         setProcessingRoomId(room.id);
         try {
             await deleteApartmentRoom(id, room.id, user.id);
             setRooms((current) => current.filter((item) => item.id !== room.id));
             await refreshApartments();
             toast.success("Room deleted");
+            return true;
         }
         catch (error) {
             toast.error(error instanceof Error ? error.message : "Unable to delete room.");
+            return false;
         }
         finally {
             setProcessingRoomId(null);
@@ -290,7 +612,7 @@ export function ManageRooms() {
     };
     const handleLogout = () => {
         logout();
-        navigate("/login");
+        navigate("/", { replace: true });
     };
     if (isLoading) {
         return <div className="manage-rooms-loading-room-management">Loading room management...</div>;
@@ -305,115 +627,114 @@ export function ManageRooms() {
         </div>
       </div>);
     }
-    const address = [property.address, property.city, property.state, property.zip].filter(Boolean).join(", ");
-    const propertyStatus = property.status
-        ? getStatusOption(property.status)
-        : property.isPublished
-            ? getStatusOption("available")
-            : { label: "Unpublished", className: "manage-rooms-badge-4" };
-    const sidebar = <LandlordSidebar user={user} verified={Boolean(user.verified || user.isVerified)} activeSection="overview" onSectionChange={(section) => navigate(`/dashboard?section=${section}`)} onClose={() => setSidebarOpen(false)} onLogout={handleLogout}/>;
-    const summaryCards = [
-        { label: "Total Rooms", helper: "All rooms in this property", value: roomCounts.total, icon: DoorOpen, iconClass: "landlord-tone-brand", border: "landlord-border-brand" },
-        { label: "Available", helper: "Ready for tenants", value: roomCounts.available, icon: CheckCircle2, iconClass: "landlord-tone-available", border: "landlord-border-brand" },
-        { label: "Occupied", helper: "Currently rented", value: roomCounts.occupied, icon: BedDouble, iconClass: "landlord-tone-muted", border: "landlord-border-brand" },
-        { label: "Under Maintenance", helper: "Temporarily unavailable", value: roomCounts.maintenance, icon: Wrench, iconClass: "landlord-tone-warning", border: "landlord-border-brand" },
-    ];
-    return (<div className="app-shell landlord-shell landlord-manage-rooms">
-      <div className="app-shell-fixed-sidebar">{sidebar}</div>
-      {sidebarOpen && <div className="app-sidebar-overlay"><button aria-label="Close navigation" className="manage-rooms-close-navigation" onClick={() => setSidebarOpen(false)}/><div className="app-sidebar-drawer">{sidebar}<button aria-label="Close navigation" onClick={() => setSidebarOpen(false)} className="app-sidebar-close"><X className="manage-rooms-x-icon"/></button></div></div>}
+    const roomsPerPage = 4;
+    const totalPages = Math.max(1, Math.ceil(rooms.length / roomsPerPage));
+    const safePage = Math.min(currentPage, totalPages);
+    const visibleRooms = rooms.slice((safePage - 1) * roomsPerPage, safePage * roomsPerPage);
+    const formatRent = (value) => `₱${Number(value || 0).toLocaleString("en-PH")}`;
+    const statusLabel = (room) => getStatusOption(statusForRoom(room)).label;
+    const editorRoom = roomId === "new" ? null : rooms.find((room) => room.id === roomId);
+    const returnToRooms = () => navigate(`/landlord/properties/${id}/rooms`, { replace: true });
 
-      <main ref={mainRef} className="app-shell-page-main">
-        <div className="app-shell-content">
-          <div className="manage-rooms-row">
-            <button aria-label="Open navigation" onClick={() => setSidebarOpen(true)} className="app-sidebar-trigger"><Menu className="manage-rooms-menu-icon"/></button>
-            <span className="manage-rooms-room-management">Room Management</span>
+    if (roomId) {
+        if (!editorRoom && roomId !== "new") {
+            return <div className="manage-rooms-grid"><div><DoorOpen className="manage-rooms-door-open-icon"/><h1 className="manage-rooms-property-not-available">Room Not Available</h1><p className="manage-rooms-text">This room could not be found in the selected property.</p><Button onClick={returnToRooms}>Back to Manage Rooms</Button></div></div>;
+        }
+        return <main className="manage-rooms-editor-page">
+          <div className="manage-rooms-editor-page-content">
+            <header className="manage-rooms-editor-header">
+              <button type="button" className="manage-rooms-editor-back" onClick={returnToRooms}><ArrowLeft /> Back to Manage Rooms</button>
+              <div><h1>{editorRoom ? `Edit Room — ${editorRoom.name || "Unnamed room"}` : "Add a Room"}</h1><p>{editorRoom ? "Update this room's details, photos, and availability." : "Enter the details for the new rental room."}</p></div>
+            </header>
+            <RoomEditorCard key={editorRoom?.id || "new-room"} room={editorRoom} busy={processingRoomId !== null} onSave={async (...args) => {
+              const saved = await saveRoom(...args);
+              if (saved) returnToRooms();
+              return saved;
+            }} onDelete={async (room) => {
+              const removed = await removeRoom(room);
+              if (removed) returnToRooms();
+            }} onChangeStatus={changeRoomStatus} onCancelNew={returnToRooms}/>
           </div>
+        </main>;
+    }
 
-          <header className="manage-rooms-header">
-            <div className="manage-rooms-row-2">
-              <button onClick={() => navigate("/dashboard?section=overview")} className="manage-rooms-back-to-my-properties"><ArrowLeft className="manage-rooms-arrow-left-icon"/>Back to My Properties</button>
-              <Button onClick={openAddForm} className="manage-rooms-add-room"><Plus className="manage-rooms-plus-icon"/>Add Room</Button>
-            </div>
-            <p className="manage-rooms-room-management-2">Room Management</p>
-            <div className="manage-rooms-row-3"><h1 className="manage-rooms-title">{property.title}</h1><Badge className={`${propertyStatus.className} manage-rooms-badge-5`}>{propertyStatus.label}</Badge></div>
-            <p className="manage-rooms-text-2"><MapPin className="manage-rooms-map-pin-icon"/>{address || "Address not provided"}</p>
-            <svg aria-hidden="true" viewBox="0 0 300 120" className="manage-rooms-svg-icon" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M18 105h265M52 105V38h92v67M72 60h24v45m19-45h16v19h-16M159 105V49h76v56M178 70h22v35m20-63v63M43 38h111M151 49h92"/><path d="M77 94h12m42-15h12M251 105V72h20v33M258 72V52h7v20" opacity=".7"/></svg>
-          </header>
+    const page = (<main ref={mainRef} className="manage-rooms-table-page">
+      <button type="button" onClick={() => navigate(-1)} className="manage-rooms-table-back">
+        <ArrowLeft /> Back to View Property
+      </button>
 
-          <section className="manage-rooms-section">
-            {summaryCards.map(({ label, helper, value, icon: Icon, iconClass, border }) => (<div key={label} className={`manage-rooms-card ${border} manage-rooms-panel`}>
-                <div className="manage-rooms-row-4"><span className={`manage-rooms-grid-2 ${iconClass}`}><Icon className="manage-rooms-icon-icon"/></span><div><p className="manage-rooms-text-3">{value}</p><p className="manage-rooms-text-4">{label}</p></div></div>
-                <p className="manage-rooms-text-5">{helper}</p>
-              </div>))}
-          </section>
+      <header className="manage-rooms-table-title">
+        <h1>Manage Rooms — {property.title || "Apartment"}</h1>
+        <p>Add, edit, or update the rooms.</p>
+      </header>
 
-          {formOpen && (<Card className="manage-rooms-card-2">
-              <CardHeader><CardTitle>{form.id ? "Edit Room" : "Add Room"}</CardTitle><CardDescription>Enter the details for this room. Property information remains unchanged.</CardDescription></CardHeader>
-              <CardContent className="manage-rooms-card-content">
-                <div className="manage-rooms-grid-3">
-                  <div className="manage-rooms-panel-2"><Label>Room Number / Name *</Label><Input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Room 101"/></div>
-                  <div className="manage-rooms-panel-2"><Label>Room Type</Label><select value={form.type} onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))} className="manage-rooms-select">{ROOM_TYPES.map((type) => <option key={type}>{type}</option>)}</select></div>
-                  <div className="manage-rooms-panel-2"><Label>Monthly Rent *</Label><Input type="number" inputMode="decimal" min={0} step="any" value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} className="hide-number-spinners"/></div>
-                  <div className="manage-rooms-panel-2"><Label>Capacity *</Label><Input type="number" min={1} value={form.maxOccupants} onChange={(event) => setForm((current) => ({ ...current, maxOccupants: event.target.value }))} className="hide-number-spinners"/></div>
-                  <div className="manage-rooms-panel-2"><Label>Room Size (sq ft)</Label><Input type="number" min={0} value={form.sqft} onChange={(event) => setForm((current) => ({ ...current, sqft: event.target.value }))} className="hide-number-spinners"/></div>
-                  <div className="manage-rooms-panel-2"><Label>Room Status</Label><select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))} className="manage-rooms-select">{ROOM_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>
-                </div>
-                <div className="manage-rooms-panel-2"><Label>Room Description</Label><Textarea rows={3} value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} placeholder="Describe the room, layout, or included fixtures."/></div>
-                <div className="manage-rooms-grid-4">
-                  <div className="manage-rooms-card-3"><div><p className="manage-rooms-private-bathroom">Private Bathroom</p><p className="manage-rooms-private-or-en-suite-bathroom">Private or en-suite bathroom</p></div><Switch checked={form.hasPrivateBath} onCheckedChange={(checked) => setForm((current) => ({ ...current, hasPrivateBath: checked }))}/></div>
-                  <div className="manage-rooms-card-3"><div><p className="manage-rooms-air-conditioning">Air Conditioning</p><p className="manage-rooms-room-has-ac-installed">Room has AC installed</p></div><Switch checked={form.hasAC} onCheckedChange={(checked) => setForm((current) => ({ ...current, hasAC: checked }))}/></div>
-                </div>
-                <div className="manage-rooms-panel-2"><Label>Bathroom Information</Label>{form.hasPrivateBath ? <select value={form.bathroomType} onChange={(event) => setForm((current) => ({ ...current, bathroomType: event.target.value }))} className="manage-rooms-select"><option value="en-suite">Private en-suite bathroom</option><option value="separate">Private separate bathroom</option></select> : <Input value={form.sharedBathLocation} onChange={(event) => setForm((current) => ({ ...current, sharedBathLocation: event.target.value }))} placeholder="Shared bathroom location"/>}</div>
-                <div className="manage-rooms-panel-3">
-                  <div><Label className="manage-rooms-room-images">Room Images</Label><p className="manage-rooms-text-6">Upload up to 10 JPG, PNG, or WebP images. Drag thumbnails to reorder and select a cover photo.</p></div>
-                  <MultiImageUploader images={roomImages} onImagesChange={setRoomImages} maxImages={10} maxFileSize={8} uploadProgress={uploadProgress} disabled={isSaving}/>
-                </div>
-                <div className="manage-rooms-content"><Button onClick={() => void saveRoom()} disabled={isSaving} className="manage-rooms-button">{isSaving ? "Saving..." : form.id ? "Save Room" : "Add Room"}</Button><Button variant="outline" onClick={resetForm} disabled={isSaving}>Cancel</Button></div>
-              </CardContent>
-            </Card>)}
-
-          {rooms.length === 0 ? (<div className="manage-rooms-card-4"><DoorOpen className="manage-rooms-door-open-icon-2"/><h2 className="manage-rooms-no-rooms-have-been-added-yet">No rooms have been added yet.</h2><p className="manage-rooms-text-7">Add the first room to make availability visible across your property listing.</p><Button onClick={openAddForm} className="manage-rooms-add-first-room"><Plus className="manage-rooms-plus-icon"/>Add First Room</Button></div>) : (<section className="manage-rooms-section-2">
-              {rooms.map((room) => {
-                const status = statusForRoom(room);
-                const statusOption = getStatusOption(status);
-                const roomImage = room.images?.find(Boolean);
-                const amenities = [room.hasPrivateBath ? "Private bathroom" : "Shared bathroom", room.hasAC ? "Air conditioning" : "No air conditioning"].filter(Boolean);
-                return (<article key={room.id} className="manage-rooms-article">
-                    <div className="manage-rooms-panel-4">
-                      <div className="manage-rooms-grid-5">
-                        <div className="manage-rooms-panel-5">
-                          {roomImage ? <img src={roomImage} alt={`${room.name || "Room"} interior`} className="manage-rooms-image"/> : <div className="manage-rooms-grid-6"><div><DoorOpen className="manage-rooms-door-open-icon-3"/><p className="manage-rooms-no-room-image-uploaded">No room image uploaded</p></div></div>}
-                        </div>
-                        <div className="manage-rooms-panel-6">
-                          <div className="manage-rooms-row-5">
-                            <div><h2 className="manage-rooms-heading">{room.name || "Room"}</h2><p className="manage-rooms-text-8">{room.description || "No room description provided."}</p></div>
-                            <div className="manage-rooms-row-6"><Badge className={`${statusOption.className} manage-rooms-badge-5`}>{statusOption.label}</Badge><button aria-label={`Actions for ${room.name || "room"}`} disabled={processingRoomId === room.id} onClick={() => setOpenRoomMenuId((current) => current === room.id ? null : room.id ?? null)} className="manage-rooms-button-2"><MoreVertical className="manage-rooms-more-vertical-icon"/></button>{openRoomMenuId === room.id && <div className="manage-rooms-card-5">{status !== "maintenance" && <button disabled={processingRoomId !== null} onClick={() => void changeRoomStatus(room, "maintenance")} className="manage-rooms-mark-as-under-maintenance"><Wrench className="manage-rooms-wrench-icon"/>Mark as Under Maintenance</button>}<button disabled={processingRoomId !== null} onClick={() => { openEditForm(room); setOpenRoomMenuId(null); }} className="manage-rooms-edit-room"><Edit3 className="manage-rooms-edit3-icon"/>Edit Room</button><button disabled={processingRoomId !== null} onClick={() => void removeRoom(room)} className="manage-rooms-delete-room"><Trash2 className="manage-rooms-trash2-icon"/>Delete Room</button></div>}</div>
-                          </div>
-                          <div className="manage-rooms-grid-7">
-                            <div className="manage-rooms-panel-7"><p className="manage-rooms-monthly-rent">Monthly Rent</p><p className="manage-rooms-text-9">₱{(room.price ?? 0).toLocaleString("en-PH")}</p></div>
-                            <div className="manage-rooms-panel-8"><p className="manage-rooms-capacity">Capacity</p><p className="manage-rooms-text-10"><Users className="manage-rooms-users-icon"/>{room.maxOccupants ?? 1}</p></div>
-                            <div className="manage-rooms-panel-8"><p className="manage-rooms-room-type">Room Type</p><p className="manage-rooms-text-9">{room.type || "Not provided"}</p></div>
-                            <div className="manage-rooms-panel-8"><p className="manage-rooms-room-size">Room Size</p><p className="manage-rooms-text-9">{room.sqft ? `${room.sqft.toLocaleString("en-PH")} sq ft` : "Not provided"}</p></div>
-                          </div>
-                          <div className="manage-rooms-row-7">{amenities.map((amenity) => <span key={amenity} className="manage-rooms-card-6">{amenity.includes("bathroom") ? <Bath className="manage-rooms-bath-icon"/> : <Wind className="manage-rooms-wind-icon"/>}{amenity}</span>)}</div>
-                        </div>
-                      </div>
-
-                      <div className="manage-rooms-grid-8">
-                        <Button variant="outline" disabled={processingRoomId !== null} onClick={() => void changeRoomStatus(room, status === "available" ? "occupied" : "available")} className="manage-rooms-button-3">{processingRoomId === room.id ? "Updating..." : status === "available" ? <><Users className="manage-rooms-users-icon-2"/>Mark as Occupied</> : <><CheckCircle2 className="manage-rooms-check-circle2-icon"/>Mark as Available</>}</Button>
-                        <Button variant="outline" disabled={processingRoomId !== null} onClick={() => openEditForm(room)} className="manage-rooms-edit-room-2"><Edit3 className="manage-rooms-edit3-icon-2"/>Edit Room</Button>
-                        <Button variant="outline" disabled={processingRoomId !== null} onClick={() => void removeRoom(room)} className="manage-rooms-delete-room-2"><Trash2 className="manage-rooms-trash2-icon-2"/>Delete Room</Button>
-                      </div>
-                    </div>
-                    <div className="manage-rooms-grid-9">
-                      {[{ label: "Created", value: formatDate(room.createdAt), icon: CalendarDays }, { label: "Created By", value: "Not recorded", icon: Users }, { label: "Last Updated", value: "Not recorded", icon: TrendingUp }, { label: "Room ID", value: room.id || "Not recorded", icon: Tag }].map(({ label, value, icon: Icon }) => <div key={label} className="manage-rooms-panel-9"><p className="manage-rooms-text-11"><Icon className="manage-rooms-icon-icon-2"/>{label}</p><p className="manage-rooms-text-12" title={value}>{value}</p></div>)}
-                    </div>
-                  </article>);
-            })}
-            </section>)}
-
-          <section className="manage-rooms-section-3"><span className="manage-rooms-grid-10"><Wrench className="manage-rooms-wrench-icon-2"/></span><div><h2 className="manage-rooms-room-status-guide">Room Status Guide</h2><p className="manage-rooms-text-13">Keep room availability updated so tenants always see accurate room information. Under Maintenance rooms remain unavailable until you mark them available.</p></div></section>
+      <section className="manage-rooms-table-card">
+        <div className="manage-rooms-table-heading">
+          <div>
+            <h2>Rooms ({roomCounts.total})</h2>
+            <p>Manage the individual rental units inside this apartment building.</p>
+          </div>
+          <Button onClick={() => navigate(`/landlord/properties/${id}/rooms/new/edit`)} className="manage-rooms-table-add-room">
+            <Plus /> Add Room
+          </Button>
         </div>
-      </main>
+
+        {rooms.length === 0 ? (<div className="manage-rooms-table-empty">
+            <DoorOpen />
+            <h3>No rooms have been added yet.</h3>
+            <p>Add the first room to make availability visible across your property listing.</p>
+            <Button onClick={() => navigate(`/landlord/properties/${id}/rooms/new/edit`)} className="manage-rooms-table-add-room"><Plus /> Add First Room</Button>
+          </div>) : (<>
+            <div className="manage-rooms-table-scroll">
+              <table className="manage-rooms-table">
+                <thead><tr><th>Apartment Unit</th><th>Room Type</th><th>Monthly Rent</th><th>Capacity</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>{visibleRooms.map((room) => (<tr key={room.id}>
+                    <th scope="row">{room.name || "Unnamed room"}</th>
+                    <td><span className="manage-rooms-table-type">{room.type || "Room"}</span></td>
+                    <td>{formatRent(room.price)}</td>
+                    <td>{Number(room.maxOccupants || 1)} {Number(room.maxOccupants || 1) === 1 ? "pax" : "pax"}</td>
+                    <td><select aria-label={`Update status for ${room.name || "room"}`} value={statusForRoom(room)} disabled={processingRoomId === room.id} onChange={(event) => void changeRoomStatus(room, event.target.value)} className={`manage-rooms-table-status manage-rooms-table-status--${statusForRoom(room)}`}><option value="available">Available</option><option value="occupied">Occupied</option><option value="maintenance">Under Maintenance</option></select></td>
+                    <td><div className="manage-rooms-table-actions"><button type="button" onClick={() => navigate(`/landlord/properties/${id}/rooms/${room.id}/edit`)} disabled={processingRoomId !== null}><Pencil /> Edit</button><button type="button" onClick={() => void removeRoom(room)} disabled={processingRoomId !== null} className="manage-rooms-table-delete">Delete</button></div></td>
+                  </tr>))}</tbody>
+              </table>
+            </div>
+            <div className="manage-rooms-table-pagination">
+              <button type="button" aria-label="Previous page" disabled={safePage === 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}><ChevronLeft /></button>
+              <span>Page {safePage} of {totalPages}</span>
+              <button type="button" aria-label="Next page" disabled={safePage === totalPages} onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}><ChevronRight /></button>
+            </div>
+          </>)}
+      </section>
+    </main>);
+    return (<div className="landlord-manage-rooms">
+      <aside className="app-shell-fixed-sidebar">
+        <LandlordSidebar
+          user={user}
+          activeSection="overview"
+          onSectionChange={(section) => navigate(section === "overview" ? "/dashboard" : `/dashboard?section=${section}`)}
+          onLogout={handleLogout}
+        />
+      </aside>
+
+      {sidebarOpen ? (<div className="app-sidebar-overlay" role="presentation">
+          <button type="button" className="manage-rooms-close-navigation" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>
+          <aside className="app-sidebar-drawer">
+            <button type="button" className="app-sidebar-close" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}><X className="manage-rooms-x-icon"/></button>
+            <LandlordSidebar
+              user={user}
+              activeSection="overview"
+              onSectionChange={(section) => navigate(section === "overview" ? "/dashboard" : `/dashboard?section=${section}`)}
+              onClose={() => setSidebarOpen(false)}
+              onLogout={handleLogout}
+            />
+          </aside>
+        </div>) : null}
+
+      <div className="app-shell-page-main">
+        <button type="button" className="app-sidebar-trigger" aria-label="Open navigation" onClick={() => setSidebarOpen(true)}><Menu className="manage-rooms-menu-icon"/></button>
+        <div className="app-shell-content app-shell-content-mobile-nav">
+          {page}
+        </div>
+      </div>
     </div>);
 }

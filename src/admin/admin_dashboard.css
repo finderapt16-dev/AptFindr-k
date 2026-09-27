@@ -1,75 +1,17 @@
-/* Admin portal sidebar: intentionally mirrors the landlord portal palette. */
-.admin-portal-shell .app-sidebar {
-  background: #fffefc !important;
-  color: #302820 !important;
-  border-color: #e8ded1 !important;
-  box-shadow: none !important;
+/* Admin styles stay scoped to the portal so other role shells are unaffected. */
+.admin-portal-shell .app-sidebar-trigger {
+  background: #0ea5e9 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 14px rgba(14, 165, 233, 0.18) !important;
 }
-.admin-portal-shell .app-sidebar::before { display: none !important; }
-.admin-portal-shell .app-sidebar::-webkit-scrollbar-thumb { background: rgba(139, 115, 91, .24) !important; }
-.admin-portal-shell .app-sidebar-brand { box-shadow: none !important; }
-.admin-portal-shell .app-sidebar-brand svg { color: #8b735b !important; background: transparent !important; box-shadow: none !important; }
-.admin-portal-shell .app-sidebar-brand strong { color: #302820 !important; -webkit-text-fill-color: #302820 !important; }
-.admin-portal-shell .app-sidebar-brand small { color: #756a60 !important; -webkit-text-fill-color: #756a60 !important; }
-.admin-portal-shell .app-sidebar-profile {
-  background: #faf8f5 !important;
-  border-color: #e8ded1 !important;
-  box-shadow: none !important;
-}
-.admin-portal-shell .app-sidebar-profile:hover { transform: none !important; border-color: #e8ded1 !important; box-shadow: none !important; }
-.admin-portal-shell .app-sidebar-profile > div:first-child { background: #8b735b !important; color: #fff !important; box-shadow: none !important; }
-.admin-portal-shell .app-sidebar-profile p:first-child { color: #302820 !important; }
-.admin-portal-shell .app-sidebar-profile p:nth-child(2),
-.admin-portal-shell .app-sidebar-profile > svg { color: #756a60 !important; }
-.admin-portal-shell .app-sidebar nav { border-color: #e8ded1 !important; }
-.admin-portal-shell .app-sidebar nav > p { color: #756a60 !important; }
-.admin-portal-shell .app-sidebar nav > p::after { background: #8b735b !important; opacity: .45 !important; }
-.admin-portal-shell .app-sidebar nav button,
-.admin-portal-shell .app-sidebar-nav-item {
-  color: #302820 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  transform: none !important;
-}
-.admin-portal-shell .app-sidebar nav button:hover,
-.admin-portal-shell .app-sidebar-nav-item:hover { background: #faf8f5 !important; color: #8b735b !important; }
-.admin-portal-shell .app-sidebar nav button[aria-current="page"],
-.admin-portal-shell .app-sidebar-nav-item[aria-current="page"] { background: #f3efea !important; color: #8b735b !important; }
-.admin-portal-shell .app-sidebar-nav-item[aria-current="page"]::before {
-  background: #8b735b !important;
-  box-shadow: none !important;
-}
-.admin-portal-shell .app-sidebar nav button > svg:first-child,
-.admin-portal-shell .app-sidebar-nav-item > svg:first-child {
-  color: #756a60 !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-}
-.admin-portal-shell .app-sidebar nav button:hover > svg:first-child,
-.admin-portal-shell .app-sidebar nav button[aria-current="page"] > svg:first-child { color: #8b735b !important; }
-.admin-portal-shell .app-sidebar-badge {
-  background: #8b735b !important;
-  border-color: #8b735b !important;
-  color: #fff !important;
-  box-shadow: none !important;
-  animation: none !important;
-}
-.admin-portal-shell .app-sidebar-logout { background: #fff !important; border: 1px solid #e8ded1 !important; color: #756a60 !important; box-shadow: none !important; }
-.admin-portal-shell .app-sidebar-logout svg { color: #756a60 !important; }
-.admin-portal-shell .app-sidebar-logout:hover { background: #fff5f5 !important; border-color: #fee2e2 !important; color: #9f4b4b !important; }
-.admin-portal-shell .app-sidebar-logout:hover svg { color: #9f4b4b !important; }
-.admin-portal-shell .app-sidebar-close { background: #faf8f5 !important; color: #756a60 !important; border-color: #e8ded1 !important; }
-.admin-portal-shell .app-sidebar-trigger { background: #8b735b !important; color: #fff !important; box-shadow: 0 8px 18px rgba(48, 40, 32, .18) !important; }
 .admin-apartment-detail .app-sidebar-trigger {
-  border-color: rgba(255, 255, 255, .55) !important;
-  background: #8b735b !important;
+  border-color: #7dd3fc !important;
+  background: #0ea5e9 !important;
   color: #fff !important;
-  box-shadow: 0 8px 18px rgba(48, 40, 32, .18) !important;
+  box-shadow: 0 6px 14px rgba(14, 165, 233, .18) !important;
 }
 .admin-apartment-detail .app-sidebar-trigger:hover {
-  background: #756a60 !important;
+  background: #0284c7 !important;
 }
 .landlord-shell .app-sidebar-trigger {
   border-color: #16a5e1 !important;
@@ -81,5 +23,208 @@
 .landlord-shell .app-sidebar-trigger:hover {
   background: #0e93ca !important;
 }
-.landlord-home .landlord-panel { box-shadow: 0 10px 28px rgba(76, 60, 45, .045); }
 
+/* Compact admin Figma shell. Scoped so tenant and landlord navigation retain
+   their existing visual systems. */
+.admin-portal-shell .app-shell-main {
+  background: #f8fafc !important;
+}
+
+.admin-portal-shell.app-shell {
+  background: #f8fafc !important;
+}
+
+.admin-portal-shell .app-shell-sidebar {
+  width: 175px !important;
+  min-width: 175px !important;
+}
+
+.admin-portal-shell .app-shell-main::before {
+  background: #e5e7eb;
+}
+
+.admin-portal-shell .app-sidebar.admin-figma-sidebar {
+  --sidebar-primary: #0ea5e9;
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 100vh;
+  flex-direction: column;
+  overflow: visible;
+  border: 0 !important;
+  border-right: 1px solid #e5e7eb !important;
+  border-left: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  color: #334155 !important;
+}
+
+.admin-portal-shell .app-sidebar.admin-figma-sidebar::before {
+  display: none;
+}
+
+.admin-figma-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 16px 13px 18px;
+}
+
+.admin-figma-sidebar-brand img {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.admin-figma-sidebar-brand span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.admin-portal-shell .admin-figma-sidebar-brand strong {
+  color: #111827 !important;
+  font-size: 9px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.admin-portal-shell .admin-figma-sidebar-brand small {
+  color: #94a3b8 !important;
+  font-size: 5.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.admin-figma-sidebar-group {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0 12px 14px;
+  border: 0 !important;
+}
+
+.admin-figma-sidebar-group > p {
+  margin: 0 0 2px;
+  padding: 0 2px;
+  color: #94a3b8 !important;
+  font-size: 8px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase;
+}
+
+.admin-portal-shell .admin-figma-sidebar-group > p::after {
+  display: none;
+}
+
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item {
+  display: flex;
+  min-height: 31px !important;
+  align-items: center;
+  gap: 7px !important;
+  padding: 6px 9px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 4px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  color: #475569 !important;
+  font-size: 9px;
+  line-height: 1.2;
+  font-weight: 600;
+  text-align: left;
+  transform: none !important;
+}
+
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item::before {
+  display: none !important;
+}
+
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item > svg {
+  width: 12px !important;
+  height: 12px !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #64748b !important;
+  transform: none !important;
+}
+
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item:hover,
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item.is-active {
+  border-color: #bae6fd !important;
+  background: #f0f9ff !important;
+  color: #0284c7 !important;
+}
+
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item:hover > svg,
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item.is-active > svg {
+  color: #0284c7 !important;
+}
+
+.admin-figma-sidebar-item small {
+  display: inline-grid;
+  min-width: 14px;
+  height: 14px;
+  margin-left: auto;
+  place-items: center;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0284c7;
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.admin-figma-sidebar-logout {
+  margin-top: auto;
+  padding: 0 12px 16px;
+}
+
+.admin-portal-shell .admin-figma-sidebar-logout button {
+  display: flex;
+  width: 100%;
+  min-height: 31px;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #475569;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-figma-sidebar-logout svg {
+  width: 12px;
+  height: 12px;
+}
+
+.admin-portal-shell .admin-figma-sidebar-logout button:hover {
+  border-color: #fecaca;
+  background: #fff7f7;
+  color: #dc2626;
+}
+
+@media (max-width: 760px) {
+  .admin-portal-shell .app-sidebar.admin-figma-sidebar {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-figma-sidebar-brand { padding-top: 22px; }
+  .admin-figma-sidebar-group > p { font-size: 9px; }
+  .admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item,
+  .admin-portal-shell .admin-figma-sidebar-logout button { min-height: 34px; font-size: 11px; }
+  .admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item > svg,
+  .admin-figma-sidebar-logout svg { width: 15px !important; height: 15px !important; }
+}
+.landlord-home .landlord-panel { box-shadow: 0 10px 28px rgba(76, 60, 45, .045); }

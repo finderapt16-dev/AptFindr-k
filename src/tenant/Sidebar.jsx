@@ -4,6 +4,7 @@ import { LogoutConfirmation } from "@/components/LogoutConfirmation";
 import { AppLogo } from "@/components/AppLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/tenant/useFavorites";
+
 const NAV_MAIN = [
     {
         icon: Search,
@@ -60,7 +61,7 @@ export function Sidebar({ active = "apartments", unreadCount = 0, tenantNotifica
             return;
         }
         logout?.();
-        navigate("/");
+        navigate("/", { replace: true });
     };
     const openSection = (section) => {
         if (mode === "dashboard" && setActiveSection) {

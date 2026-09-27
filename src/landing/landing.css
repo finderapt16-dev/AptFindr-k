@@ -1221,9 +1221,16 @@
   }
 }
 
-.landing-preview-verified {
-  backdrop-filter: blur(8px);
-  box-shadow: 0 10px 15px -3px #0000001a, 0 4px 6px -4px #0000001a;
+.landing-preview-available {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #DCFCE7;
+    color: #15803D;
+    font-size: 11px;
+    font-weight: 600;
 }
 
 .landing-preview-pet {
@@ -1313,32 +1320,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-}
-
-.landing-preview-details {
-  color: #666666;
-  border-color: #e8eef3;
-  border-top-style: solid;
-  border-top-width: 1px;
-  align-items: center;
-  gap: 1rem;
-  margin-top: auto;
-  padding-top: .75rem;
-  font-size: .875rem;
-  line-height: 1.42857;
-  display: flex;
-}
-
-.landing-preview-detail {
-  align-items: center;
-  gap: .25rem;
-  display: flex;
-}
-
-.landing-preview-detail-icon {
-  color: #666666;
-  width: 1rem;
-  height: 1rem;
 }
 
 .landing-preview-area {
@@ -1637,4 +1618,497 @@
 }
 .location-highlight {
   color: #0EA5E9;
+}
+
+
+/* =========================================================
+   LANDING FLOATING LOGIN
+========================================================= */
+
+.landing-login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background: rgba(15, 23, 42, 0.42);
+
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+
+.landing-login-modal {
+    position: relative;
+
+    box-sizing: border-box;
+
+    width: 100%;
+    max-width: 430px;
+
+    padding: 32px;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+
+    box-shadow:
+        0 24px 70px
+        rgba(15, 23, 42, 0.22);
+
+    animation:
+        landingLoginModalIn
+        160ms ease-out;
+}
+
+.landing-signup-modal {
+    width: min(550px, calc(100vw - 48px));
+    height: min(535px, calc(100dvh - 48px));
+    min-height: 0;
+    max-width: none;
+    max-height: calc(100dvh - 48px);
+    padding: 32px 75px;
+    border-color: #4b5563;
+    border-radius: 12px;
+    overflow-y: auto;
+}
+
+.landing-signup-modal .landing-login-close {
+    top: 10px;
+    right: 10px;
+}
+
+.landing-signup-modal .signup-form-shell {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+}
+
+.landing-signup-modal .signup-form-heading {
+    margin-bottom: 3.25rem;
+}
+
+.landing-signup-modal .signup-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.landing-signup-modal .signup-description {
+    margin-top: 1rem;
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+.landing-signup-modal .signup-account-type-options {
+    gap: 1.75rem;
+}
+
+.landing-signup-modal .signup-account-type-option {
+    box-sizing: border-box;
+    min-height: 122px;
+    padding: 1.25rem 2.15rem;
+    gap: 2rem;
+    border-color: #64748b;
+    border-radius: 0.55rem;
+}
+
+.landing-signup-modal .signup-account-type-icon {
+    width: 3rem;
+    height: 3rem;
+}
+
+.landing-signup-modal .signup-account-type-content strong {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.landing-signup-modal .signup-account-type-content span {
+    margin-top: 0.3rem;
+    color: #71717a;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.landing-signup-modal .signup-account-type-chevron {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Validation messages can make the tenant form taller than the viewport.
+   Keep the complete form reachable instead of clipping its Google option. */
+.landing-signup-modal:has(.signup-page--tenant),
+.landing-signup-modal:has(.signup-page--landlord) {
+    height: min(700px, calc(100dvh - 24px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.landing-login-overlay:has(.landing-signup-modal) {
+    padding: 12px;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-form-heading,
+.landing-signup-modal:has(.signup-page--landlord) .signup-form-heading {
+    margin-bottom: 0.75rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-title,
+.landing-signup-modal:has(.signup-page--landlord) .signup-title {
+    font-size: 1.5rem !important;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-description,
+.landing-signup-modal:has(.signup-page--landlord) .signup-description {
+    margin-top: 0.4rem;
+    font-size: 0.875rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-change-role {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-form {
+    gap: 0.75rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-tenant-simple-form {
+    gap: 0.625rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-account-field {
+    gap: 0.25rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .auth-field > :not(:last-child) {
+    margin-bottom: 0.25rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .auth-field-label {
+    font-size: 0.8125rem;
+    line-height: 1rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .auth-field-control {
+    height: 2.625rem;
+    border-radius: 0.625rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-tenant-password-help,
+.landing-signup-modal:has(.signup-page--tenant) .signup-agreement {
+    padding: 0.75rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-tenant-password-help {
+    gap: 0.25rem;
+}
+
+.landing-signup-modal:has(.signup-page--tenant) .signup-agreement {
+    font-size: 0.6875rem;
+    line-height: 1.3;
+}
+
+@media (max-width: 600px) {
+    .landing-signup-modal {
+        height: auto;
+        max-height: calc(100dvh - 32px);
+        min-height: 0;
+        padding: 2.5rem 1.5rem;
+    }
+
+    .landing-signup-modal .signup-account-type-option {
+        padding-inline: 1.25rem;
+        gap: 1rem;
+    }
+}
+
+
+
+@keyframes landingLoginModalIn {
+    from {
+        opacity: 0;
+        transform:
+            translateY(10px)
+            scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+/* CLOSE BUTTON */
+
+.landing-login-close {
+    position: absolute;
+
+    top: 16px;
+    right: 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    padding: 0;
+
+    color: #64748b;
+
+    background: transparent;
+
+    border: 0;
+    border-radius: 999px;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+
+.landing-login-close:hover {
+    color: #111827;
+
+    background: #f1f5f9;
+}
+
+
+/* HEADER */
+
+.landing-login-modal-header {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    padding-right: 36px;
+    margin-bottom: 26px;
+}
+
+
+.landing-login-logo {
+    flex-shrink: 0;
+
+    width: 44px;
+    height: 44px;
+}
+
+
+.landing-login-title {
+    margin: 0;
+
+    color: #111827;
+
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+
+.landing-login-description {
+    margin: 6px 0 0;
+
+    color: #64748b;
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* ERROR */
+
+.landing-login-error {
+    margin-bottom: 18px;
+}
+
+
+.landing-login-error-icon {
+    width: 18px;
+    height: 18px;
+}
+
+
+/* FORM */
+
+.landing-login-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+
+.landing-login-password {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+.landing-password-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 4px;
+
+    color: #64748b;
+
+    background: transparent;
+
+    border: 0;
+
+    cursor: pointer;
+}
+
+
+.landing-forgot-password {
+    align-self: flex-end;
+
+    padding: 0;
+
+    color: #0ea5e9;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    background: transparent;
+
+    border: 0;
+
+    cursor: pointer;
+}
+
+
+.landing-forgot-password:hover {
+    text-decoration: underline;
+}
+
+
+/* SUBMIT */
+
+.landing-login-submit {
+    width: 100%;
+    height: 46px;
+
+    margin-top: 2px;
+
+    border-radius: 10px;
+
+    background: #0ea5e9;
+}
+
+
+.landing-login-submit:hover {
+    background: #0284c7;
+}
+
+
+.landing-login-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+
+/* CREATE ACCOUNT */
+
+.landing-login-signup {
+    margin: 22px 0 0;
+
+    color: #64748b;
+
+    font-size: 14px;
+
+    text-align: center;
+}
+
+
+.landing-login-signup button {
+    padding: 0;
+
+    color: #0ea5e9;
+
+    font: inherit;
+    font-weight: 600;
+
+    background: transparent;
+
+    border: 0;
+
+    cursor: pointer;
+}
+
+
+.landing-login-signup button:hover {
+    text-decoration: underline;
+}
+
+
+/* MOBILE LOGIN LINK */
+
+.landing-mobile-login-button {
+    width: 100%;
+
+    text-align: left;
+
+    background: transparent;
+    border: 0;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 640px) {
+
+    .landing-login-overlay {
+        align-items: flex-end;
+
+        padding: 12px;
+    }
+
+
+    .landing-login-modal {
+        max-width: none;
+
+        padding:
+            28px
+            22px
+            24px;
+
+        border-radius:
+            18px
+            18px
+            14px
+            14px;
+    }
+
+
+    .landing-login-title {
+        font-size: 21px;
+    }
+
+
+    .landing-login-description {
+        font-size: 13px;
+    }
+
 }

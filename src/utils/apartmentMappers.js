@@ -12,6 +12,9 @@ export function apartmentToFormValues(apartment) {
         && !Array.isArray(apartment.features.verification)
         ? Object.fromEntries(Object.entries(apartment.features.verification).filter((entry) => typeof entry[1] === 'string'))
         : {};
+    const featureMetadata = apartment.features && !Array.isArray(apartment.features)
+        ? Object.fromEntries(Object.entries(apartment.features).filter(([key]) => !['availableDate', 'customFeatures', 'verification'].includes(key)))
+        : {};
     return {
         title: apartment.title,
         price: String(apartment.price),
@@ -34,6 +37,7 @@ export function apartmentToFormValues(apartment) {
         utilityItems: Array.isArray(apartment.utilities) ? apartment.utilities : [],
         customFeatures,
         verification,
+        featureMetadata,
         lat: String(apartment.lat),
         lng: String(apartment.lng),
         isPublished: apartment.isPublished ?? true,

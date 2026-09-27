@@ -1,4 +1,3 @@
-import { AdminAnalyticsOverview } from "@/admin/AdminAnalyticsOverview";
 import { getAdminListingState, getLowestRoomRent } from "@/admin/adminListingState";
 import { clearAdminNavigationMemory, getAdminModuleLocation, getAdminModulePath, rememberAdminModuleLocation } from "@/admin/adminNavigationMemory";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, } from "@/components/ui/alert-dialog";
@@ -17,6 +16,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { AdminApartments } from './AdminApartments';
 import { AdminAppeals } from './AdminAppeals';
+import { AdminLandlordVerification } from './AdminLandlordVerification';
 import { activityTimestamp, ArchiveEmpty, canPublishForLandlord, formatOptionalDate, getLandlordVerificationStatus, isAdminModule, NOTICE_TYPES, NotificationEmpty, OverviewEmpty, SectionHeading, SettingsField, SettingsSectionTitle, text, toAdminProfileState, toEvidenceItem, VIOLATION_TYPES } from './adminDashboardHelpers';
 import { AdminReports } from './AdminReports';
 import { AdminSidebar } from './AdminSidebar';
@@ -24,12 +24,15 @@ export function AdminDashboard() {
     const { user, verifyLandlord, updateUser, refreshUsers, logout } = useAuth();
     const navigate = useNavigate();
     const routeLocation = useLocation();
-    const portalBasePath = "/dashboard";
+    const portalBasePath = routeLocation.pathname === "/admin" ? "/admin" : "/dashboard";
     const apartmentDetailBasePath = "/admin/apartment";
     const [searchParams] = useSearchParams();
-    const requestedSection = searchParams.get("section") ?? "overview";
+    const requestedSectionValue = searchParams.get("section");
+    const requestedSection = !requestedSectionValue || requestedSectionValue === "overview"
+        ? "landlords"
+        : requestedSectionValue;
     const isAvailableSection = (value) => isAdminModule(value);
-    const [activeSection, setActiveSection] = useState(() => isAvailableSection(requestedSection) ? requestedSection : "overview");
+    const [activeSection, setActiveSection] = useState(() => isAvailableSection(requestedSection) ? requestedSection : "landlords");
     useEffect(() => {
         if (isAvailableSection(requestedSection))
             setActiveSection(requestedSection);
@@ -913,7 +916,7 @@ export function AdminDashboard() {
             }
         });
     };
-    const openViolationModal = (mode, landlordId, landlordName, apartmentTitle, reportId, apartmentId, sourceModule = isAdminModule(activeSection) ? activeSection : "overview") => {
+    const openViolationModal = (mode, landlordId, landlordName, apartmentTitle, reportId, apartmentId, sourceModule = isAdminModule(activeSection) ? activeSection : "landlords") => {
         setVType(VIOLATION_TYPES[0]);
         setNType(NOTICE_TYPES[0]);
         setVMessage("");
@@ -1026,7 +1029,7 @@ export function AdminDashboard() {
     const handleLogout = () => { if (user?.id)
         clearAdminNavigationMemory(user.id); logout?.(); navigate("/"); };
     // ── Sidebar ───────────────────────────────────────────────────────────────
-    const PortalSidebarContent = () => (<AdminSidebar activeSection={activeSection} user={user} pendingReports={pendingReports} activeAppealsCount={activeAppealsCount} pendingCount={pendingCount} unreadNotifsCount={unreadNotifsCount} navigateToAdminModule={navigateToAdminModule} handleLogout={handleLogout}/>);
+    const PortalSidebarContent = () => (<AdminSidebar activeSection={activeSection} pendingReports={pendingReports} activeAppealsCount={activeAppealsCount} unreadNotifsCount={unreadNotifsCount} navigateToAdminModule={navigateToAdminModule} handleLogout={handleLogout}/>);
     // ── Section: Notifications ────────────────────────────────────────────────
     const renderOverview = () => {
         const pendingAppealCount = appeals.filter((appeal) => ["pending", "under_review", "needs_information"].includes(String(appeal.status ?? "").toLowerCase())).length;
@@ -1287,7 +1290,7 @@ export function AdminDashboard() {
       </div>);
     };
     // ── Section: Apartments ───────────────────────────────────────────────────
-    const renderLandlords = () => {
+    const renderLegacyLandlords = () => {
         const normalizedSearch = landlordSearch.trim().toLowerCase();
         const visibleLandlords = landlords
             .filter((landlord) => {
@@ -1409,6 +1412,7 @@ export function AdminDashboard() {
         </section>
       </div>);
     };
+    const renderLandlords = () => (<AdminLandlordVerification landlords={landlords} onViewVerification={setSelectedLandlord}/>);
     const renderApartments = () => (<AdminApartments allApartments={allApartments} getApartmentReportCount={getApartmentReportCount} setActiveSection={setActiveSection} unreadNotifsCount={unreadNotifsCount} aptSearch={aptSearch} setAptSearch={setAptSearch} aptStatusFilter={aptStatusFilter} setAptStatusFilter={setAptStatusFilter} aptPropertyTypeFilter={aptPropertyTypeFilter} setAptPropertyTypeFilter={setAptPropertyTypeFilter} aptSort={aptSort} setAptSort={setAptSort} filteredApts={filteredApts} aptFilter={aptFilter} getLandlordForApt={getLandlordForApt} setSelectedApt={setSelectedApt} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} setAptFilter={setAptFilter} violations={violations} openViolationModal={openViolationModal} selectedApt={selectedApt} reports={reports} setSelectedLandlord={setSelectedLandlord} resolveReport={resolveReport} dismissReport={dismissReport} handleApproveAndPublishApartment={handleApproveAndPublishApartment} publishingApartmentId={publishingApartmentId}/>);
     // ── Section: Reports ──────────────────────────────────────────────────────
     const renderReports = () => (<AdminReports reports={reports} reportArchiveView={reportArchiveView} archivedReports={archivedReports} reportSearch={reportSearch} allApartments={allApartments} reportStatusFilter={reportStatusFilter} reportTypeFilter={reportTypeFilter} reportSort={reportSort} selectedReport={selectedReport} selectedReportDetails={selectedReportDetails} setSelectedReport={setSelectedReport} setActiveSection={setActiveSection} unreadNotifsCount={unreadNotifsCount} setViewingUserProfile={setViewingUserProfile} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} selectedReportEvidence={selectedReportEvidence} resolveReport={resolveReport} setDismissReportModal={setDismissReportModal} setCaseAction={setCaseAction} setReportSearch={setReportSearch} setReportStatusFilter={setReportStatusFilter} setReportTypeFilter={setReportTypeFilter} setReportSort={setReportSort} setReportArchiveView={setReportArchiveView} dismissReportModal={dismissReportModal} dismissReport={dismissReport} viewingUserProfile={viewingUserProfile}/>);
@@ -1682,7 +1686,7 @@ export function AdminDashboard() {
       </div>);
     };
     const sectionMap = {
-        overview: renderOverview,
+        overview: renderLandlords,
         notifications: renderNotifications,
         landlords: renderLandlords,
         apartments: renderApartments,
@@ -1713,7 +1717,7 @@ export function AdminDashboard() {
             ? renderAdministrativeAction()
             : activeSection === "landlords" && selectedLandlord && selectedLandlordDetails
                 ? renderLandlordDetails()
-                : (sectionMap[activeSection] ?? renderOverview)()}
+                : (sectionMap[activeSection] ?? renderLandlords)()}
           </main>
         </div>
       </div>

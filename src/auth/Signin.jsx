@@ -1,210 +1,708 @@
 import { AuthField } from "./AuthField";
-import { AppLogo } from "@/components/AppLogo";
-import { ImageWithFallback } from "@/components/ImageWithFallback";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+
+import {
+    Alert,
+    AlertDescription,
+} from "@/components/ui/alert";
+
 import { Button } from "@/components/ui/button";
+
 import { useAuth } from "@/contexts/AuthContext";
-import { isTenantRole, resendSignupVerification } from "@/services/authService";
-import { AlertCircle, BadgeCheck, CheckCircle2, Eye, EyeOff, Home, Key, UserRound, MapPin, ShieldCheck, } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import {
+    isTenantRole,
+    loginWithGoogle,
+    resendSignupVerification,
+} from "@/services/authService";
+
+import {
+    AlertCircle,
+    CheckCircle2,
+    Eye,
+    EyeOff,
+    Key,
+    UserRound,
+} from "lucide-react";
+
+import {
+    useEffect,
+    useState,
+} from "react";
+
+import {
+    useLocation,
+    useNavigate,
+} from "react-router-dom";
+
 import "./signin.css";
-export function Login() {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { login } = useAuth();
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [showPass, setShowPass] = useState(false);
-    const [error, setError] = useState("");
-    const [successMessage, setSuccessMessage] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [verificationEmail, setVerificationEmail] = useState("");
-    const [resending, setResending] = useState(false);
-    const [resendCooldown, setResendCooldown] = useState(0);
-    const requestedRedirect = new URLSearchParams(location.search).get("redirect");
-    const redirectTo = requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//")
-        ? requestedRedirect
-        : "/dashboard";
-    const signupPath = requestedRedirect
-        ? `/signup?redirect=${encodeURIComponent(redirectTo)}`
-        : "/signup";
+
+
+export function Login({
+    onSuccess,
+    onCreateAccount,
+    onForgotPassword,
+}) {
+    const navigate =
+        useNavigate();
+
+    const location =
+        useLocation();
+
+    const {
+        login,
+    } = useAuth();
+
+
+    /* =====================================================
+       FORM STATE
+    ===================================================== */
+
+    const [
+        username,
+        setUsername,
+    ] = useState("");
+
+    const [
+        password,
+        setPassword,
+    ] = useState("");
+
+    const [
+        showPass,
+        setShowPass,
+    ] = useState(false);
+
+    const [
+        error,
+        setError,
+    ] = useState("");
+
+    const [
+        successMessage,
+        setSuccessMessage,
+    ] = useState("");
+
+    const [
+        loading,
+        setLoading,
+    ] = useState(false);
+
+
+    /* =====================================================
+       EMAIL VERIFICATION
+    ===================================================== */
+
+    const [
+        verificationEmail,
+        setVerificationEmail,
+    ] = useState("");
+
+    const [
+        resending,
+        setResending,
+    ] = useState(false);
+
+    const [
+        resendCooldown,
+        setResendCooldown,
+    ] = useState(0);
+
+
+    /* =====================================================
+       REDIRECT
+    ===================================================== */
+
+    const requestedRedirect =
+        new URLSearchParams(
+            location.search
+        ).get("redirect");
+
+    const hasRequestedRedirect =
+        requestedRedirect?.startsWith(
+            "/"
+        ) &&
+        !requestedRedirect.startsWith(
+            "//"
+        );
+
+    const redirectTo =
+        hasRequestedRedirect
+            ? requestedRedirect
+            : null;
+
+
+    /* =====================================================
+       RECEIVE MESSAGE FROM SIGNUP
+    ===================================================== */
+
     useEffect(() => {
-        if (location.state?.message) {
-            setSuccessMessage(location.state.message);
-            if (typeof location.state.verificationEmail === "string")
-                setVerificationEmail(location.state.verificationEmail);
-            window.history.replaceState({}, document.title);
+        if (
+            location.state?.message
+        ) {
+            setSuccessMessage(
+                location.state.message
+            );
         }
-    }, [location]);
+
+        if (
+            location.state?.error
+        ) {
+            setError(
+                location.state.error
+            );
+        }
+
+        if (
+            typeof location.state
+                ?.verificationEmail ===
+            "string"
+        ) {
+            setVerificationEmail(
+                location.state
+                    .verificationEmail
+            );
+        }
+    }, [location.state]);
+
+
+    /* =====================================================
+       RESEND COOLDOWN
+    ===================================================== */
+
     useEffect(() => {
-        if (resendCooldown <= 0)
+        if (
+            resendCooldown <= 0
+        ) {
             return;
-        const timer = window.setInterval(() => setResendCooldown((value) => Math.max(0, value - 1)), 1000);
-        return () => window.clearInterval(timer);
+        }
+
+        const timer =
+            window.setInterval(
+                () => {
+                    setResendCooldown(
+                        (current) =>
+                            Math.max(
+                                0,
+                                current - 1
+                            )
+                    );
+                },
+                1000
+            );
+
+        return () => {
+            window.clearInterval(
+                timer
+            );
+        };
     }, [resendCooldown]);
-    const resendVerification = async () => {
-        if (!verificationEmail || resending || resendCooldown > 0)
-            return;
-        setResending(true);
-        setError("");
-        try {
-            await resendSignupVerification(verificationEmail);
-            setSuccessMessage("Verification email requested. Check your inbox and spam folder.");
-            setResendCooldown(60);
-        }
-        catch (resendError) {
-            console.error("Unable to resend verification email:", resendError);
-            setError(resendError instanceof Error ? resendError.message : "Unable to resend the verification email. Please try again later.");
-        }
-        finally {
-            setResending(false);
-        }
-    };
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
-        try {
-            const result = await login({ username, password });
-            if (result.success) {
-                const hasRequestedRedirect = requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//");
-                navigate(hasRequestedRedirect ? redirectTo : result.user?.role === "admin" ? "/admin" : isTenantRole(result.user?.role) ? "/browse" : "/dashboard", { replace: true });
+
+
+    /* =====================================================
+       RESEND VERIFICATION
+    ===================================================== */
+
+    const resendVerification =
+        async () => {
+            if (
+                !verificationEmail ||
+                resending ||
+                resendCooldown > 0
+            ) {
+                return;
             }
-            else {
-                const message = result.error || "Invalid username or password.";
-                setError(message);
+
+            setResending(true);
+            setError("");
+
+            try {
+                await resendSignupVerification(
+                    verificationEmail
+                );
+
+                setSuccessMessage(
+                    "Verification email requested. Check your inbox and spam folder."
+                );
+
+                setResendCooldown(
+                    60
+                );
             }
-        }
-        catch {
-            setError("Unable to sign in. Check your connection and try again.");
-        }
-        finally {
-            setLoading(false);
-        }
-    };
-    return (<div className="auth-palette login-page">
+            catch (
+                resendError
+            ) {
+                console.error(
+                    "Unable to resend verification email:",
+                    resendError
+                );
 
-      <div className="auth-visual-panel login-visual-panel">
-        <div className="login-background">
-          <ImageWithFallback src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=960" alt="Modern apartment in La Paz" className="auth-background-image login-background-image"/>
-          <div className="auth-background-overlay login-background-overlay"/>
-        </div>
+                setError(
+                    resendError instanceof Error
+                        ? resendError.message
+                        : "Unable to resend the verification email. Please try again later."
+                );
+            }
+            finally {
+                setResending(
+                    false
+                );
+            }
+        };
 
-        <div className="login-visual-content">
-          <Link to="/" className="login-brand">
-            <AppLogo className="login-brand-logo"/>
-            <div>
-              <span className="login-brand-name">AptFindr</span>
-              <p className="login-brand-location">La Paz, Iloilo City</p>
-            </div>
-          </Link>
 
-          <div className="login-introduction">
-            <div>
-              <h2 className="login-visual-title">
-                Continue to<br />
-                <span className="login-visual-accent">
-                  AptFindr
-                </span>
-              </h2>
-              <p className="login-visual-description">
-                Sign in to browse apartments or manage your property listings.
-              </p>
-            </div>
-          </div>
+    /* =====================================================
+       LOGIN
+    ===================================================== */
 
-          <div className="auth-benefits login-benefits">
-            {[
-            { icon: BadgeCheck, text: "Review landlord verification status" },
-            { icon: ShieldCheck, text: "Check available rooms and listing details" },
-            { icon: MapPin, text: "Compare apartment locations on the map" },
-        ].map(({ icon: Icon, text }) => (<div key={text} className="login-benefit">
-                <div className="login-benefit-symbol">
-                  <Icon className="login-benefit-icon"/>
-                </div>
-                <span className="login-benefit-text">{text}</span>
-              </div>))}
-          </div>
+    const handleSubmit =
+        async (event) => {
+            event.preventDefault();
 
-        </div>
-      </div>
+            if (loading) {
+                return;
+            }
 
-      <div className="login-content">
+            setError("");
+            setLoading(true);
 
-        <div className="login-mobile-header">
-          <Link to="/" className="login-mobile-brand">
-            <AppLogo className="login-mobile-logo"/>
-            <span className="login-mobile-brand-name">AptFindr</span>
-          </Link>
-          <Link to={signupPath} className="login-signup-link">
-            Create account
-          </Link>
-        </div>
+            try {
+                const result =
+                    await login({
+                        username:
+                            username.trim(),
+                        password,
+                    });
 
-        <div className="login-form-container">
-          <div className="auth-form-shell login-form-shell">
+                if (
+                    !result.success
+                ) {
+                    setError(
+                        result.error ||
+                            "Invalid username or password."
+                    );
+
+                    return;
+                }
+
+                setPassword("");
+
+
+                /*
+                 * When used inside Landing.jsx,
+                 * Landing handles navigation.
+                 */
+                if (
+                    typeof onSuccess ===
+                    "function"
+                ) {
+                    onSuccess(
+                        result.user
+                    );
+
+                    return;
+                }
+
+
+                /*
+                 * Fallback if this component
+                 * is ever rendered directly.
+                 */
+                if (
+                    redirectTo
+                ) {
+                    navigate(
+                        redirectTo,
+                        {
+                            replace: true,
+                        }
+                    );
+
+                    return;
+                }
+
+                if (
+                    result.user?.role ===
+                    "admin"
+                ) {
+                    navigate(
+                        "/admin",
+                        {
+                            replace: true,
+                        }
+                    );
+
+                    return;
+                }
+
+                if (
+                    isTenantRole(
+                        result.user?.role
+                    )
+                ) {
+                    navigate(
+                        "/browse",
+                        {
+                            replace: true,
+                        }
+                    );
+
+                    return;
+                }
+
+                navigate(
+                    "/dashboard",
+                    {
+                        replace: true,
+                    }
+                );
+            }
+            catch (
+                loginError
+            ) {
+                console.error(
+                    "Unable to sign in:",
+                    loginError
+                );
+
+                setError(
+                    "Unable to sign in. Check your connection and try again."
+                );
+            }
+            finally {
+                setLoading(
+                    false
+                );
+            }
+        };
+
+
+    const handleGoogleLogin =
+        async () => {
+            if (loading) {
+                return;
+            }
+
+            setError("");
+            setLoading(true);
+
+            try {
+                await loginWithGoogle();
+            } catch (googleError) {
+                console.error("[AUTH] Google sign-in failed", googleError);
+                setError(
+                    googleError instanceof Error
+                        ? googleError.message
+                        : "We could not continue with Google. Please try again."
+                );
+                setLoading(false);
+            }
+        };
+
+
+    /* =====================================================
+       CREATE ACCOUNT
+    ===================================================== */
+
+    const handleCreateAccount =
+        () => {
+            if (
+                typeof onCreateAccount ===
+                "function"
+            ) {
+                onCreateAccount();
+
+                return;
+            }
+
+            navigate(
+                "/signup"
+            );
+        };
+
+
+    /* =====================================================
+       FORGOT PASSWORD
+    ===================================================== */
+
+    const handleForgotPassword =
+        () => {
+            if (
+                typeof onForgotPassword ===
+                "function"
+            ) {
+                onForgotPassword();
+
+                return;
+            }
+
+            navigate(
+                "/forgot-password"
+            );
+        };
+
+
+    /* =====================================================
+       LOGIN FORM
+    ===================================================== */
+
+    return (
+        <div className="login-form-shell">
 
             <div className="login-form-heading">
-              <h1 className="login-title">Sign in to AptFindr</h1>
+
+                <h2 className="login-title">
+                    Sign in to AptFindr
+                </h2>
+
+                <p className="login-subtitle">
+                    Enter your username and
+                    password to continue.
+                </p>
+
             </div>
 
-            <>
-              {successMessage && (<div className="login-message">
-                  <Alert className="login-success-alert">
-                    <CheckCircle2 className="login-success-icon"/>
-                    <AlertDescription className="login-success-text">{successMessage}</AlertDescription>
-                  </Alert>
-                  {verificationEmail && <button type="button" disabled={resending || resendCooldown > 0} onClick={() => void resendVerification()} className="login-resend-link">{resending ? "Sending..." : resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : "Resend Verification Email"}</button>}
-                </div>)}
-            </>
 
-            <>
-              {error && (<div className="login-message">
-                  <Alert variant="destructive" className="login-error-alert">
-                    <AlertCircle className="login-error-icon"/>
-                    <AlertDescription className="login-error-text">{error}</AlertDescription>
-                  </Alert>
-                </div>)}
-            </>
+            {/* SUCCESS */}
 
-            <form onSubmit={handleSubmit} className="login-form">
+            {successMessage && (
 
-              <div>
-                <div className="login-form-fields">
-                  <AuthField id="username" label="Username" value={username} onChange={setUsername} required icon={<UserRound className="login-icon-small"/>}/>
+                <div className="login-message">
 
-                  <div className="login-password-field">
-                    <AuthField id="password" label="Password" type={showPass ? "text" : "password"} value={password} onChange={setPassword} required icon={<Key className="login-icon-small"/>} suffix={<button type="button" onClick={() => setShowPass(!showPass)} className="auth-password-toggle login-password-toggle" aria-label={showPass ? "Hide password" : "Show password"}>
-                          {showPass ? <EyeOff className="login-icon-small"/> : <Eye className="login-icon-small"/>}
-                        </button>}/>
-                    <div className="login-recovery-link-row">
-                      <Link to="/forgot-password" className="login-recovery-link">
-                        Forgot password?
-                      </Link>
-                    </div>
-                  </div>
+                    <Alert className="login-success-alert">
+
+                        <CheckCircle2 className="login-success-icon" />
+
+                        <AlertDescription className="login-success-text">
+                            {successMessage}
+                        </AlertDescription>
+
+                    </Alert>
+
+
+                    {verificationEmail && (
+
+                        <button
+                            type="button"
+                            disabled={
+                                resending ||
+                                resendCooldown > 0
+                            }
+                            onClick={() =>
+                                void resendVerification()
+                            }
+                            className="login-resend-link"
+                        >
+                            {resending
+                                ? "Sending..."
+                                : resendCooldown > 0
+                                ? `Resend available in ${resendCooldown}s`
+                                : "Resend Verification Email"}
+                        </button>
+
+                    )}
+
                 </div>
-              </div>
 
-              <Button type="submit" disabled={loading} className="login-submit-button">
-                {loading ? (<>
-                    <div className="login-spinner"/>
-                    Signing in...
-                  </>) : (<>
-                    Sign In
-                  </>)}
-              </Button>
+            )}
 
-              <p className="login-signup-prompt">Don't have an account? <Link to={signupPath} className="login-create-link">Create account</Link></p>
 
-              <Link to="/" className="login-home-link">
-                <Home className="login-icon-small"/>
-                Back to Home
-              </Link>
+            {/* ERROR */}
+
+            {error && (
+
+                <div className="login-message">
+
+                    <Alert
+                        variant="destructive"
+                        className="login-error-alert"
+                    >
+
+                        <AlertCircle className="login-error-icon" />
+
+                        <AlertDescription className="login-error-text">
+                            {error}
+                        </AlertDescription>
+
+                    </Alert>
+
+                </div>
+
+            )}
+
+
+            {/* FORM */}
+
+            <form
+                onSubmit={
+                    handleSubmit
+                }
+                className="login-form"
+            >
+
+                <div className="login-form-fields">
+
+                    {/* USERNAME */}
+
+                    <AuthField
+                        id="login-username"
+                        label="Username"
+                        value={
+                            username
+                        }
+                        onChange={
+                            setUsername
+                        }
+                        required
+                        icon={
+                            <UserRound className="login-icon-small" />
+                        }
+                    />
+
+
+                    {/* PASSWORD */}
+
+                    <div className="login-password-field">
+
+                        <AuthField
+                            id="login-password"
+                            label="Password"
+                            type={
+                                showPass
+                                    ? "text"
+                                    : "password"
+                            }
+                            value={
+                                password
+                            }
+                            onChange={
+                                setPassword
+                            }
+                            required
+                            icon={
+                                <Key className="login-icon-small" />
+                            }
+                            suffix={
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowPass(
+                                            (current) =>
+                                                !current
+                                        )
+                                    }
+                                    className="auth-password-toggle login-password-toggle"
+                                    aria-label={
+                                        showPass
+                                            ? "Hide password"
+                                            : "Show password"
+                                    }
+                                >
+
+                                    {showPass ? (
+
+                                        <EyeOff className="login-icon-small" />
+
+                                    ) : (
+
+                                        <Eye className="login-icon-small" />
+
+                                    )}
+
+                                </button>
+
+                            }
+                        />
+
+
+                        <div className="login-recovery-link-row">
+
+                            <button
+                                type="button"
+                                onClick={
+                                    handleForgotPassword
+                                }
+                                className="login-recovery-link"
+                            >
+                                Forgot password?
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                {/* SUBMIT */}
+
+                <Button
+                    type="submit"
+                    disabled={
+                        loading
+                    }
+                    className="login-submit-button"
+                >
+
+                    {loading ? (
+                        <>
+                            <div className="login-spinner" />
+                            Signing in...
+                        </>
+                    ) : (
+                        "Sign In"
+                    )}
+
+                </Button>
+
+
+                <div className="login-social-divider" aria-hidden="true">
+                    <span />
+                    <b>or</b>
+                    <span />
+                </div>
+
+
+                <button
+                    type="button"
+                    className="login-google-button"
+                    onClick={
+                        handleGoogleLogin
+                    }
+                    disabled={
+                        loading
+                    }
+                >
+                    <svg className="login-google-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="#4285F4" d="M21.35 12.27c0-.71-.06-1.23-.19-1.77H12v3.35h5.38a4.6 4.6 0 0 1-1.99 3.02l2.81 2.18c1.64-1.51 2.57-3.74 2.57-6.78Z" />
+                        <path fill="#34A853" d="M12 21.76c2.62 0 4.82-.86 6.43-2.34l-2.81-2.18c-.78.52-1.78.83-2.98.83-2.52 0-4.66-1.7-5.42-3.99l-2.9 2.24A9.72 9.72 0 0 0 12 21.76Z" />
+                        <path fill="#FBBC05" d="M7.22 14.08A5.84 5.84 0 0 1 6.9 12c0-.72.12-1.42.32-2.08l-2.9-2.24A9.75 9.75 0 0 0 2.24 12c0 1.57.38 3.06 1.08 4.32l2.9-2.24Z" />
+                        <path fill="#EA4335" d="M12 5.93c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.82 3 14.62 2.24 12 2.24a9.72 9.72 0 0 0-7.68 5.44l2.9 2.24c.76-2.29 2.9-3.99 5.42-3.99Z" />
+                    </svg>
+                    {loading ? "Connecting to Google..." : "Continue with Google"}
+                </button>
+
+
+                {/* CREATE ACCOUNT */}
+
+                <p className="login-signup-prompt">
+
+                    Don't have an account?{" "}
+
+                    <button
+                        type="button"
+                        onClick={
+                            handleCreateAccount
+                        }
+                        className="login-create-link"
+                    >
+                        Create account
+                    </button>
+
+                </p>
+
             </form>
-          </div>
+
         </div>
-      </div>
-    </div>);
+    );
 }
