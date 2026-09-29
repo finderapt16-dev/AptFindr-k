@@ -20,6 +20,7 @@ import { isTenantVisibleApartment } from "@/utils/listingVisibility";
 import { isTenantRole } from "@/services/authService";
 
 import {
+    Home,
     Mail,
     MapPin,
     Menu,
@@ -310,6 +311,24 @@ export function Landing() {
         setLandingSearch,
     ] = useState("");
 
+    /*
+     * Progressive search: whether the
+     * suggestions panel is attached to
+     * the search field, and which
+     * suggestion the keyboard has
+     * highlighted.
+     */
+
+    const [
+        searchFocused,
+        setSearchFocused,
+    ] = useState(false);
+
+    const [
+        activeSuggestionIndex,
+        setActiveSuggestionIndex,
+    ] = useState(-1);
+
 
     const [
         scrolled,
@@ -366,12 +385,25 @@ export function Landing() {
 
 
     /* =====================================================
-       INVENTORY LOCATIONS
+       PROGRESSIVE SEARCH SUGGESTIONS
+
+       Two suggestion pools are derived from the live inventory:
+       - locations  -> barangay / place names (grouped, most
+                       populated first)
+       - apartments -> unique listing titles
+
+       While the visitor types, both pools are filtered by
+       substring. With an empty query the panel shows the most
+       popular locations instead, so the search starts being
+       useful before a single letter is typed.
     ===================================================== */
 
-    const inventoryLocations =
+    const searchSuggestions =
         useMemo(() => {
-            const grouped =
+            const locations =
+                new Map();
+
+            const apartmentsByName =
                 new Map();
 
 
@@ -387,60 +419,105 @@ export function Landing() {
                             );
 
 
-                        if (!name) {
-                            return;
+                        if (name) {
+                            const key =
+                                normalizeLocationKey(
+                                    name
+                                );
+
+                            const existing =
+                                locations.get(
+                                    key
+                                );
+
+                            locations.set(
+                                key,
+                                existing
+                                    ? {
+                                          ...existing,
+                                          count:
+                                              existing.count +
+                                              1,
+                                      }
+                                    : {
+                                          label:
+                                              name,
+                                          count:
+                                              1,
+                                      }
+                            );
                         }
 
 
-                        const key =
-                            normalizeLocationKey(
-                                name
+                        const title =
+                            apartment
+                                ?.title
+                                ?.trim();
+
+
+                        if (title) {
+                            const key =
+                                title.toLocaleLowerCase(
+                                    "en-PH"
+                                );
+
+                            const existing =
+                                apartmentsByName.get(
+                                    key
+                                );
+
+                            apartmentsByName.set(
+                                key,
+                                existing
+                                    ? {
+                                          ...existing,
+                                          count:
+                                              existing.count +
+                                              1,
+                                      }
+                                    : {
+                                          label:
+                                              title,
+                                          count:
+                                              1,
+                                      }
                             );
-
-
-                        const existing =
-                            grouped.get(
-                                key
-                            );
-
-
-                        grouped.set(
-                            key,
-                            existing
-                                ? {
-                                      ...existing,
-                                      count:
-                                          existing.count +
-                                          1,
-                                  }
-                                : {
-                                      name,
-                                      count: 1,
-                                  }
-                        );
+                        }
                     }
                 );
 
 
-            return [
-                ...grouped.values(),
-            ]
-                .sort(
+            return {
+                locations: [
+                    ...locations.values(),
+                ].sort(
                     (
                         left,
                         right
                     ) =>
                         right.count -
                             left.count ||
-                        left.name.localeCompare(
-                            right.name,
+                        left.label.localeCompare(
+                            right.label,
                             "en-PH"
                         )
-                )
-                .slice(
-                    0,
-                    6
-                );
+                ),
+
+                apartments: [
+                    ...apartmentsByName.values(),
+                ].sort(
+                    (
+                        left,
+                        right
+                    ) =>
+                        right.count -
+                            left.count ||
+                        left.label.localeCompare(
+                            right.label,
+                            "en-PH"
+                        )
+                ),
+            };
         }, [apartments]);
 
 
@@ -754,24 +831,28 @@ export function Landing() {
 
 
     /* =====================================================
-       SEARCH
+       PROGRESSIVE SEARCH
+
+       The query is carried over to the browse page as a
+       ?search= parameter. Guests hit the login modal first;
+       the destination (including the query) is preserved and
+       navigated to right after a successful login.
     ===================================================== */
 
-    const handleLandingSearch =
-        (event) => {
-            event.preventDefault();
+    const runLandingSearch =
+        (rawQuery) => {
+            const query =
+                rawQuery.trim();
 
 
             const params =
                 new URLSearchParams();
 
 
-            if (
-                landingSearch.trim()
-            ) {
+            if (query) {
                 params.set(
                     "search",
-                    landingSearch.trim()
+                    query
                 );
             }
 
@@ -794,6 +875,234 @@ export function Landing() {
             navigate(
                 destination
             );
+        };
+
+
+    const handleLandingSearch =
+        (event) => {
+            event.preventDefault();
+
+            runLandingSearch(
+                landingSearch
+            );
+        };
+
+
+    /*
+     * What the dropdown shows right now:
+     * - query typed  -> substring matches, locations first
+     * - empty + focused -> most popular locations
+     */
+
+    const visibleSuggestions =
+        useMemo(() => {
+            const query =
+                landingSearch
+                    .trim()
+                    .toLocaleLowerCase(
+                        "en-PH"
+                    );
+
+
+            if (!query) {
+                if (!searchFocused) {
+                    return [];
+                }
+
+                return searchSuggestions
+                    .locations
+                    .slice(
+                        0,
+                        6
+                    )
+                    .map(
+                        (location) => ({
+                            ...location,
+                            kind:
+                                "location",
+                        })
+                    );
+            }
+
+
+            const matches =
+                (suggestion) =>
+                    suggestion
+                        .label
+                        .toLocaleLowerCase(
+                            "en-PH"
+                        )
+                        .includes(query);
+
+
+            return [
+                ...searchSuggestions
+                    .locations
+                    .filter(matches)
+                    .slice(
+                        0,
+                        4
+                    )
+                    .map(
+                        (location) => ({
+                            ...location,
+                            kind:
+                                "location",
+                        })
+                    ),
+
+                ...searchSuggestions
+                    .apartments
+                    .filter(matches)
+                    .slice(
+                        0,
+                        4
+                    )
+                    .map(
+                        (apartment) => ({
+                            ...apartment,
+                            kind:
+                                "apartment",
+                        })
+                    ),
+            ];
+        }, [
+            landingSearch,
+            searchFocused,
+            searchSuggestions,
+        ]);
+
+
+    const showSuggestions =
+        searchFocused &&
+        visibleSuggestions
+            .length >
+        0;
+
+
+    /*
+     * Typing replaces the match set,
+     * so drop the keyboard highlight
+     * whenever the query changes.
+     */
+
+    useEffect(() => {
+        setActiveSuggestionIndex(
+            -1
+        );
+    }, [landingSearch]);
+
+
+    const selectSuggestion =
+        (suggestion) => {
+            setLandingSearch(
+                suggestion.label
+            );
+
+            setSearchFocused(
+                false
+            );
+
+            setActiveSuggestionIndex(
+                -1
+            );
+
+            runLandingSearch(
+                suggestion.label
+            );
+        };
+
+
+    const handleSearchKeyDown =
+        (event) => {
+            if (
+                event.key ===
+                "ArrowDown"
+            ) {
+                event.preventDefault();
+
+                if (
+                    !visibleSuggestions
+                        .length
+                ) {
+                    return;
+                }
+
+                setActiveSuggestionIndex(
+                    (index) =>
+                        (index + 1) %
+                            visibleSuggestions
+                                .length
+                );
+
+                return;
+            }
+
+
+            if (
+                event.key ===
+                "ArrowUp"
+            ) {
+                event.preventDefault();
+
+                if (
+                    !visibleSuggestions
+                        .length
+                ) {
+                    return;
+                }
+
+                setActiveSuggestionIndex(
+                    (index) =>
+                        (index - 1 +
+                            visibleSuggestions
+                                .length) %
+                            visibleSuggestions
+                                .length
+                );
+
+                return;
+            }
+
+
+            if (
+                event.key ===
+                "Enter"
+            ) {
+                const active =
+                    visibleSuggestions[
+                        activeSuggestionIndex
+                    ];
+
+
+                if (
+                    active &&
+                    activeSuggestionIndex >=
+                        0
+                ) {
+                    event.preventDefault();
+
+                    selectSuggestion(
+                        active
+                    );
+                }
+
+                return;
+            }
+
+
+            if (
+                event.key ===
+                "Escape"
+            ) {
+                setSearchFocused(
+                    false
+                );
+
+                setActiveSuggestionIndex(
+                    -1
+                );
+            }
         };
 
 
@@ -1091,6 +1400,7 @@ export function Landing() {
 
 
                                             <input
+                                                type="text"
                                                 value={
                                                     landingSearch
                                                 }
@@ -1102,6 +1412,41 @@ export function Landing() {
                                                             .target
                                                             .value
                                                     )
+                                                }
+                                                onFocus={() =>
+                                                    setSearchFocused(
+                                                        true
+                                                    )
+                                                }
+                                                onBlur={() => {
+                                                    setSearchFocused(
+                                                        false
+                                                    );
+
+                                                    setActiveSuggestionIndex(
+                                                        -1
+                                                    );
+                                                }}
+                                                onKeyDown={
+                                                    handleSearchKeyDown
+                                                }
+                                                role="combobox"
+                                                aria-label="Search by barangay or apartment name"
+                                                aria-expanded={
+                                                    showSuggestions
+                                                }
+                                                aria-controls={
+                                                    showSuggestions
+                                                        ? "landing-search-suggestions"
+                                                        : undefined
+                                                }
+                                                aria-autocomplete="list"
+                                                aria-activedescendant={
+                                                    activeSuggestionIndex
+                                                        >=
+                                                        0
+                                                        ? `landing-search-option-${activeSuggestionIndex}`
+                                                        : undefined
                                                 }
                                                 placeholder="Search by barangay or apartment name within La Paz..."
                                                 className="landing-search-input"
@@ -1120,6 +1465,98 @@ export function Landing() {
                                     </div>
 
                                 </form>
+
+
+                                {/* PROGRESSIVE SUGGESTIONS */}
+
+                                {showSuggestions && (
+
+                                    <div
+                                        className="landing-suggestions-panel"
+                                        role="listbox"
+                                        id="landing-search-suggestions"
+                                        aria-label="Search suggestions"
+                                    >
+
+                                        {!landingSearch
+                                            .trim() && (
+                                            <p className="landing-suggestions-heading">
+                                                Popular in
+                                                La Paz
+                                            </p>
+                                        )}
+
+                                        {visibleSuggestions
+                                            .map(
+                                                (
+                                                    suggestion,
+                                                    index
+                                                ) => (
+                                                    <button
+                                                        key={`${suggestion.kind}-${suggestion.label}-${index}`}
+                                                        type="button"
+                                                        role="option"
+                                                        id={`landing-search-option-${index}`}
+                                                        aria-selected={
+                                                            index ===
+                                                            activeSuggestionIndex
+                                                        }
+                                                        className="landing-suggestion-button"
+                                                        data-active={
+                                                            index ===
+                                                            activeSuggestionIndex
+                                                                ? "true"
+                                                                : undefined
+                                                        }
+                                                        onMouseDown={
+                                                            (
+                                                                event
+                                                            ) =>
+                                                                event.preventDefault()
+                                                        }
+                                                        onClick={
+                                                            () =>
+                                                                selectSuggestion(
+                                                                    suggestion
+                                                                )
+                                                        }
+                                                    >
+
+                                                        {suggestion
+                                                            .kind ===
+                                                            "location"
+                                                            ? (
+                                                                <MapPin className="landing-suggestion-icon" />
+                                                            )
+                                                            : (
+                                                                <Home className="landing-suggestion-icon" />
+                                                            )}
+
+
+                                                        <span className="landing-suggestion-label">
+                                                            {suggestion
+                                                                .label}
+                                                        </span>
+
+
+                                                        <span className="landing-suggestion-count">
+                                                            {suggestion
+                                                                .count}{" "}
+                                                            listing
+                                                            {suggestion
+                                                                .count ===
+                                                                1
+                                                                ? ""
+                                                                : "s"}
+                                                        </span>
+
+                                                    </button>
+                                                )
+                                            )}
+
+                                    </div>
+
+                                )}
 
                             </div>
 
