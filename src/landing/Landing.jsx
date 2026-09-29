@@ -233,6 +233,11 @@ export function Landing() {
     ] = useState(false);
 
     const [
+        mobileMenuOpen,
+        setMobileMenuOpen,
+    ] = useState(false);
+
+    const [
         signupRedirect,
         setSignupRedirect,
     ] = useState(null);
@@ -804,9 +809,15 @@ export function Landing() {
                             MOBILE MENU
                         ============================= */}
 
-                        <Sheet>
+                        <Sheet
+                            open={mobileMenuOpen}
+                            onOpenChange={setMobileMenuOpen}
+                        >
 
-                            <SheetTrigger className="landing-menu-trigger">
+                            <SheetTrigger
+                                className="landing-menu-trigger"
+                                aria-label="Open navigation menu"
+                            >
 
                                 <Menu className="landing-menu-icon" />
 
@@ -815,19 +826,20 @@ export function Landing() {
 
                             <SheetContent className="landing-menu-panel">
 
-                                <SheetTitle className="landing-menu-title">
-                                    Menu
-                                </SheetTitle>
+                                <div className="landing-menu-header">
+                                    <SheetTitle className="landing-menu-title">
+                                        Menu
+                                    </SheetTitle>
 
+                                    <SheetDescription className="landing-menu-description">
+                                        AptFindr — La Paz, Iloilo City
+                                    </SheetDescription>
+                                </div>
 
-                                <SheetDescription className="landing-menu-description">
-                                    AptFindr — La Paz,
-                                    Iloilo City
-                                </SheetDescription>
-
-
-                                <nav className="landing-mobile-nav">
-
+                                <nav
+                                    className="landing-mobile-nav"
+                                    aria-label="Mobile navigation"
+                                >
 
                                     {!user ? (
                                         <>
@@ -835,9 +847,10 @@ export function Landing() {
                                             <button
                                                 type="button"
                                                 className="landing-mobile-link landing-mobile-login-button"
-                                                onClick={() =>
-                                                    openLogin()
-                                                }
+                                                onClick={() => {
+                                                    setMobileMenuOpen(false);
+                                                    openLogin();
+                                                }}
                                             >
                                                 Login
                                             </button>
@@ -845,8 +858,11 @@ export function Landing() {
 
                                             <button
                                                 type="button"
-                                                className="landing-mobile-link"
-                                                onClick={() => openSignup()}
+                                                className="landing-mobile-link landing-mobile-link-primary"
+                                                onClick={() => {
+                                                    setMobileMenuOpen(false);
+                                                    openSignup();
+                                                }}
                                             >
                                                 Sign Up
                                             </button>
@@ -858,7 +874,8 @@ export function Landing() {
                                             to={
                                                 dashboardPath
                                             }
-                                            className="landing-mobile-link"
+                                            className="landing-mobile-link landing-mobile-link-primary"
+                                            onClick={() => setMobileMenuOpen(false)}
                                         >
                                             Dashboard
                                         </Link>
