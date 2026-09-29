@@ -39,6 +39,19 @@ test("PWA icon paths exist, including 192/512 PNGs and the Apple icon", () => {
   for (const size of [192, 512]) assert.ok(manifest.icons.some((icon) => icon.sizes === `${size}x${size}` && icon.type === "image/png"));
   assert.ok(existsSync(new URL("../public/icons/apple-touch-icon.png", import.meta.url)));
   assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.scope, "/");
+  assert.equal(manifest.start_url, "/");
+});
+
+test("PWA service worker supports offline app routes without caching data writes", () => {
+  const serviceWorker = readFileSync(new URL("../public/sw.js", import.meta.url), "utf8");
+  const runtime = readFileSync(new URL("../src/components/AppRuntime.jsx", import.meta.url), "utf8");
+  assert.match(serviceWorker, /request\.method !== "GET"/);
+  assert.match(serviceWorker, /request\.mode === "navigate"/);
+  assert.match(serviceWorker, /Object\.values\(buildManifest\)/);
+  assert.match(serviceWorker, /caches\.match\("\/index\.html"\)/);
+  assert.match(runtime, /\.register\("\/sw\.js"\)/);
+  assert.match(runtime, /addEventListener\("offline"/);
 });
 
 function profileClient(existingName) {

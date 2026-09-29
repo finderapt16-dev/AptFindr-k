@@ -1549,7 +1549,7 @@ export async function updateReportStatus(reportId, status) {
 export async function notifyReportResolved(reportId, landlordId, reporterId, apartmentTitle) {
     try {
         // Notify landlord
-        await createNotification({
+        const landlordNotification = await createNotification({
             user_id: landlordId,
             type: "report_resolved",
             title: "Report Resolved",
@@ -1562,7 +1562,7 @@ export async function notifyReportResolved(reportId, landlordId, reporterId, apa
             },
         });
         // Notify reporting tenant
-        await createNotification({
+        const reporterNotification = await createNotification({
             user_id: reporterId,
             type: "report_status_updated",
             title: "Your Report Has Been Resolved",
@@ -1574,9 +1574,11 @@ export async function notifyReportResolved(reportId, landlordId, reporterId, apa
                 resolved_at: new Date().toISOString(),
             },
         });
+        return Boolean(landlordNotification && reporterNotification);
     }
     catch (err) {
         console.error("Error notifying report resolution:", err);
+        return false;
     }
 }
 /**
@@ -1586,7 +1588,7 @@ export async function notifyReportResolved(reportId, landlordId, reporterId, apa
 export async function notifyReportDismissed(reportId, reporterId, apartmentTitle, dismissalReason) {
     try {
         // Notify reporting tenant
-        await createNotification({
+        const notification = await createNotification({
             user_id: reporterId,
             type: "report_dismissed",
             title: "Your Report Was Dismissed",
@@ -1601,9 +1603,11 @@ export async function notifyReportDismissed(reportId, reporterId, apartmentTitle
                 dismissed_at: new Date().toISOString(),
             },
         });
+        return Boolean(notification);
     }
     catch (err) {
         console.error("Error notifying report dismissal:", err);
+        return false;
     }
 }
 /**

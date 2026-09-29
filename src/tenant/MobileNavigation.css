@@ -45,8 +45,8 @@
 }
 
 .tenant-mobile-navigation-close-navigation {
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 .tenant-mobile-navigation-x-icon {

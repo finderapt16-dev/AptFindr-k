@@ -507,9 +507,11 @@ export function ManageRooms({ propertyId }) {
                 refreshOnFocus();
         };
         window.addEventListener("focus", refreshOnFocus);
+        window.addEventListener("online", refreshOnFocus);
         document.addEventListener("visibilitychange", refreshOnVisibility);
         return () => {
             window.removeEventListener("focus", refreshOnFocus);
+            window.removeEventListener("online", refreshOnFocus);
             document.removeEventListener("visibilitychange", refreshOnVisibility);
             void supabase.removeChannel(channel);
         };

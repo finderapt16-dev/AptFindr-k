@@ -166,7 +166,7 @@ export function AdminLandlordVerification({
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search apartments"
+            placeholder="Search landlords by name, email, phone, or permit"
             type="search"
           />
         </label>

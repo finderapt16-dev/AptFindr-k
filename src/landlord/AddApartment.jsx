@@ -16,7 +16,7 @@ import { VERIFICATION_DOCUMENT_TYPES, uploadVerificationDocuments, validateVerif
 import { deletePropertyDraft, fetchPropertyDraft, savePropertyDraft, } from "@/services/propertyDraftService";
 import { DEFAULT_LA_PAZ_MAP_CENTER, hasValidApartmentCoordinates, } from "@/utils/mapCoordinates";
 import { supabase } from "@/services/supabaseClient";
-import { AlertCircle, ArrowLeft, ArrowRight, Building2, Camera, Check, Cloud, CloudUpload, FileText, Home, ListChecks, MapPin, Plus, RotateCcw, ShieldCheck, Trash2, Upload, X, } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Building2, Camera, Check, Cloud, CloudUpload, FileText, Home, ListChecks, MapPin, Plus, RotateCcw, ShieldCheck, Trash2, Upload, X, Menu, } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -112,6 +112,7 @@ export function AddApartment() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
     const [guidelinesOpen, setGuidelinesOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const { refreshApartments } = useApartmentsContext();
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -705,6 +706,16 @@ export function AddApartment() {
                 navigate("/", { replace: true });
             }}/>
         </aside>
+
+        {sidebarOpen && <div className="app-sidebar-overlay landlord-add-property-overlay" onClick={() => setSidebarOpen(false)} />}
+        <aside className={`app-sidebar-drawer landlord-add-property-drawer ${sidebarOpen ? "is-open" : ""}`} aria-label="Landlord navigation">
+          <button type="button" aria-label="Close navigation" className="app-sidebar-close" onClick={() => setSidebarOpen(false)}><X /></button>
+          <LandlordSidebar user={user} verified={user?.isVerified === true} activeSection="add-property" onSectionChange={(section) => { setSidebarOpen(false); navigate(`/dashboard?section=${section}`); }} onClose={() => setSidebarOpen(false)} onLogout={() => {
+                logout?.();
+                navigate("/", { replace: true });
+            }}/>
+        </aside>
+        <button type="button" aria-label="Open navigation" aria-expanded={sidebarOpen} className="app-sidebar-trigger landlord-add-property-trigger" onClick={() => setSidebarOpen(true)}><Menu /></button>
 
         <main className="app-shell-main landlord-add-property-main">
           <div className="landlord-add-property add-apartment-page">

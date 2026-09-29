@@ -21,6 +21,7 @@
 .runtime-config-copy { margin-top:1rem; font-size:1rem; line-height:1.75rem; color:#cbd5e1; }
 .runtime-config-code { margin-top:1.5rem; border:1px solid #334155; border-radius:.5rem; background:#0f172a; padding:1rem; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.875rem; color:#f1f5f9; }
 .runtime-config-note { margin-top:1.25rem; font-size:.875rem; line-height:1.5rem; color:#94a3b8; }
+.runtime-offline-banner { position:fixed; top:calc(.75rem + env(safe-area-inset-top)); left:.75rem; right:.75rem; z-index:200; margin:0 auto; max-width:36rem; border:1px solid #cbd5e1; border-radius:.75rem; background:#0f172a; padding:.75rem 1rem; color:#fff; text-align:center; font-size:.875rem; line-height:1.4; box-shadow:0 12px 28px -12px rgba(15,23,42,.55); }
 .runtime-update-banner { position:fixed; left:.75rem; right:.75rem; bottom:calc(1rem + env(safe-area-inset-bottom)); z-index:200; margin:0 auto; display:flex; max-width:28rem; align-items:center; gap:.75rem; border:1px solid #fed7aa; border-radius:.75rem; background:#fff; padding:.75rem; box-shadow:0 25px 50px -12px rgba(0,0,0,.25); }
 .runtime-update-text { min-width:0; flex:1 1 0%; font-size:.875rem; font-weight:600; color:#334155; }
 .runtime-update-button { flex-shrink:0; border-radius:.5rem; background:#f97316; padding:.5rem 1rem; font-size:.875rem; font-weight:700; color:#fff; }

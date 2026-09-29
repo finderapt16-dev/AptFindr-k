@@ -515,8 +515,8 @@
 }
 
 .app-sidebar-overlay {
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 @media (min-width: 64rem) {
@@ -2145,8 +2145,8 @@
 
 .add-apartment-overlay {
   padding: calc(var(--spacing, .25rem) * 4);
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 .add-apartment-card-10 {
@@ -2602,4 +2602,98 @@
   .landlord-add-property .add-apartment-row-10 { padding-top: 9px; }
   .landlord-add-property .add-apartment-previous,
   .landlord-add-property .add-apartment-next { min-width: 140px; height: 22px; font-size: 7px; }
+}
+
+/* Keep Add Property usable on touch screens and at normal reading sizes. */
+.landlord-add-property-drawer {
+  transform: translateX(-105%);
+  z-index: 60;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100%;
+}
+.landlord-add-property-drawer.is-open { transform: translateX(0); }
+.landlord-add-property-overlay { z-index: 55; }
+.landlord-add-property-trigger { z-index: 45; }
+.landlord-add-property-shell .add-apartment-page-content { max-width: 860px; }
+.landlord-add-property .add-apartment-row-3,
+.landlord-add-property .add-apartment-card-4 { display: flex; }
+.landlord-add-property .add-apartment-card-4 { display: block; }
+.landlord-add-property .add-apartment-step { font-size: 12px; }
+.landlord-add-property .add-apartment-add-property { font-size: clamp(24px, 3vw, 32px); }
+.landlord-add-property .add-apartment-text-4 { font-size: 14px; line-height: 1.5; }
+.landlord-add-property .add-apartment-container { padding: 16px 12px 20px; }
+.landlord-add-property .add-apartment-button-3 { width: 32px; height: 32px; flex-basis: 32px; font-size: 14px; }
+.landlord-add-property .add-apartment-button-6 { font-size: 12px; }
+.landlord-add-property .add-apartment-button-6 small { font-size: 11px; }
+.landlord-add-property .add-apartment-card-header { padding: 20px 24px 14px; }
+.landlord-add-property .add-apartment-card-title { font-size: 18px; }
+.landlord-add-property .add-apartment-card-header [class*="description"] { font-size: 13px; }
+.landlord-add-property .add-apartment-card-content { padding: 22px 24px 24px; }
+.landlord-add-property .add-apartment-row-6 h3 { font-size: 12px; }
+.landlord-add-property .add-apartment-panel-9 > label { font-size: 14px; }
+.landlord-add-property input:not([type=file]),
+.landlord-add-property textarea,
+.landlord-add-property .add-apartment-select { min-height: 42px; font-size: 14px; }
+.landlord-add-property textarea { min-height: 100px; }
+.landlord-add-property .add-apartment-text-5,
+.landlord-add-property .add-apartment-text-6 { font-size: 12px; }
+.landlord-add-property .add-apartment-choice-grid { gap: 8px; }
+.landlord-add-property .add-apartment-choice { min-height: 36px; padding: 7px 9px; font-size: 12px; line-height: 1.3; }
+.landlord-add-property .add-apartment-other-label { font-size: 12px; }
+.landlord-add-property .add-apartment-add-choice input,
+.landlord-add-property .add-apartment-add-choice button { min-height: 38px; font-size: 13px; }
+.landlord-add-property .add-apartment-added-choice-tag { min-height: 26px; font-size: 12px; }
+.landlord-add-property .add-apartment-verification-documents { font-size: 12px; }
+.landlord-add-property .add-apartment-text-7,
+.landlord-add-property .add-apartment-text-8,
+.landlord-add-property .add-apartment-verification-intro { font-size: 12px; }
+.landlord-add-property .add-apartment-grid-5 .add-apartment-card-9 { min-height: 130px; }
+.landlord-add-property .add-apartment-grid-5 .add-apartment-card-9::before { font-size: 12px; }
+.landlord-add-property .add-apartment-grid-5 .add-apartment-text-9 { font-size: 13px; }
+.landlord-add-property .add-apartment-grid-5 .add-apartment-text-10 { font-size: 12px; }
+.landlord-add-property .add-apartment-grid-5 .add-apartment-label { min-height: 34px; padding: 0 12px; font-size: 12px; }
+.landlord-add-property .add-apartment-previous,
+.landlord-add-property .add-apartment-cancel,
+.landlord-add-property .add-apartment-next,
+.landlord-add-property .add-apartment-button-14 { min-width: 120px; min-height: 40px; height: auto; font-size: 13px; }
+.landlord-add-property .location-picker-card,
+.landlord-add-property .location-picker-row { height: 260px; }
+
+@media (max-width: 1023px) {
+  .landlord-add-property-shell .add-apartment-page-content { padding-top: 54px; }
+}
+@media (max-width: 640px) {
+  .landlord-add-property.add-apartment-page { padding: 12px 12px 28px; }
+  .landlord-add-property .add-apartment-page-content { width: 100%; max-width: 100%; padding: 54px 0 0 !important; }
+  .landlord-add-property .add-apartment-panel-4 { display: block; padding-bottom: 14px; }
+  .landlord-add-property .add-apartment-row-3 { margin: 8px 0 0; }
+  .landlord-add-property .add-apartment-step { font-size: 12px; }
+  .landlord-add-property .add-apartment-container { padding: 12px 0 16px; }
+  .landlord-add-property .add-apartment-button-3 { width: 28px; height: 28px; flex-basis: 28px; font-size: 12px; }
+  .landlord-add-property .add-apartment-button-6 { font-size: 10px; }
+  .landlord-add-property .add-apartment-button-6 small { font-size: 9px; }
+  .landlord-add-property .add-apartment-card-header,
+  .landlord-add-property .add-apartment-card-content { padding-left: 14px; padding-right: 14px; }
+  .landlord-add-property .add-apartment-card-title { font-size: 16px; }
+  .landlord-add-property .add-apartment-card-header [class*="description"] { font-size: 12px; }
+  .landlord-add-property .add-apartment-grid-2,
+  .landlord-add-property .add-apartment-grid-3,
+  .landlord-add-property .add-apartment-grid-4 { grid-template-columns: 1fr; }
+  .landlord-add-property .add-apartment-choice-grid,
+  .landlord-add-property .add-apartment-utility-grid,
+  .landlord-add-property .add-apartment-rules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .landlord-add-property .add-apartment-amenity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .landlord-add-property .add-apartment-location-primary-grid,
+  .landlord-add-property .add-apartment-location-fields { grid-template-columns: 1fr; }
+  .landlord-add-property .add-apartment-location-fields { margin-top: 10px; }
+  .landlord-add-property .add-apartment-location-step input { min-height: 42px; font-size: 14px; }
+  .landlord-add-property .add-apartment-location-step .add-apartment-text-6 { font-size: 12px; }
+  .landlord-add-property .add-apartment-location-step .location-picker-card,
+  .landlord-add-property .add-apartment-location-step .location-picker-row { height: 220px; }
+  .landlord-add-property .add-apartment-row-10 { gap: 8px; }
+  .landlord-add-property .add-apartment-previous,
+  .landlord-add-property .add-apartment-cancel,
+  .landlord-add-property .add-apartment-next,
+  .landlord-add-property .add-apartment-button-14 { min-width: 0; flex: 1; min-height: 42px; font-size: 12px; }
 }

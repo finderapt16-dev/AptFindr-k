@@ -96,11 +96,13 @@ export function ApartmentsProvider({ children }) {
                 scheduleRefresh();
         };
         window.addEventListener('focus', refreshOnFocus);
+        window.addEventListener('online', refreshOnFocus);
         document.addEventListener('visibilitychange', refreshOnVisibility);
         return () => {
             if (refreshTimer)
                 clearTimeout(refreshTimer);
             window.removeEventListener('focus', refreshOnFocus);
+            window.removeEventListener('online', refreshOnFocus);
             document.removeEventListener('visibilitychange', refreshOnVisibility);
             void supabase.removeChannel(channel);
         };
