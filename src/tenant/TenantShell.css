@@ -298,3 +298,37 @@
   background: transparent !important;
   box-shadow: none !important;
 }
+
+/* Keep the user details beneath the logo as a plain row, not a profile card. */
+.tenant-browse .app-sidebar-profile {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.tenant-browse .app-sidebar-profile:hover {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.app-sidebar .tenant-sidebar-row-2 {
+  background: var(--apt-primary) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+}
+
+/* Favorites keeps the dashboard apartment-card grid at every breakpoint. */
+.favorites-dashboard-apartment-card { min-width: 0; }
+.favorites-section-grid-2 { gap: calc(var(--spacing, .25rem) * 5); }
+@media (min-width: 48rem) {
+  .favorites-section-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 80rem) {
+  .favorites-section-grid-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

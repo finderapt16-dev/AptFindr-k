@@ -756,18 +756,18 @@
 }
 
 .manage-rooms-table-status {
-  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   max-width: 150px;
-  padding: 8px 22px 8px 8px;
+  min-width: 108px;
+  padding: 8px 12px;
   border: 0;
   border-radius: 8px;
   box-sizing: border-box;
   font: inherit;
-  cursor: pointer;
-  appearance: auto;
 }
 
-.manage-rooms-table-status:disabled { cursor: wait; opacity: .65; }
 .manage-rooms-table-status--available { background: #dcfce8; color: #15803d; }
 .manage-rooms-table-status--occupied { background: #fee2e2; color: #dc2626; }
 .manage-rooms-table-status--maintenance { background: #fff3e5; color: #c2410c; }

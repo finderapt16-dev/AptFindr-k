@@ -13,6 +13,7 @@ import {
     isTenantRole,
     loginWithGoogle,
     resendSignupVerification,
+    clearPendingGoogleOAuthFlow,
 } from "@/services/authService";
 
 import {
@@ -20,8 +21,6 @@ import {
     CheckCircle2,
     Eye,
     EyeOff,
-    Key,
-    UserRound,
 } from "lucide-react";
 
 import {
@@ -388,6 +387,7 @@ export function Login({
             try {
                 await loginWithGoogle();
             } catch (googleError) {
+                clearPendingGoogleOAuthFlow();
                 console.error("[AUTH] Google sign-in failed", googleError);
                 setError(
                     googleError instanceof Error
@@ -553,9 +553,6 @@ export function Login({
                             setUsername
                         }
                         required
-                        icon={
-                            <UserRound className="login-icon-small" />
-                        }
                     />
 
 
@@ -578,9 +575,6 @@ export function Login({
                                 setPassword
                             }
                             required
-                            icon={
-                                <Key className="login-icon-small" />
-                            }
                             suffix={
 
                                 <button

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Status" },

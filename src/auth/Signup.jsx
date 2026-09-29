@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { signupWithGoogle } from "@/services/authService";
+import { clearPendingGoogleOAuthFlow, isTenantRole, signupWithGoogle } from "@/services/authService";
 
 import {
     AlertCircle,
@@ -121,6 +121,7 @@ export function Signup({ embedded = false, redirect = null }) {
 
     const {
         signup,
+        hydrateSession,
     } = useAuth();
 
 
@@ -193,6 +194,10 @@ export function Signup({ embedded = false, redirect = null }) {
         landlordStep,
         setLandlordStep,
     ] = useState(1);
+
+    const [reviewEditor, setReviewEditor] = useState(null);
+    const [reviewDraft, setReviewDraft] = useState(null);
+    const [reviewUpdateSuccess, setReviewUpdateSuccess] = useState(null);
 
 
     const permitRef =
@@ -327,6 +332,26 @@ export function Signup({ embedded = false, redirect = null }) {
             );
         };
 
+    const openLandlordReviewEditor = (section) => {
+        setReviewDraft({ ...formData });
+        setReviewEditor(section);
+    };
+
+    const saveLandlordReviewEditor = () => {
+        if (!reviewEditor || !reviewDraft) return;
+
+        const fields = reviewEditor === "account"
+            ? ["username", "email"]
+            : ["firstName", "lastName", "middleInitial", "mobileNumber"];
+
+        setFormData((current) => Object.fromEntries([
+            ...Object.entries(current),
+            ...fields.map((field) => [field, reviewDraft[field] ?? ""]),
+        ]));
+        setReviewUpdateSuccess(reviewEditor);
+        setReviewEditor(null);
+    };
+
 
     /* =====================================================
        SUBMIT
@@ -362,21 +387,6 @@ export function Signup({ embedded = false, redirect = null }) {
             }
 
 
-            /* LANDLORD PERMIT */
-
-            if (
-                formData.role ===
-                    "landlord" &&
-                !formData.permitNumber.trim()
-            ) {
-                setError(
-                    "Business permit number is required."
-                );
-
-                return;
-            }
-
-
             /* AGREEMENTS */
 
             if (
@@ -398,7 +408,7 @@ export function Signup({ embedded = false, redirect = null }) {
                 !landlordAgreementAccepted
             ) {
                 setError(
-                    "You must agree to the Terms of Use and Landlord Verification Policy to continue."
+                    "You must agree to the Terms of Service and Privacy Policy to continue."
                 );
 
                 return;
@@ -417,17 +427,6 @@ export function Signup({ embedded = false, redirect = null }) {
                 ) {
                     setError(
                         "Personal information is required."
-                    );
-
-                    return;
-                }
-
-
-                if (
-                    !formData.address.trim()
-                ) {
-                    setError(
-                        "Home address is required."
                     );
 
                     return;
@@ -723,10 +722,29 @@ export function Signup({ embedded = false, redirect = null }) {
             setLoading(true);
 
             try {
-                await signupWithGoogle({
+                const googleSignup = await signupWithGoogle({
                     termsAccepted: tenantTermsAccepted,
                 });
+                if (googleSignup?.profile) {
+                    // Profile creation can finish before the AuthProvider's
+                    // auth-state subscription runs. Hydrate it explicitly so
+                    // the protected destination never sees an anonymous user.
+                    const profile = await hydrateSession();
+                    if (!profile) {
+                        throw new Error("Your Google account was created, but its profile is not available yet.");
+                    }
+                    clearPendingGoogleOAuthFlow();
+                    navigate(
+                        isTenantRole(profile.role)
+                            ? "/browse"
+                            : profile.role === "admin"
+                            ? "/admin"
+                            : "/dashboard",
+                        { replace: true }
+                    );
+                }
             } catch (googleError) {
+                clearPendingGoogleOAuthFlow();
                 console.error("[AUTH] Google signup failed", googleError);
                 setError(
                     googleError instanceof Error
@@ -765,15 +783,6 @@ export function Signup({ embedded = false, redirect = null }) {
                 }
 
 
-                if (
-                    !formData.address.trim()
-                ) {
-                    setError(
-                        "Home address is required!."
-                    );
-
-                    return;
-                }
             }
 
 
@@ -792,22 +801,7 @@ export function Signup({ embedded = false, redirect = null }) {
             }
 
 
-            /* STEP 3 */
-
-            if (
-                landlordStep ===
-                    3 &&
-                !formData.permitNumber.trim()
-            ) {
-                setError(
-                    "Business permit number is required!."
-                );
-
-                return;
-            }
-
-
-            /* STEP 4 */
+            /* ACCOUNT DETAILS */
 
             if (
                 landlordStep ===
@@ -1072,12 +1066,7 @@ export function Signup({ embedded = false, redirect = null }) {
 
                             <h1 className="signup-title">
 
-                                {!formData.role
-                                    ? "Create Your Account"
-                                    : formData.role ===
-                                      "tenant"
-                                    ? "Create Your Account"
-                                    : "Create Landlord Account"}
+                                Create Your Account
 
                             </h1>
 
@@ -1124,9 +1113,14 @@ export function Signup({ embedded = false, redirect = null }) {
                             ERROR
                         ================================================= */}
 
-                        {error && (
+                        <div
+                            className="signup-message signup-message--reserved"
+                            aria-live="polite"
+                        >
 
-                            <div className="signup-message">
+                            {error && (
+
+                                <>
 
                                 <Alert
                                     variant="destructive"
@@ -1190,9 +1184,11 @@ export function Signup({ embedded = false, redirect = null }) {
 
                                 )}
 
-                            </div>
+                                </>
 
-                        )}
+                            )}
+
+                        </div>
 
 
                         {/* =================================================
@@ -1623,7 +1619,7 @@ export function Signup({ embedded = false, redirect = null }) {
                                 LANDLORD
                             ================================================= */}
 
-                            {formData.role ===
+                            {false && formData.role ===
                                 "landlord" && (
 
                                 <div className="signup-landlord-wizard">
@@ -2972,6 +2968,118 @@ export function Signup({ embedded = false, redirect = null }) {
 
                                 </div>
 
+                            )}
+
+
+                            {formData.role === "landlord" && (
+                                <>
+                                <div className="signup-landlord-wizard signup-landlord-wizard--compact">
+                                    <div className="signup-landlord-stepper" aria-label={`Step ${landlordStep} of 3`}>
+                                        {["Account Details", "Personal Information", "Review"].map((label, index) => {
+                                            const stepNumber = index + 1;
+                                            const active = landlordStep === stepNumber;
+                                            const complete = landlordStep > stepNumber;
+
+                                            return (
+                                                <div className="signup-landlord-step-item" key={label}>
+                                                    <div className={`signup-landlord-step-circle ${active || complete ? "signup-landlord-step-circle-active" : ""}`}>
+                                                        {stepNumber}
+                                                    </div>
+                                                    <span className={`signup-landlord-step-text ${active ? "signup-landlord-step-text-active" : ""}`}>{label}</span>
+                                                    {stepNumber < 3 && <span className={`signup-landlord-step-connector ${complete ? "signup-landlord-step-connector-complete" : ""}`} />}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {landlordStep === 1 && (
+                                        <section className="signup-landlord-panel signup-landlord-panel--account">
+                                            <h2 className="signup-landlord-panel-title">Account Details</h2>
+                                            <AuthField id="landlord-username" label="Username" value={formData.username} onChange={(value) => set("username", value)} required placeholder="Enter your username" />
+                                            <AuthField id="landlord-email" label="Email Address" type="email" value={formData.email} onChange={(value) => set("email", value)} required placeholder="Enter your email address" />
+                                            <AuthField id="landlord-password" label="Password" type={showPass ? "text" : "password"} value={formData.password} onChange={(value) => set("password", value)} required placeholder="Enter your password" suffix={<button type="button" onClick={() => setShowPass((previous) => !previous)} className="auth-password-toggle signup-password-toggle" aria-label={showPass ? "Hide password" : "Show password"}>{showPass ? <EyeOff className="signup-icon-small" /> : <Eye className="signup-icon-small" />}</button>} />
+                                            <AuthField id="landlord-confirm-password" label="Confirm Password" type={showConfirm ? "text" : "password"} value={formData.confirmPassword} onChange={(value) => set("confirmPassword", value)} required placeholder="Confirm your password" suffix={<button type="button" onClick={() => setShowConfirm((previous) => !previous)} className="auth-password-toggle signup-password-toggle" aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}>{showConfirm ? <EyeOff className="signup-icon-small" /> : <Eye className="signup-icon-small" />}</button>} />
+                                            <div className="signup-tenant-password-help"><strong>Password must contain:</strong><span>At least 6 characters. An uppercase letter, number, and special character are recommended for a stronger password.</span></div>
+                                            <div className="signup-landlord-actions signup-landlord-actions-end">
+                                                <button type="button" onClick={nextLandlordStep} className="signup-landlord-continue">Continue <ChevronRight className="signup-next-icon" /></button>
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {landlordStep === 2 && (
+                                        <section className="signup-landlord-panel">
+                                            <h2 className="signup-landlord-panel-title">Personal Information</h2>
+                                            <AuthField id="landlord-first-name-compact" label="First Name" value={formData.firstName} onChange={(value) => set("firstName", value)} required placeholder="Enter your first name" />
+                                            <AuthField id="landlord-last-name-compact" label="Last Name" value={formData.lastName} onChange={(value) => set("lastName", value)} required placeholder="Enter your last name" />
+                                            <AuthField id="landlord-middle-initial-compact" label="Middle Initial (Optional)" value={formData.middleInitial} onChange={(value) => set("middleInitial", value)} placeholder="M" />
+                                            <AuthField id="landlord-mobile-compact" label="Mobile Number" type="tel" value={formData.mobileNumber} onChange={(value) => set("mobileNumber", value)} required placeholder="Enter your mobile number" />
+                                            <div className="signup-landlord-actions">
+                                                <button type="button" onClick={previousLandlordStep} className="signup-landlord-back">Back</button>
+                                                <button type="button" onClick={nextLandlordStep} className="signup-landlord-continue">Continue <ChevronRight className="signup-next-icon" /></button>
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {landlordStep === 3 && (
+                                        <section className="signup-landlord-panel">
+                                            <h2 className="signup-landlord-panel-title">Review</h2>
+                                            <div className="signup-landlord-review-card">
+                                                <div className="signup-landlord-review-heading"><strong>Account Details</strong><button type="button" onClick={() => openLandlordReviewEditor("account")}>Edit</button></div>
+                                                <div className="signup-landlord-review-row"><span>Username</span><b>{formData.username}</b></div>
+                                                <div className="signup-landlord-review-row"><span>Recovery Email</span><b>{formData.email}</b></div>
+                                            </div>
+                                            <div className="signup-landlord-review-card">
+                                                <div className="signup-landlord-review-heading"><strong>Personal Information</strong><button type="button" onClick={() => openLandlordReviewEditor("personal")}>Edit</button></div>
+                                                <div className="signup-landlord-review-row"><span>Name</span><b>{`${formData.firstName} ${formData.middleInitial ? `${formData.middleInitial}. ` : ""}${formData.lastName}`.trim()}</b></div>
+                                                <div className="signup-landlord-review-row"><span>Mobile Number</span><b>{formData.mobileNumber}</b></div>
+                                            </div>
+                                            <label className="signup-agreement">
+                                                <input type="checkbox" checked={landlordAgreementAccepted} onChange={(event) => setLandlordAgreementAccepted(event.target.checked)} className="signup-checkbox" />
+                                                <span>I agree to the Terms of Service and Privacy Policy.</span>
+                                            </label>
+                                            <Button type="submit" disabled={loading} className="signup-submit-button signup-landlord-final-submit">{loading ? <><span className="signup-spinner" /> Creating your account...</> : "Create Account"}</Button>
+                                        </section>
+                                    )}
+                                </div>
+
+                                {reviewEditor && reviewDraft && (
+                                    <div className="signup-review-dialog-backdrop" role="presentation">
+                                        <section className="signup-review-dialog" role="dialog" aria-modal="true" aria-labelledby="signup-review-dialog-title">
+                                            <button type="button" className="signup-review-dialog-close" onClick={() => setReviewEditor(null)} aria-label="Close">&times;</button>
+                                            <h2 id="signup-review-dialog-title">{reviewEditor === "account" ? "Edit Account Details" : "Edit Personal Information"}</h2>
+                                            <p>{reviewEditor === "account" ? "Update your account details below." : "Update your personal information below."}</p>
+                                            {reviewEditor === "account" ? (
+                                                <>
+                                                    <label>Username <span>*</span><input value={reviewDraft.username} onChange={(event) => setReviewDraft((draft) => ({ ...draft, username: event.target.value }))} /></label>
+                                                    <label>Recovery Email <span>*</span><input type="email" value={reviewDraft.email} onChange={(event) => setReviewDraft((draft) => ({ ...draft, email: event.target.value }))} /></label>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <label>First Name <span>*</span><input value={reviewDraft.firstName} onChange={(event) => setReviewDraft((draft) => ({ ...draft, firstName: event.target.value }))} /></label>
+                                                    <label>Last Name <span>*</span><input value={reviewDraft.lastName} onChange={(event) => setReviewDraft((draft) => ({ ...draft, lastName: event.target.value }))} /></label>
+                                                    <label>Middle Initial<input value={reviewDraft.middleInitial} onChange={(event) => setReviewDraft((draft) => ({ ...draft, middleInitial: event.target.value }))} /></label>
+                                                    <label>Mobile Number <span>*</span><input type="tel" value={reviewDraft.mobileNumber} onChange={(event) => setReviewDraft((draft) => ({ ...draft, mobileNumber: event.target.value }))} /></label>
+                                                </>
+                                            )}
+                                            <div className="signup-review-dialog-actions">
+                                                <button type="button" onClick={() => setReviewEditor(null)}>Cancel</button>
+                                                <button type="button" onClick={saveLandlordReviewEditor}>Save Changes</button>
+                                            </div>
+                                        </section>
+                                    </div>
+                                )}
+
+                                {reviewUpdateSuccess && (
+                                    <div className="signup-review-dialog-backdrop" role="presentation">
+                                        <section className="signup-review-success" role="dialog" aria-modal="true" aria-live="polite">
+                                            <span aria-hidden="true"><Check /></span>
+                                            <h2>{reviewUpdateSuccess === "account" ? "Account Details Updated" : "Personal Information Updated"}</h2>
+                                            <p>Your {reviewUpdateSuccess === "account" ? "account details" : "personal information"} have been updated successfully.</p>
+                                            <button type="button" onClick={() => setReviewUpdateSuccess(null)}>OK</button>
+                                        </section>
+                                    </div>
+                                )}
+                                </>
                             )}
 
 

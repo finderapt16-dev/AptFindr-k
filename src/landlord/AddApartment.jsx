@@ -1,5 +1,6 @@
 import "./AddApartment.css";
 import { PropertyLocationPicker } from "@/landlord/PropertyLocationPicker";
+import { LandlordSidebar } from "@/landlord/LandlordSidebar";
 import { PropertyGuidelines } from "@/landlord/PropertyGuidelines";
 import { MultiImageUploader } from "@/components/MultiImageUploader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -53,8 +54,19 @@ const SUGGESTED_FEATURES = [
     "Near School",
 ];
 const SUGGESTED_AMENITIES = [
-    "WiFi", "Parking", "Laundry Area", "Gym", "Swimming Pool", "CCTV", "Elevator", "Generator", "Water Heater",
+    "Wi-Fi", "Laundry Area", "AC", "Parking", "CCTV", "Gym", "Study Lounge", "Balcony", "Pool", "Elevator",
 ];
+const PROPERTY_TYPES = ["Apartment", "Boarding House", "Dormitory", "Bedspace", "House", "Room for Rent"];
+const SUGGESTED_HOUSE_RULES = ["Students Only", "Visitors Allowed", "Cooking Allowed", "No Smoking", "No Alcohol", "Pets Allowed"];
+const propertyGuidelinesStorageKey = (userId) => `aptfindr:add-property-guidelines-seen:${userId ?? "anonymous"}`;
+const splitChoiceValues = (value) => String(value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+const getCustomChoiceValues = (value, suggestedValues) => {
+    const suggested = new Set(suggestedValues.map((item) => item.toLowerCase()));
+    return splitChoiceValues(value).filter((item) => !suggested.has(item.toLowerCase()));
+};
 const normalizeListValues = (value) => {
     const canonical = new Map(SUGGESTED_AMENITIES.map((item) => [item.toLowerCase(), item]));
     return value.split(",").map((item) => item.trim()).filter(Boolean).reduce((items, item) => {
@@ -66,8 +78,15 @@ const normalizeListValues = (value) => {
 };
 const INITIAL_FORM_DATA = {
     title: "",
+    // The streamlined first step uses Apartment as the default listing type.
+    // This preserves the existing submission contract without adding a field
+    // that is not present in the requested layout.
+    propertyType: "Apartment",
+    price: "",
+    securityDeposit: "",
     sqft: 500,
     address: "",
+    barangay: "",
     city: "La Paz",
     state: "Iloilo City",
     zip: "5000",
@@ -92,17 +111,17 @@ const INITIAL_VERIFICATION_DATA = {
 export function AddApartment() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
-    const [guidelinesOpen, setGuidelinesOpen] = useState(true);
+    const [guidelinesOpen, setGuidelinesOpen] = useState(false);
     const { refreshApartments } = useApartmentsContext();
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationErrors, setValidationErrors] = useState({});
     const totalSteps = 4;
     const stepConfig = [
-        { number: 1, title: "Property Information", description: "Photos, name, and basic details" },
-        { number: 2, title: "Location", description: "Address and exact map location" },
-        { number: 3, title: "Amenities & Features", description: "Amenities, utilities, and additional features" },
-        { number: 4, title: "Property Verification", description: "Permit details and verification documents" },
+        { number: 1, title: "Property Information", progressDescription: "Basic details", description: "Let's start with the basic details about your property." },
+        { number: 2, title: "Location Details", progressDescription: "Address & map", description: "Where is your property located?" },
+        { number: 3, title: "Amenities & House Rules", progressDescription: "Features & policies", description: "Select the amenities, utilities, and policies for your property." },
+        { number: 4, title: "Property Verification", progressDescription: "Verification", description: "Submit details and verification documents." },
     ];
     const [formData, setFormData] = useState({ ...INITIAL_FORM_DATA });
     const [locationLookupRequest, setLocationLookupRequest] = useState(0);
@@ -112,7 +131,36 @@ export function AddApartment() {
     const [uploadedImages, setUploadedImages] = useState([]);
     const [amenitiesInput, setAmenitiesInput] = useState("");
     const [utilitiesInput, setUtilitiesInput] = useState("");
+    const [customAmenityInput, setCustomAmenityInput] = useState("");
+    const [customUtilityInput, setCustomUtilityInput] = useState("");
+    const [customRuleInput, setCustomRuleInput] = useState("");
     const [features, setFeatures] = useState([]);
+    const [houseRules, setHouseRules] = useState([]);
+    const toggleCommaValue = (setValue, value) => setValue((current) => {
+        const values = splitChoiceValues(current);
+        return values.some((item) => item.toLowerCase() === value.toLowerCase())
+            ? values.filter((item) => item.toLowerCase() !== value.toLowerCase()).join(", ")
+            : [...values, value].join(", ");
+    });
+    const appendCommaValue = (setValue, value, clear) => {
+        const trimmed = value.trim();
+        if (!trimmed)
+            return;
+        setValue((current) => {
+            const values = splitChoiceValues(current);
+            return values.some((item) => item.toLowerCase() === trimmed.toLowerCase()) ? values.join(", ") : [...values, trimmed].join(", ");
+        });
+        clear("");
+    };
+    const removeCommaValue = (setValue, value) => setValue((current) => splitChoiceValues(current)
+        .filter((item) => item.toLowerCase() !== value.toLowerCase())
+        .join(", "));
+    const addCustomHouseRule = () => {
+        const rule = customRuleInput.trim();
+        if (rule && !houseRules.some((item) => item.toLowerCase() === rule.toLowerCase()))
+            setHouseRules((current) => [...current, rule]);
+        setCustomRuleInput("");
+    };
     const [featureInput, setFeatureInput] = useState("");
     const addFeature = (value) => {
         const trimmed = value.trim();
@@ -148,6 +196,24 @@ export function AddApartment() {
     const autoSaveTimerRef = useRef(null);
     const skipNextAutoSaveRef = useRef(false);
     const submissionCompleteRef = useRef(false);
+    useEffect(() => {
+        try {
+            setGuidelinesOpen(localStorage.getItem(propertyGuidelinesStorageKey(user?.id)) !== "true");
+        }
+        catch {
+            // If browser storage is unavailable, retain the normal first-visit prompt.
+            setGuidelinesOpen(true);
+        }
+    }, [user?.id]);
+    const dismissGuidelines = () => {
+        try {
+            localStorage.setItem(propertyGuidelinesStorageKey(user?.id), "true");
+        }
+        catch {
+            // The dialog can still close if browser storage is unavailable.
+        }
+        setGuidelinesOpen(false);
+    };
     const selectVerificationDocument = (type, file) => {
         if (!file)
             return;
@@ -182,12 +248,13 @@ export function AddApartment() {
             || amenitiesInput.trim()
             || utilitiesInput.trim()
             || features.length > 0
+            || houseRules.length > 0
             || featureInput.trim()
             || uploadedImages.length > 0
             || verificationDocuments.length > 0
             || verificationHasContent
             || currentStep > 1);
-    }, [amenitiesInput, currentStep, featureInput, features, formData, uploadedImages, utilitiesInput, verificationData, verificationDocuments]);
+    }, [amenitiesInput, currentStep, featureInput, features, formData, houseRules, uploadedImages, utilitiesInput, verificationData, verificationDocuments]);
     const resetDraftForm = () => {
         setCurrentStep(1);
         setFormData({ ...INITIAL_FORM_DATA });
@@ -195,6 +262,7 @@ export function AddApartment() {
         setAmenitiesInput("");
         setUtilitiesInput("");
         setFeatures([]);
+        setHouseRules([]);
         setFeatureInput("");
         setVerificationData({ ...INITIAL_VERIFICATION_DATA });
         setVerificationDocuments((current) => {
@@ -234,6 +302,7 @@ export function AddApartment() {
         setAmenitiesInput(pendingDraft.amenitiesInput ?? "");
         setUtilitiesInput(pendingDraft.utilitiesInput ?? "");
         setFeatures(pendingDraft.features ?? []);
+        setHouseRules(pendingDraft.houseRules ?? []);
         setFeatureInput(pendingDraft.featureInput ?? "");
         setVerificationData({ ...INITIAL_VERIFICATION_DATA, ...pendingDraft.verificationData });
         setImageReuploadRequired(Boolean(pendingDraft.requiresImageReupload));
@@ -288,6 +357,7 @@ export function AddApartment() {
             amenitiesInput,
             utilitiesInput,
             features,
+            houseRules,
             featureInput,
             verificationData: INITIAL_VERIFICATION_DATA,
             uploadedImages: persistentImages,
@@ -303,7 +373,7 @@ export function AddApartment() {
             if (updateStatus)
                 setDraftStatus("error");
         }
-    }, [amenitiesInput, currentStep, featureInput, features, formData, hasDraftContent, imageReuploadRequired, uploadedImages, user?.id, utilitiesInput, verificationData]);
+    }, [amenitiesInput, currentStep, featureInput, features, formData, hasDraftContent, houseRules, imageReuploadRequired, uploadedImages, user?.id, utilitiesInput, verificationData]);
     useEffect(() => {
         if (!draftReady || !user?.id || submissionCompleteRef.current)
             return;
@@ -340,7 +410,8 @@ export function AddApartment() {
         });
     };
     const FieldError = ({ field }) => validationErrors[field] ? <p className="add-apartment-text">{validationErrors[field]}</p> : null;
-    const locationAddressQuery = useMemo(() => [formData.address, formData.city, formData.state, formData.zip, "Philippines"].filter(Boolean).join(", "), [formData.address, formData.city, formData.state, formData.zip]);
+    const persistedStreetAddress = useMemo(() => [formData.address, formData.barangay].filter(Boolean).join(", "), [formData.address, formData.barangay]);
+    const locationAddressQuery = useMemo(() => [formData.address, formData.barangay, formData.city, formData.state, formData.zip, "Philippines"].filter(Boolean).join(", "), [formData.address, formData.barangay, formData.city, formData.state, formData.zip]);
     useEffect(() => {
         if (currentStep !== 2)
             return;
@@ -373,6 +444,8 @@ export function AddApartment() {
             errors.images = "Upload at least one property image.";
         if (!String(formData.address ?? "").trim())
             errors.address = "Complete address is required.";
+        if (!String(formData.barangay ?? "").trim())
+            errors.barangay = "Barangay is required.";
         if (locationResolving) {
             errors.mapLocation = "Finding this address on the map. Please wait a moment.";
         }
@@ -383,7 +456,7 @@ export function AddApartment() {
             errors.businessPermit = "Business permit number is required.";
         const firstStep = errors.title || errors.sqft || errors.description || errors.images
             ? 1
-            : errors.address || errors.mapLocation
+            : errors.address || errors.barangay || errors.mapLocation
                 ? 2
                 : errors.businessPermit
                     ? 4
@@ -396,7 +469,7 @@ export function AddApartment() {
             if (step === 1)
                 return ["title", "sqft", "description", "images"].includes(field);
             if (step === 2)
-                return ["address", "mapLocation"].includes(field);
+                return ["address", "barangay", "mapLocation"].includes(field);
             if (step === 3)
                 return false;
             if (step === 4)
@@ -484,17 +557,19 @@ export function AddApartment() {
         const draftApartment = {
             id: "",
             title: formData.title || "",
-            price: 0,
+            price: Number(formData.price) || 0,
             bedrooms: 0,
             bathrooms: 0,
             sqft: Number(formData.sqft) || 500,
-            address: formData.address || "",
+            address: persistedStreetAddress,
             city: formData.city || "La Paz",
             state: formData.state || "Iloilo City",
             zip: formData.zip || "5000",
             image: primaryImageUrl,
             images: uploadedImages.map((img) => img.url),
             description: formData.description || "",
+            propertyType: formData.propertyType || "Apartment",
+            securityDeposit: String(formData.securityDeposit ?? ""),
             amenities: submittedAmenities,
             availableDate: formData.availableDate || new Date().toISOString().split("T")[0],
             petFriendly: featureLower.includes("pet friendly"),
@@ -515,9 +590,12 @@ export function AddApartment() {
                 ...apartmentFormValuesFromApartment(draftApartment),
                 utilityItems,
                 customFeatures: submittedFeatures,
+                propertyType: formData.propertyType || "Apartment",
+                securityDeposit: String(formData.securityDeposit ?? ""),
+                houseRules,
                 verification: {
                     propertyName: formData.title || "",
-                    propertyAddress: [formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(", "),
+                    propertyAddress: [persistedStreetAddress, formData.city, formData.state, formData.zip].filter(Boolean).join(", "),
                     businessPermit: verificationData.businessPermit,
                     permitExpiry: verificationData.permitExpiry,
                     tinNumber: verificationData.tinNumber,
@@ -619,8 +697,18 @@ export function AddApartment() {
     if (user?.role !== "landlord") {
         return <Navigate to="/dashboard" replace/>;
     }
-    return (<main className="landlord-add-property add-apartment-page">
-      <div className="app-shell-content add-apartment-page-content">
+    return (<div className="app-shell landlord-shell landlord-add-property-shell">
+      <div className="app-shell-frame">
+        <aside className="app-shell-sidebar landlord-add-property-sidebar">
+          <LandlordSidebar user={user} verified={user?.isVerified === true} activeSection="add-property" onSectionChange={(section) => navigate(`/dashboard?section=${section}`)} onLogout={() => {
+                logout?.();
+                navigate("/", { replace: true });
+            }}/>
+        </aside>
+
+        <main className="app-shell-main landlord-add-property-main">
+          <div className="landlord-add-property add-apartment-page">
+            <div className="app-shell-content add-apartment-page-content">
         <div className="add-apartment-panel-4">
           <h1 className="add-apartment-add-property">Add Property</h1>
           <p className="add-apartment-text-4">Submit property information for review, then manage individual rooms separately.</p>
@@ -669,7 +757,7 @@ export function AddApartment() {
                 : currentStep > step.number
                     ? "add-apartment-button-8"
                     : "add-apartment-button-9"}`}>
-                {step.title}
+                <span>{step.title}</span><small>{step.progressDescription}</small>
               </button>))}
           </div>
         </div>
@@ -686,7 +774,7 @@ export function AddApartment() {
                   <div className="add-apartment-panel-8">
                     <div className="add-apartment-row-6">
                       <Upload className="add-apartment-upload-icon"/>
-                      <h3 className="add-apartment-property-photos">Property Photos</h3>
+                      <h3 className="add-apartment-property-photos">Upload Photos</h3>
                     </div>
 
                     <MultiImageUploader images={uploadedImages} onImagesChange={(images) => {
@@ -710,7 +798,7 @@ export function AddApartment() {
                   <div className="add-apartment-panel-8">
                     <div className="add-apartment-row-6">
                       <Building2 className="add-apartment-building2-icon"/>
-                      <h3 className="add-apartment-basic-information">Basic Information</h3>
+                    <h3 className="add-apartment-basic-information">Property Info</h3>
                     </div>
 
                     <div className="add-apartment-panel-9">
@@ -723,20 +811,17 @@ export function AddApartment() {
                       <FieldError field="title"/>
                     </div>
 
-                    <div className="add-apartment-grid-2">
-                      <div className="add-apartment-panel-9">
-                        <Label className="add-apartment-total-property-area-sq-ft">Total Property Area (sq ft) *</Label>
-                        <Input type="number" value={formData.sqft || ""} onChange={(e) => {
+                    <div className="add-apartment-panel-9 add-apartment-property-basics-grid">
+                      <Label className="add-apartment-total-property-area-sq-ft">Total Property Floor Area *</Label>
+                      <Input type="number" value={formData.sqft || ""} onChange={(e) => {
                 setFormData({ ...formData, sqft: Number(e.target.value) });
                 if (Number(e.target.value) > 0)
                     clearValidationError("sqft");
             }} required aria-invalid={Boolean(validationErrors.sqft)} className={`${fieldClass("sqft")} hide-number-spinners`}/>
-                        <p className="add-apartment-text-5">Enter the approximate total floor area of the property.</p>
-                        <FieldError field="sqft"/>
-                      </div>
+                      <FieldError field="sqft"/>
                     </div>
 
-                    <div className="add-apartment-panel-9">
+                    <div className="add-apartment-panel-9 add-apartment-description-panel">
                       <Label className="add-apartment-description">Description *</Label>
                       <Textarea value={formData.description} onChange={(e) => {
                 setFormData({ ...formData, description: e.target.value });
@@ -745,39 +830,58 @@ export function AddApartment() {
             }} rows={4} required aria-invalid={Boolean(validationErrors.description)} placeholder="Describe the property, surrounding area, accessibility, and other important details." className={`${fieldClass("description")} add-apartment-textarea`}/>
                       <FieldError field="description"/>
                     </div>
+
+
                   </div>
                 </>)}
 
-              {currentStep === 2 && (<div className="add-apartment-panel-8">
-                  <div className="add-apartment-row-6">
-                    <MapPin className="add-apartment-map-pin-icon"/>
-                    <h3 className="add-apartment-location-details">Location Details</h3>
-                  </div>
-
-                  <div className="add-apartment-panel-9">
-                    <Label className="add-apartment-detailed-address-street-address">Detailed Address / Street Address *</Label>
-                    <Input value={formData.address} onChange={(e) => {
+              {currentStep === 2 && (<div className="add-apartment-panel-8 add-apartment-location-step">
+                  <p className="add-apartment-location-section-label">Address</p>
+                  <div className="add-apartment-location-primary-grid">
+                    <div className="add-apartment-panel-9">
+                      <Label>Barangay *</Label>
+                      <Input value={formData.barangay} onChange={(e) => {
+                setFormData({ ...formData, barangay: e.target.value, lat: undefined, lng: undefined });
+                setLocationPinned(false);
+                setLocationResolving(Boolean(e.target.value.trim()));
+                if (e.target.value.trim())
+                    clearValidationError("barangay");
+            }} placeholder="e.g., Nabitasan" required aria-invalid={Boolean(validationErrors.barangay)} className={fieldClass("barangay")}/>
+                      <FieldError field="barangay"/>
+                    </div>
+                    <div className="add-apartment-panel-9">
+                      <Label className="add-apartment-detailed-address-street-address">Street *</Label>
+                      <Input value={formData.address} onChange={(e) => {
                 setFormData({ ...formData, address: e.target.value, lat: undefined, lng: undefined });
                 setLocationPinned(false);
                 setLocationResolving(Boolean(e.target.value.trim()));
                 if (e.target.value.trim())
                     clearValidationError("address");
             }} onBlur={() => setLocationLookupRequest((request) => request + 1)} placeholder="House number, street, subdivision" required aria-invalid={Boolean(validationErrors.address)} className={fieldClass("address")}/>
-                    <FieldError field="address"/>
+                      <FieldError field="address"/>
+                    </div>
                   </div>
 
-                  <div className="add-apartment-grid-3">
+                  <div className="add-apartment-grid-3 add-apartment-location-fields">
                     <div className="add-apartment-panel-9">
                       <Label className="add-apartment-district-area">District / Area</Label>
-                      <Input value={formData.city} readOnly className="add-apartment-input"/>
+                      <Input value={formData.city} onChange={(e) => {
+                setFormData({ ...formData, city: e.target.value, lat: undefined, lng: undefined });
+                setLocationPinned(false);
+                setLocationResolving(Boolean(e.target.value.trim()));
+            }} placeholder="La Paz" className="add-apartment-input"/>
                     </div>
                     <div className="add-apartment-panel-9">
                       <Label className="add-apartment-city">City</Label>
-                      <Input value={formData.state} readOnly className="add-apartment-input"/>
+                      <Input value={formData.state} onChange={(e) => {
+                setFormData({ ...formData, state: e.target.value, lat: undefined, lng: undefined });
+                setLocationPinned(false);
+                setLocationResolving(Boolean(e.target.value.trim()));
+            }} placeholder="Iloilo City" className="add-apartment-input"/>
                     </div>
                     <div className="add-apartment-panel-9">
                       <Label className="add-apartment-zip-code">ZIP Code</Label>
-                      <Input value={formData.zip} readOnly className="add-apartment-input"/>
+                      <Input value={formData.zip} onChange={(e) => setFormData({ ...formData, zip: e.target.value })} placeholder="5000" className="add-apartment-input"/>
                     </div>
                   </div>
 
@@ -806,83 +910,61 @@ export function AddApartment() {
                 </div>)}
 
               {currentStep === 3 && (<>
-                  <div className="add-apartment-panel-8">
-                    <div className="add-apartment-row-6">
-                      <Building2 className="add-apartment-building2-icon"/>
-                      <h3 className="add-apartment-amenities">Amenities</h3>
+                  <section className="add-apartment-panel-8 add-apartment-choice-section">
+                    <div className="add-apartment-row-6"><h3>Amenities</h3></div>
+                    <p className="add-apartment-text-5">Select the available amenities for the property listing.</p>
+                    <div className="add-apartment-choice-grid add-apartment-amenity-grid">
+                      {SUGGESTED_AMENITIES.map((amenity) => {
+                const selected = getSubmittedAmenities().some((item) => item.toLowerCase() === amenity.toLowerCase());
+                return <button key={amenity} type="button" onClick={() => toggleCommaValue(setAmenitiesInput, amenity)} className={`add-apartment-choice ${selected ? "is-selected" : ""}`}>{amenity}</button>;
+            })}
                     </div>
-                    <div className="add-apartment-panel-9">
-                      <Label className="add-apartment-amenities-comma-separated">Amenities (comma-separated)</Label>
-                      <Textarea value={amenitiesInput} onChange={(e) => {
-                setAmenitiesInput(e.target.value);
-                if (e.target.value.split(",").some((amenity) => amenity.trim())) {
-                    clearValidationError("amenities");
+                    <p className="add-apartment-other-label">Other amenity (optional)</p>
+                    <div className="add-apartment-add-choice"><Input value={customAmenityInput} onChange={(event) => setCustomAmenityInput(event.target.value)} placeholder="Type an amenity and press Enter" onKeyDown={(event) => event.key === "Enter" && (event.preventDefault(), appendCommaValue(setAmenitiesInput, customAmenityInput, setCustomAmenityInput))}/><Button type="button" onClick={() => appendCommaValue(setAmenitiesInput, customAmenityInput, setCustomAmenityInput)}>Add</Button></div>
+                    <AddedChoiceTags values={getCustomChoiceValues(amenitiesInput, SUGGESTED_AMENITIES)} label="amenity" onRemove={(value) => removeCommaValue(setAmenitiesInput, value)}/>
+                    <FieldError field="amenities"/>
+                  </section>
+
+                  <section className="add-apartment-panel-8 add-apartment-choice-section">
+                    <div className="add-apartment-row-6"><h3>Utilities Included</h3></div>
+                    <p className="add-apartment-text-5">Select which operational utilities are included in the base rent price.</p>
+                    <div className="add-apartment-choice-grid add-apartment-utility-grid">
+                      {["Water", "Electricity", "Internet", "Gas", "Other"].map((utility) => {
+                const selected = String(utilitiesInput).split(",").some((item) => item.trim().toLowerCase() === utility.toLowerCase());
+                return <button key={utility} type="button" onClick={() => toggleCommaValue(setUtilitiesInput, utility)} className={`add-apartment-choice ${selected ? "is-selected" : ""}`}>{utility}</button>;
+            })}
+                    </div>
+                    <p className="add-apartment-other-label">Other utility (optional)</p>
+                    <div className="add-apartment-add-choice"><Input value={customUtilityInput} onChange={(event) => setCustomUtilityInput(event.target.value)} placeholder="Type a utility and press Enter" onKeyDown={(event) => event.key === "Enter" && (event.preventDefault(), appendCommaValue(setUtilitiesInput, customUtilityInput, setCustomUtilityInput))}/><Button type="button" onClick={() => appendCommaValue(setUtilitiesInput, customUtilityInput, setCustomUtilityInput)}>Add</Button></div>
+                    <AddedChoiceTags values={getCustomChoiceValues(utilitiesInput, ["Water", "Electricity", "Internet", "Gas", "Other"])} label="utility" onRemove={(value) => removeCommaValue(setUtilitiesInput, value)}/>
+                  </section>
+
+                  <section className="add-apartment-panel-8 add-apartment-choice-section">
+                    <div className="add-apartment-row-6"><h3>House Rules &amp; Policies</h3></div>
+                    <p className="add-apartment-text-5">Specify conditions for tenants for boarding houses and apartments.</p>
+                    <div className="add-apartment-choice-grid add-apartment-rules-grid">
+                      {SUGGESTED_HOUSE_RULES.map((rule) => {
+                const selected = houseRules.includes(rule);
+                return <button type="button" key={rule} onClick={() => setHouseRules((current) => selected ? current.filter((item) => item !== rule) : [...current, rule])} className={`add-apartment-choice ${selected ? "is-selected" : ""}`}>{rule}</button>;
+            })}
+                    </div>
+                    <p className="add-apartment-other-label">Other rule (optional)</p>
+                    <div className="add-apartment-add-choice"><Input value={customRuleInput} onChange={(event) => setCustomRuleInput(event.target.value)} placeholder="Type a rule and press Enter" onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    addCustomHouseRule();
                 }
-            }} aria-invalid={Boolean(validationErrors.amenities)} placeholder="e.g., Parking, WiFi, Gym, Pool" rows={3} className={`${fieldClass("amenities")} add-apartment-textarea`}/>
-                      <FieldError field="amenities"/>
-                      <div className="add-apartment-row-7">
-                        {SUGGESTED_AMENITIES.filter((suggestion) => !getSubmittedAmenities().some((item) => item.toLowerCase() === suggestion.toLowerCase())).map((suggestion) => (<button key={suggestion} type="button" onClick={() => setAmenitiesInput((current) => [...normalizeListValues(current), suggestion].join(", "))} className="add-apartment-button-10">
-                            <Plus className="add-apartment-plus-icon-2"/> {suggestion}
-                          </button>))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="add-apartment-panel-8">
-                    <div className="add-apartment-row-6">
-                      <Home className="add-apartment-home-icon-2"/>
-                      <h3 className="add-apartment-utilities-included">Utilities Included</h3>
-                    </div>
-                    <div className="add-apartment-panel-9">
-                      <Label className="add-apartment-included-utilities-comma-separated">Included Utilities (comma-separated)</Label>
-                      <Textarea value={utilitiesInput} onChange={(e) => setUtilitiesInput(e.target.value)} placeholder="e.g., Water, Electricity, Internet" rows={3} className="add-apartment-textarea-2"/>
-                    </div>
-                  </div>
-
-                  <div className="add-apartment-panel-8">
-                    <div className="add-apartment-row-6">
-                      <ListChecks className="add-apartment-list-checks-icon"/>
-                      <h3 className="add-apartment-additional-features">Additional Features</h3>
-                    </div>
-
-                    <div className="add-apartment-row-8">
-                      <Input value={featureInput} onChange={(e) => {
-                setFeatureInput(e.target.value);
-                if (e.target.value.trim())
-                    clearValidationError("features");
-            }} onKeyDown={handleFeatureKeyDown} aria-invalid={Boolean(validationErrors.features)} placeholder="Type feature and press Enter" className={`${fieldClass("features")} add-apartment-input-2`}/>
-                      <Button type="button" onClick={() => addFeature(featureInput)} className="add-apartment-button-11">
-                        <Plus className="add-apartment-plus-icon"/>
-                      </Button>
-                    </div>
-                    <FieldError field="features"/>
-                    <p className="add-apartment-text-5">Additional features are optional. Add only features the property actually has.</p>
-
-                    {features.length > 0 && (<div className="add-apartment-row-7">
-                        {features.map((feature, i) => (<span key={i} className="add-apartment-card-8">
-                            {feature}
-                            <button type="button" onClick={() => removeFeature(i)} className="add-apartment-button-12">
-                              <X className="add-apartment-x-icon-2"/>
-                            </button>
-                          </span>))}
-                      </div>)}
-
-                    <div className="add-apartment-panel-10">
-                      <p className="add-apartment-quick-add">Quick Add</p>
-                      <div className="add-apartment-row-7">
-                        {SUGGESTED_FEATURES.filter((s) => !features.map((f) => f.toLowerCase()).includes(s.toLowerCase())).map((suggestion) => (<button key={suggestion} type="button" onClick={() => addFeature(suggestion)} className="add-apartment-button-13">
-                            <Plus className="add-apartment-plus-icon-3"/> {suggestion}
-                          </button>))}
-                      </div>
-                    </div>
-                  </div>
+            }}/><Button type="button" onClick={addCustomHouseRule}>Add</Button></div>
+                    <AddedChoiceTags values={houseRules.filter((rule) => !SUGGESTED_HOUSE_RULES.some((suggested) => suggested.toLowerCase() === rule.toLowerCase()))} label="rule" onRemove={(value) => setHouseRules((current) => current.filter((rule) => rule.toLowerCase() !== value.toLowerCase()))}/>
+                  </section>
                 </>)}
 
               {currentStep === 4 && (<div className="add-apartment-panel-8">
                   <div className="add-apartment-row-6">
                     <ShieldCheck className="add-apartment-shield-check-icon"/>
-                    <h3 className="add-apartment-property-verification">Property Verification</h3>
+                    <h3 className="add-apartment-property-verification">Property Information</h3>
                   </div>
+                  <p className="add-apartment-verification-intro">Provide the property details used for verification.</p>
 
                   <div className="add-apartment-panel-9">
                     <Label className="add-apartment-property-name-2">
@@ -896,7 +978,7 @@ export function AddApartment() {
                     <Label className="add-apartment-property-address">
                       <MapPin className="add-apartment-map-pin-icon-2"/> Property Address
                     </Label>
-                    <Input value={[formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(", ")} readOnly className="add-apartment-input-3"/>
+                    <Input value={[persistedStreetAddress, formData.city, formData.state, formData.zip].filter(Boolean).join(", ")} readOnly className="add-apartment-input-3"/>
                     <p className="add-apartment-text-5">Carried from Location. Go back to step 2 to change this address.</p>
                   </div>
 
@@ -914,7 +996,7 @@ export function AddApartment() {
                     </div>
 
                     <div className="add-apartment-panel-9">
-                      <Label className="add-apartment-permit-expiry-date-optional">Permit Expiry Date (optional)</Label>
+                      <Label className="add-apartment-permit-expiry-date-optional">Permit Expiry Date <span aria-hidden="true">*</span></Label>
                       <Input type="date" value={verificationData.permitExpiry} onChange={(e) => setVerificationData({ ...verificationData, permitExpiry: e.target.value })}/>
                     </div>
 
@@ -958,14 +1040,12 @@ export function AddApartment() {
 
                   <div className="add-apartment-panel-11">
                     <div>
-                      <h3 className="add-apartment-verification-documents">Verification Documents</h3>
+                      <h3 className="add-apartment-verification-documents">Verification Document</h3>
                       <p className="add-apartment-text-7">Upload your business permit document for admin review. If no document is uploaded, it will be marked as “Not provided.”</p>
                       <p className="add-apartment-text-8">JPG, JPEG, PNG, WebP, or PDF · maximum 10 MB each</p>
                     </div>
                     <div className="add-apartment-grid-5">
-                      {VERIFICATION_DOCUMENT_TYPES
-                        .filter((documentType) => /business[\s_-]*permit/i.test(`${documentType.key ?? ""} ${documentType.label ?? ""}`))
-                        .map((documentType) => {
+                      {VERIFICATION_DOCUMENT_TYPES.slice(0, 1).map((documentType) => {
                 const document = verificationDocuments.find((item) => item.type === documentType.key);
                 const uploadId = `verification-upload-${documentType.key}`;
                 const cameraId = `verification-camera-${documentType.key}`;
@@ -979,7 +1059,7 @@ export function AddApartment() {
                               </div>)}
                             <div className="add-apartment-grid-7">
                               <input id={uploadId} type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" className="add-apartment-input-4" onChange={(event) => { selectVerificationDocument(documentType.key, event.target.files?.[0]); event.currentTarget.value = ""; }}/>
-                              <label htmlFor={uploadId} className="add-apartment-label"><Upload className="add-apartment-upload-icon-3"/>{document ? "Replace" : "Upload"}</label>
+                              <label htmlFor={uploadId} className="add-apartment-label"><Upload className="add-apartment-upload-icon-3"/>{document ? "Replace" : "Browse files"}</label>
                               <input id={cameraId} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="add-apartment-input-4" onChange={(event) => { selectVerificationDocument(documentType.key, event.target.files?.[0]); event.currentTarget.value = ""; }}/>
                               <label htmlFor={cameraId} className="add-apartment-take-photo"><Camera className="add-apartment-camera-icon"/>Take photo</label>
                               {document && <button type="button" onClick={() => removePendingVerificationDocument(documentType.key)} className="add-apartment-remove-file"><Trash2 className="add-apartment-trash2-icon"/>Remove file</button>}
@@ -994,7 +1074,7 @@ export function AddApartment() {
                 {currentStep > 1 ? (<Button type="button" variant="outline" onClick={handlePrevStep} className="add-apartment-previous">
                     <ArrowLeft className="add-apartment-arrow-left-icon"/> Previous
                   </Button>) : (<Button type="button" variant="outline" onClick={() => navigate(-1)} className="add-apartment-cancel">
-                    <ArrowLeft className="add-apartment-arrow-left-icon"/> Cancel
+                    Cancel
                   </Button>)}
 
                 {currentStep < totalSteps ? (<Button type="button" onClick={handleNextStep} className="add-apartment-next">
@@ -1037,9 +1117,28 @@ export function AddApartment() {
         </div>)}
       {guidelinesOpen && draftReady && !pendingDraft && (
         <PropertyGuidelines
-          onAccept={() => setGuidelinesOpen(false)}
-          onClose={() => navigate("/dashboard?section=overview")}
+          onAccept={dismissGuidelines}
+          onClose={() => {
+                dismissGuidelines();
+                navigate("/dashboard?section=overview");
+            }}
         />
       )}
-    </main>);
+            </div>
+        </main>
+      </div>
+    </div>);
+}
+
+function AddedChoiceTags({ values, label, onRemove }) {
+    if (values.length === 0)
+        return null;
+    return (<div className="add-apartment-added-choice-tags" aria-label={`Added ${label}s`}>
+      {values.map((value) => (<span key={value.toLowerCase()} className="add-apartment-added-choice-tag">
+          {value}
+          <button type="button" onClick={() => onRemove(value)} aria-label={`Remove ${value}`}>
+            <X aria-hidden="true"/>
+          </button>
+        </span>))}
+    </div>);
 }

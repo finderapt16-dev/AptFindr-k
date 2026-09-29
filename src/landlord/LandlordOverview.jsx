@@ -685,14 +685,14 @@ export const LandlordOverview = ({
     <div className="ld-simple-dashboard">
       <header className="ld-simple-heading">
         <h1>Landlord Dashboard</h1>
-        <p>Manage your properties and tenant engagement.</p>
+        <p>Monitor your property and tenant engagement.</p>
       </header>
 
       <section className="ld-properties-card">
         <div className="ld-properties-header">
           <div>
-            <h2>My Properties</h2>
-            <p>Manage your properties and view tenant engagement.</p>
+            <h2>Your Properties</h2>
+            <p>Manage your apartments, rooms, and availability.</p>
           </div>
         </div>
 
@@ -715,8 +715,8 @@ export const LandlordOverview = ({
               to="/add-apartment"
               className="ld-empty-properties-add-button"
             >
-              <Plus size={18} />
-              Add Property
+              <Plus size={18} strokeWidth={3} />
+              <span>Add Property</span>
             </Link>
 
             <div className="ld-empty-properties-review">

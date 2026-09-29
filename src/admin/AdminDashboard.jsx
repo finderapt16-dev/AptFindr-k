@@ -1113,7 +1113,7 @@ export function AdminDashboard() {
             }),
         ].filter((item) => item.timestamp)
             .sort((left, right) => new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime())
-            .slice(0, 5);
+            .slice(0, 10);
         const itemMotion = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
         return (<div className="admin-dashboard-container-2">
         <header className="admin-dashboard-header">

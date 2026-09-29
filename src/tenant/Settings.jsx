@@ -49,7 +49,6 @@ export function Settings({
     onSave,
     loading,
     onDeleteAccount,
-    onEditProfile,
     onChangePassword,
 }) {
     const [busy, setBusy] = useState(false);
@@ -253,14 +252,6 @@ export function Settings({
                         security.
                     </p>
                 </div>
-
-                <button
-                    type="button"
-                    className="tenant-profile-edit-profile"
-                    onClick={() => onEditProfile?.()}
-                >
-                    Edit profile
-                </button>
             </header>
 
 

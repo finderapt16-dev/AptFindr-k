@@ -34,6 +34,28 @@ export function AuthProvider({ children }) {
             }
         });
     }, []);
+    const hydrateSession = useCallback(async () => {
+        const requestId = ++authRequestIdRef.current;
+        setIsLoading(true);
+        try {
+            const authenticatedUser = await getCurrentAuthenticatedUser();
+            if (requestId !== authRequestIdRef.current)
+                return null;
+            setCurrentUser(authenticatedUser);
+            return authenticatedUser;
+        }
+        catch (error) {
+            if (requestId === authRequestIdRef.current) {
+                setCurrentUser(null);
+                persistCurrentUser(null);
+            }
+            throw error;
+        }
+        finally {
+            if (requestId === authRequestIdRef.current)
+                setIsLoading(false);
+        }
+    }, []);
     useEffect(() => {
         let isActive = true;
         const initializeAuth = async () => {
@@ -209,6 +231,7 @@ export function AuthProvider({ children }) {
         isLoading,
         isAuthenticated: currentUser !== null,
         refreshUsers,
+        hydrateSession,
         login,
         signup,
         updateUser,
@@ -222,6 +245,7 @@ export function AuthProvider({ children }) {
         pendingLandlordCount,
         isLoading,
         refreshUsers,
+        hydrateSession,
         login,
         signup,
         updateUser,

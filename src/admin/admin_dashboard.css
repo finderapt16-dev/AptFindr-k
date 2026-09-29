@@ -141,7 +141,7 @@
   transform: none !important;
 }
 
-.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item::before {
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item:not(.is-active)::before {
   display: none !important;
 }
 
@@ -166,6 +166,24 @@
 .admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item:hover > svg,
 .admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item.is-active > svg {
   color: #0284c7 !important;
+}
+
+/* Match the tenant sidebar's clear active-location cue for admin navigation. */
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item {
+  position: relative;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.admin-portal-shell .admin-figma-sidebar .admin-figma-sidebar-item.is-active::before {
+  content: "";
+  position: absolute;
+  top: 15%;
+  bottom: 15%;
+  left: -13px;
+  width: 4px;
+  border-radius: 0 999px 999px 0;
+  background: #16a5e1;
+  animation: app-sidebar-indicator-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .admin-figma-sidebar-item small {

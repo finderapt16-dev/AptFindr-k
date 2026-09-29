@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { exchangeAuthCode, getAuthUser, getCurrentAuthenticatedUser, signOutAuthSession } from "@/services/authService";
+import { useAuth } from "@/contexts/AuthContext";
+import { clearPendingGoogleOAuthFlow, exchangeAuthCode, getAuthUser, getExistingProfileForAuthUser, getPendingGoogleOAuthFlow, isTenantRole, signOutAuthSession } from "@/services/authService";
 export function AuthCallback() {
     const navigate = useNavigate();
+    const { hydrateSession } = useAuth();
     const [error, setError] = useState("");
     useEffect(() => {
         let active = true;
@@ -10,6 +12,7 @@ export function AuthCallback() {
             const params = new URLSearchParams(window.location.search);
             const callbackError = params.get("error_description") || params.get("error");
             if (callbackError) {
+                clearPendingGoogleOAuthFlow();
                 console.error("Authentication callback was rejected:", callbackError);
                 if (active)
                     navigate("/login", {
@@ -39,18 +42,32 @@ export function AuthCallback() {
                 return;
             }
             try {
-                const profile = await getCurrentAuthenticatedUser();
-                if (!profile)
-                    throw new Error("The verified account profile is not available.");
                 const isGoogleAuth = data.user.app_metadata?.provider === "google";
                 if (isGoogleAuth) {
+                    const oauthFlow = getPendingGoogleOAuthFlow();
+                    const existingProfile = await getExistingProfileForAuthUser(data.user);
+                    // A bare Google login must never invent a tenant or landlord
+                    // profile. Keep the authenticated Google session and send the
+                    // person through the existing role/account setup screen.
+                    if (!existingProfile && oauthFlow !== "signup") {
+                        clearPendingGoogleOAuthFlow();
+                        if (active)
+                            navigate("/signup?google=setup", { replace: true });
+                        return;
+                    }
+                    const profile = await hydrateSession();
+                    if (!profile)
+                        throw new Error("The Google account profile is not available.");
+                    clearPendingGoogleOAuthFlow();
                     if (active)
-                        navigate("/dashboard", { replace: true });
+                        navigate(isTenantRole(profile.role) ? "/browse" : profile.role === "admin" ? "/admin" : "/dashboard", { replace: true });
                     return;
                 }
-                await signOutAuthSession();
+                const profile = await hydrateSession();
+                if (!profile)
+                    throw new Error("The verified account profile is not available.");
                 if (active)
-                    navigate("/login", { replace: true, state: { message: "Email verified successfully. You can now sign in." } });
+                    navigate(isTenantRole(profile.role) ? "/browse" : profile.role === "admin" ? "/admin" : "/dashboard", { replace: true });
             }
             catch (profileError) {
                 console.error("Email was verified but profile recovery failed:", profileError);
@@ -60,7 +77,7 @@ export function AuthCallback() {
             }
         })();
         return () => { active = false; };
-    }, [navigate]);
+    }, [hydrateSession, navigate]);
     return (<main className="auth-status-page">
       <section className="auth-status-card">
         {error ? (<>

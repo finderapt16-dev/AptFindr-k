@@ -2163,3 +2163,51 @@
   height: calc(var(--spacing, .25rem) * 4);
   width: calc(var(--spacing, .25rem) * 4);
 }
+
+/* Reference favorite listing card. This replaces the former favorite-only card. */
+.favorites-reference-card { overflow: hidden; border: 1px solid #e4e7ec; border-radius: 10px; background: #fff; box-shadow: 0 2px 6px rgba(16, 24, 40, .06); }
+.favorites-reference-image-wrap { aspect-ratio: 4 / 3; position: relative; overflow: hidden; background: #eef2f6; }
+.favorites-reference-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+.favorites-reference-image-placeholder { width: 100%; height: 100%; display: grid; place-items: center; color: #98a2b3; }
+.favorites-reference-image-placeholder svg { width: 42px; height: 42px; }
+.favorites-reference-badges { position: absolute; top: 14px; left: 14px; display: grid; justify-items: start; gap: 6px; }
+.favorites-reference-status, .favorites-reference-verified, .favorites-reference-pet { min-height: 23px; display: inline-flex; align-items: center; padding: 0 9px; border-radius: 5px; font-size: 12px; font-weight: 750; box-shadow: 0 1px 3px rgba(16, 24, 40, .16); }
+.favorites-reference-status { background: #00a86b; color: #fff; }
+.favorites-reference-verified { background: #fff; color: #0788c4; }
+.favorites-reference-pet { background: rgba(255,255,255,.95); color: #667085; }
+.favorites-reference-heart { position: absolute; top: 14px; right: 14px; width: 46px; height: 46px; display: grid; place-items: center; border: 0; border-radius: 50%; background: #fff; color: #ff2b5c; box-shadow: 0 2px 8px rgba(16, 24, 40, .14); }
+.favorites-reference-heart:disabled { opacity: .55; }
+.favorites-reference-heart svg { width: 25px; height: 25px; }
+.favorites-reference-content { padding: 18px 19px 16px; }
+.favorites-reference-heading-row, .favorites-reference-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.favorites-reference-heading-row h2 { margin: 0; min-width: 0; overflow: hidden; color: #101828; font-size: 19px; line-height: 1.2; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.favorites-reference-heading-row strong { color: #475467; font-size: 14px; white-space: nowrap; }
+.favorites-reference-meta { margin-top: 8px; color: #475467; font-size: 12px; font-weight: 650; }
+.favorites-reference-meta span, .favorites-reference-specs span { display: inline-flex; align-items: center; gap: 5px; }
+.favorites-reference-meta span:first-child { color: #475467; }
+.favorites-reference-meta span:first-child svg { color: #f5a623; }
+.favorites-reference-meta span:last-child { color: #4c91c5; }
+.favorites-reference-meta svg { width: 14px; height: 14px; }
+.favorites-reference-location { min-height: 37px; margin: 16px 0; display: flex; align-items: flex-start; gap: 7px; color: #5e7898; font-size: 14px; font-weight: 600; line-height: 1.3; }
+.favorites-reference-location svg { width: 16px; height: 16px; flex: 0 0 auto; color: #20a9e4; }
+.favorites-reference-specs { display: flex; flex-wrap: wrap; gap: 12px; padding: 14px 0 18px; border-bottom: 1px solid #eaecf0; color: #596b82; font-size: 12px; }
+.favorites-reference-specs svg { width: 16px; height: 16px; color: #20a9e4; }
+.favorites-reference-specs b { color: #344054; }
+.favorites-reference-details { min-height: 48px; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 11px; border: 1px solid #d0d5dd; border-radius: 9px; color: #596b82; font-size: 14px; font-weight: 750; text-decoration: none; }
+.favorites-reference-details:hover { border-color: #98a2b3; background: #f9fafb; }
+.favorites-reference-details svg { width: 17px; height: 17px; color: #667085; }
+@media (max-width: 420px) {
+  .favorites-reference-content { padding: 15px; }
+  .favorites-reference-heading-row h2 { font-size: 18px; }
+  .favorites-reference-heading-row strong { font-size: 13px; }
+  .favorites-reference-specs { gap: 9px; font-size: 11px; }
+}
+
+/* Favorites uses the same responsive grid that contains dashboard listing cards. */
+.favorites-section-grid-2 { gap: calc(var(--spacing, .25rem) * 5); }
+@media (min-width: 48rem) {
+  .favorites-section-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 80rem) {
+  .favorites-section-grid-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

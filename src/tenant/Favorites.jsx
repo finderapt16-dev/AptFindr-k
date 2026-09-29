@@ -1,7 +1,8 @@
-import { Bath, Bed, Bookmark, Building2, ChevronRight, Eye, Grid2X2, Heart, List, MapPin, Search, Square, Trash2 } from "lucide-react";
+import { Bath, Bed, Bookmark, Building2, ChevronRight, Eye, Grid2X2, Heart, List, MapPin, Search, Square } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApartmentsContext } from "@/contexts/ApartmentsContext";
@@ -16,16 +17,35 @@ import { useTenantNotifications } from "@/tenant/useTenantNotifications";
 import { getAvailableRoomCount, getLowestAvailableRoomPrice, isTenantVisibleApartment, getAvailableRoomCount as getAvailableRooms } from "@/utils/listingVisibility";
 import { ApartmentRatingSummary } from "@/components/ApartmentRatingSummary";
 import { EmptyState } from "@/tenant/EmptyState";
+import { ApartmentCard } from "@/tenant/ApartmentDiscovery";
 const STATUS_LABEL = {
     available: "Available",
     occupied: "Occupied",
     maintenance: "Under Maintenance",
 };
-const STATUS_CLASS = {
-    available: "favorites-badge-2",
-    occupied: "favorites-badge-3",
-    maintenance: "favorites-badge-4",
+const BROWSE_STATUS_CLASS = {
+    available: "apartment-browse-badge-3",
+    occupied: "apartment-browse-badge-4",
+    maintenance: "apartment-browse-badge-5",
 };
+
+const getBrowsePriceLabel = (apartment) => {
+    const prices = (apartment.rooms ?? [])
+        .map((room) => Number(room.price))
+        .filter((price) => Number.isFinite(price) && price > 0);
+    if (prices.length === 0) {
+        return "Price unavailable";
+    }
+    const lowest = Math.min(...prices);
+    const highest = Math.max(...prices);
+    const formatPrice = (price) => `₱${price.toLocaleString("en-PH")}`;
+    return lowest === highest
+        ? `${formatPrice(lowest)}/month`
+        : `${formatPrice(lowest)} - ${formatPrice(highest)}/month`;
+};
+
+const favoriteViewLabel = (count) =>
+    `${count.toLocaleString()} ${count === 1 ? "view" : "views"}`;
 export function Favorites() {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -132,60 +152,51 @@ export function Favorites() {
         const availableRooms = getAvailableRooms(apartment);
         const images = [apartment.image, ...(apartment.images ?? [])].filter(Boolean);
         const location = formatApartmentLocation(apartment);
-        return (<article className={`favorites-article ${viewMode === "list" ? "favorites-article-2" : ""}`}>
-        <div className="favorites-panel">
-          <div className={viewMode === "list" ? "favorites-panel-2" : "favorites-panel-3"}>
-            {images[0] ? (<img src={getImageUrl(images[0])} alt={apartment.title} className="favorites-image"/>) : (<div className="favorites-row">
-                <Building2 className="favorites-building2-icon"/>
-              </div>)}
-          </div>
-          <div className="favorites-content">
-            {apartment.landlordVerified === true && <VerifiedBadge label="Verified Listing" className="favorites-verified-badge"/>}
-            {apartment.petFriendly && <Badge className="favorites-pet-friendly">Pet Friendly</Badge>}
-            <Badge className={`favorites-badge ${STATUS_CLASS[status] ?? STATUS_CLASS.available}`}>{STATUS_LABEL[status] ?? "Available"}</Badge>
-          </div>
-          <button onClick={() => void removeFavorite(apartment.id)} disabled={removingId === apartment.id} className="favorites-remove-from-favorites" aria-label="Remove from favorites">
-            <Heart className="favorites-heart-icon"/>
-          </button>
-        </div>
+        const isVerified = apartment.landlordVerified === true || apartment.isVerified === true;
+        const viewCount = Number(apartment.views ?? apartment.viewCount ?? 0);
 
-        <div className="favorites-content-2">
-          <div className="favorites-content-3">
-            <div className="favorites-panel-4">
-              <h2 className="favorites-heading">{apartment.title}</h2>
-              <div className="favorites-row-2">
-                <MapPin className="favorites-map-pin-icon"/>
-                <span>{location}</span>
+        return (<article className="apartment-browse-article">
+          <div className="apartment-browse-panel-5">
+            {images[0] ? (<ImageWithFallback src={getImageUrl(images[0])} alt={apartment.title} className="apartment-browse-image-with-fallback"/>) : (<div className="apartment-browse-row-6">
+                <Building2 className="apartment-browse-building2-icon"/>
+              </div>)}
+
+            <div className="apartment-browse-content-2">
+              <Badge className={`apartment-browse-badge-2 ${BROWSE_STATUS_CLASS[status] ?? BROWSE_STATUS_CLASS.available}`}>{STATUS_LABEL[status] ?? "Available"}</Badge>
+              {isVerified && <VerifiedBadge label="Verified Listing" className="apartment-browse-verified-badge"/>}
+              {apartment.petFriendly && <Badge className="apartment-browse-pet-friendly">Pet Friendly</Badge>}
+            </div>
+
+            <button type="button" title="Remove from favorites" onClick={() => void removeFavorite(apartment.id)} disabled={removingId === apartment.id} className="apartment-browse-button-6 apartment-browse-button-7" aria-label="Remove from favorites">
+              <Heart className="apartment-browse-heart-icon" fill="currentColor"/>
+            </button>
+          </div>
+
+          <div className="apartment-browse-panel-6">
+            <div className="apartment-browse-row-7">
+              <div className="apartment-browse-panel-7">
+                <h2 className="apartment-browse-heading">{apartment.title}</h2>
+                <ApartmentRatingSummary stats={(apartment.rating ?? apartment.averageRating ?? apartment.average_rating) ? { average: Number(apartment.rating ?? apartment.averageRating ?? apartment.average_rating), count: Number(apartment.ratingCount ?? apartment.rating_count ?? 1) } : undefined} className="apartment-browse-apartment-rating-summary"/>
+                <p className="apartment-browse-text-3"><MapPin className="apartment-browse-map-pin-icon"/>{location}</p>
+              </div>
+              <div className="apartment-browse-panel-8">
+                <p className="apartment-browse-view-room-prices">{getBrowsePriceLabel(apartment)}</p>
+                <p className="apartment-browse-text-4"><Eye className="apartment-browse-eye-icon"/>{favoriteViewLabel(viewCount)}</p>
               </div>
             </div>
-            <div className="favorites-panel-5">
-              <p className="favorites-view-room-prices">View room prices</p>
+
+            <div className="apartment-browse-grid-5">
+              <BrowseMetric icon={Building2} value={availableRooms.toLocaleString()} label="rooms"/>
+              <BrowseMetric icon={Bed} value={Number(apartment.bedrooms ?? apartment.rooms?.length ?? 0).toLocaleString()} label="bed"/>
+              <BrowseMetric icon={Bath} value={Number(apartment.bathrooms ?? 0).toLocaleString()} label="bath"/>
+              <BrowseMetric icon={Square} value={Number(apartment.sqft ?? 0).toLocaleString()} label="sqft"/>
             </div>
-          </div>
 
-          <div className="favorites-grid">
-            <InfoPill icon={Bookmark} value={availableRooms.toLocaleString()} label={availableRooms === 1 ? "Room" : "Rooms"} tone="tenant-tone-brand"/>
-            <InfoPill icon={Bed} value={apartment.rooms?.length ? apartment.rooms.length.toLocaleString() : apartment.bedrooms.toLocaleString()} label={apartment.rooms?.length ? "Room count" : "Beds"} tone="tenant-tone-brand"/>
-            <InfoPill icon={Bath} value={apartment.bathrooms.toLocaleString()} label={apartment.bathrooms === 1 ? "Bath" : "Baths"} tone="tenant-tone-brand"/>
-            <InfoPill icon={Square} value={Number(apartment.sqft || 0).toLocaleString()} label="Sqft" tone="tenant-tone-brand"/>
-          </div>
-
-          {apartment.description && (<p className="favorites-text">{apartment.description}</p>)}
-
-          <div className="favorites-content-4">
-            <Button asChild variant="outline" className="favorites-button">
-              <Link to={`/apartment/${apartment.id}`} state={{ returnTo: "/favorites", backLabel: "Back to Favorites" }}>
-                <Eye className="favorites-eye-icon"/>
-                View Details
-              </Link>
-            </Button>
-            <Button variant="outline" disabled={removingId === apartment.id} onClick={() => void removeFavorite(apartment.id)} className="favorites-button-2">
-              <Trash2 className="favorites-trash2-icon"/>
-              {removingId === apartment.id ? "Removing..." : "Remove"}
+            <Button asChild variant="outline" className="apartment-browse-button-9">
+              <Link to={`/apartment/${apartment.id}`} state={{ returnTo: "/favorites", backLabel: "Back to Favorites" }}><Eye className="apartment-browse-eye-icon-2"/>View Details</Link>
             </Button>
           </div>
-        </div>
-      </article>);
+        </article>);
     };
     return (<div className="tenant-browse app-shell">
       <MobileNavigation active="favorites" unreadCount={unreadCount}/>
@@ -246,7 +257,7 @@ export function Favorites() {
                   <Search className="favorites-search-icon"/>
                   <h2 className="favorites-no-favorites-match-this-filter">No favorites match this filter</h2>
                   <Button variant="outline" onClick={() => setFilter("all")} className="favorites-show-all-favorites">Show All Favorites</Button>
-                </div>) : (<div className={viewMode === "grid" ? "favorites-grid-3" : "favorites-panel-11"}>
+                </div>) : (<div className="apartment-browse-grid-11">
                   {visibleFavorites.map((apartment) => (<FavoriteCard key={apartment.id} apartment={apartment}/>))}
                 </div>)}
             </section>
@@ -278,6 +289,14 @@ function InfoPill({ icon: Icon, value, label, tone, }) {
         <p className="favorites-text-7">{value}</p>
         <p className="favorites-text-8">{label}</p>
       </div>
+    </div>);
+}
+
+function BrowseMetric({ icon: Icon, value, label, }) {
+    return (<div className="apartment-browse-row-10">
+      <Icon className="apartment-browse-icon-icon"/>
+      <span className="apartment-browse-span-3">{value}</span>
+      <span className="apartment-browse-span-4">{label}</span>
     </div>);
 }
 
@@ -363,82 +382,7 @@ export const FavoritesOverview = ({ favoriteApartments, visibleFavoriteApartment
       </Button>
     </section>
   </div>);
-const FavoriteApartmentCard = ({ apartment, favoriteView, removingFavoriteId, removeFavorite, ratingSummary, ratingsLoading, }) => {
-    const status = apartment.status ?? "available";
-    const statusClass = {
-        available: "favorite-apartment-card-badge-2",
-        occupied: "favorite-apartment-card-badge-3",
-        maintenance: "favorite-apartment-card-badge-4",
-    };
-    const statusLabel = {
-        available: "Available",
-        occupied: "Occupied",
-        maintenance: "Under Maintenance",
-    };
-    const availableRooms = getAvailableRooms(apartment);
-    const images = [apartment.image, ...(apartment.images ?? [])].filter(Boolean);
-    const locationLabel = formatApartmentLocation(apartment);
-    return (<article className={`favorite-apartment-card-article ${favoriteView === "list" ? "favorite-apartment-card-article-2" : ""}`}>
-      <div className="favorite-apartment-card-panel">
-        <div className={favoriteView === "list" ? "favorite-apartment-card-panel-2" : "favorite-apartment-card-panel-3"}>
-          {images[0] ? (<img src={getImageUrl(images[0])} alt={apartment.title} className="favorite-apartment-card-image"/>) : (<div className="favorite-apartment-card-row">
-              <Building2 className="favorite-apartment-card-building2-icon"/>
-            </div>)}
-        </div>
-        <div className="favorite-apartment-card-content">
-          <VerifiedBadge label="Verified Listing" className="favorite-apartment-card-verified-badge"/>
-          {apartment.petFriendly && <Badge className="favorite-apartment-card-pet-friendly">Pet Friendly</Badge>}
-          <Badge className={`favorite-apartment-card-badge ${statusClass[status] ?? statusClass.available}`}>{statusLabel[status] ?? "Available"}</Badge>
-        </div>
-        <button onClick={() => void removeFavorite(apartment.id)} disabled={removingFavoriteId === apartment.id} className="favorite-apartment-card-remove-from-favorites" aria-label="Remove from favorites">
-          <Heart className="favorite-apartment-card-heart-icon"/>
-        </button>
-        {images.length > 1 && (<div className="favorite-apartment-card-grid">
-            {images.slice(1, 5).map((image, index) => (<div key={`${image}-${index}`} className="favorite-apartment-card-panel-4">
-                <img src={getImageUrl(image)} alt={`${apartment.title} ${index + 2}`} className="favorite-apartment-card-image"/>
-              </div>))}
-          </div>)}
-      </div>
-
-      <div className="favorite-apartment-card-content-2">
-        <div className="favorite-apartment-card-content-3">
-          <div className="favorite-apartment-card-panel-5">
-            <h2 className="favorite-apartment-card-heading">{apartment.title}</h2>
-            <ApartmentRatingSummary stats={ratingSummary.byApartment.get(apartment.id)} isLoading={ratingsLoading} className="favorite-apartment-card-apartment-rating-summary"/>
-            <div className="favorite-apartment-card-row-2">
-              <MapPin className="favorite-apartment-card-map-pin-icon"/>
-              <span>{locationLabel}</span>
-            </div>
-          </div>
-          <div className="favorite-apartment-card-panel-6">
-            <p className="favorite-apartment-card-view-room-prices">View room prices</p>
-          </div>
-        </div>
-
-        <div className="favorite-apartment-card-grid-2">
-          <SavedInfoPill icon={Bookmark} value={availableRooms.toLocaleString()} label={availableRooms === 1 ? "Room" : "Rooms"} tone="tenant-tone-brand-muted"/>
-          <SavedInfoPill icon={Bed} value={apartment.rooms?.length ? apartment.rooms.length.toLocaleString() : apartment.bedrooms.toLocaleString()} label={apartment.rooms?.length ? "Room count" : "Beds"} tone="tenant-tone-rose"/>
-          <SavedInfoPill icon={Bath} value={apartment.bathrooms.toLocaleString()} label={apartment.bathrooms === 1 ? "Bath" : "Baths"} tone="tenant-tone-purple"/>
-          <SavedInfoPill icon={Square} value={Number(apartment.sqft || 0).toLocaleString()} label="Sqft" tone="tenant-tone-sky"/>
-        </div>
-
-        {apartment.description && (<p className="favorite-apartment-card-text">{apartment.description}</p>)}
-
-        <div className="favorite-apartment-card-content-4">
-          <Button asChild variant="outline" className="favorite-apartment-card-button">
-            <Link to={`/apartment/${apartment.id}`} state={{ returnTo: "/dashboard?section=favorites", backLabel: "Back to Favorites" }}>
-              <Eye className="favorite-apartment-card-eye-icon"/>
-              View Details
-            </Link>
-          </Button>
-          <Button variant="outline" disabled={removingFavoriteId === apartment.id} onClick={() => void removeFavorite(apartment.id)} className="favorite-apartment-card-button-2">
-            <Trash2 className="favorite-apartment-card-trash2-icon"/>
-            {removingFavoriteId === apartment.id ? "Removing..." : "Remove"}
-          </Button>
-        </div>
-      </div>
-    </article>);
-};
+const FavoriteApartmentCard = ({ apartment, ratingSummary, ratingsLoading, }) => (<ApartmentCard apartment={apartment} ratingStats={ratingSummary.byApartment.get(apartment.id)} ratingsLoading={ratingsLoading} detailState={{ returnTo: "/dashboard?section=favorites", backLabel: "Back to Favorites" }}/>);
 const SavedInfoPill = ({ icon: Icon, value, label, tone, }) => (<div className="info-pill-row">
     <span className={`info-pill-row-2 ${tone}`}>
       <Icon className="info-pill-icon-icon"/>

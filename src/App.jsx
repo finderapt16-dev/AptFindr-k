@@ -1,10 +1,12 @@
 import { lazy } from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider, useLocation } from "react-router-dom";
 import { AppRuntime } from "./components/AppRuntime";
 import { PageLoader } from "./components/PageLoader";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import { ApartmentsProvider } from "./contexts/ApartmentsContext";
 import { Root } from "./components/Root";
+import { useAuth } from "./contexts/AuthContext";
+import { isTenantRole } from "./services/authService";
 // Public
 const Landing = lazy(() => import("./landing/Landing").then((module) => ({ default: module.Landing })));
 const NotFound = lazy(() => import("./landing/NotFound").then((module) => ({ default: module.NotFound })));
@@ -31,6 +33,15 @@ const AdminApartmentDetail = lazy(() => import("./admin/AdminApartmentDetail").t
 const roleDashboard = <Dashboard tenant={<TenantDashboard />} landlord={<LandlordDashboard />} admin={<AdminDashboard />}/>;
 const APARTMENT_LOGIN_MESSAGE = "Please sign in or create an account to view apartment details.";
 function PublicLandingRoute() {
+    const { user, isLoading } = useAuth();
+    const location = useLocation();
+    if (location.pathname === "/login" && isLoading) {
+        return <div className="auth-status-page auth-session-loading">Checking your session...</div>;
+    }
+    if (location.pathname === "/login" && user?.role) {
+        const destination = user.role === "admin" ? "/admin" : isTenantRole(user.role) ? "/browse" : "/dashboard";
+        return <Navigate to={destination} replace />;
+    }
     return (<ApartmentsProvider>
       <PageLoader><Landing /></PageLoader>
     </ApartmentsProvider>);

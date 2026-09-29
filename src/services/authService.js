@@ -14,6 +14,7 @@ export class SignupFlowError extends Error {
 }
 const APP_USERS_TABLE = 'app_users';
 const VALID_ROLES = new Set(['tenant', 'landlord', 'admin']);
+const GOOGLE_OAUTH_FLOW_STORAGE_KEY = 'aptfindr.google-oauth-flow';
 let latestAuthProfileRequestId = 0;
 function isRecord(value) {
     return typeof value === 'object' && value !== null;
@@ -60,6 +61,21 @@ function normalizeRoleValue(value) {
 }
 export function isTenantRole(role) {
     return normalizeRoleValue(role) === 'tenant';
+}
+export function setPendingGoogleOAuthFlow(flow) {
+    if (typeof window === 'undefined' || !['login', 'signup'].includes(flow))
+        return;
+    window.sessionStorage.setItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY, flow);
+}
+export function getPendingGoogleOAuthFlow() {
+    if (typeof window === 'undefined')
+        return null;
+    const flow = window.sessionStorage.getItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY);
+    return ['login', 'signup'].includes(flow) ? flow : null;
+}
+export function clearPendingGoogleOAuthFlow() {
+    if (typeof window !== 'undefined')
+        window.sessionStorage.removeItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY);
 }
 function assertValidRole(role) {
     if (!VALID_ROLES.has(role)) {
@@ -232,6 +248,14 @@ export async function fetchUserByEmail(email) {
     }
     return data ? normalizeUser(data) : null;
 }
+export async function getExistingProfileForAuthUser(authUser) {
+    if (!authUser?.id)
+        return null;
+    const existingByAuthId = await fetchUserByAuthId(authUser.id);
+    if (existingByAuthId)
+        return existingByAuthId;
+    return authUser.email ? fetchUserByEmail(authUser.email) : null;
+}
 async function ensureProfileForAuthUser(authUser) {
     const existingByAuthId = await fetchUserByAuthId(authUser.id);
     if (existingByAuthId) {
@@ -276,9 +300,7 @@ async function ensureProfileForAuthUser(authUser) {
     const address = typeof authUser.user_metadata?.address === 'string' ? authUser.user_metadata.address : null;
     const mobile = typeof authUser.user_metadata?.mobile === 'string' ? authUser.user_metadata.mobile : null;
     const status = role === 'landlord' ? 'pending' : 'active';
-    const { data, error } = await supabaseClient
-        .from(APP_USERS_TABLE)
-        .insert({
+    const profilePayload = {
         auth_id: authUser.id,
         email,
         name,
@@ -288,10 +310,22 @@ async function ensureProfileForAuthUser(authUser) {
         role,
         status,
         is_verified: role !== 'landlord',
-    })
+    };
+    const { data, error } = await supabaseClient
+        .from(APP_USERS_TABLE)
+        .insert(profilePayload)
         .select('*')
         .single();
     if (error) {
+        // The auth-state listener and callback hydration can arrive together
+        // after OAuth. A unique-key collision means the other request created
+        // the same profile first, so load it instead of treating it as a
+        // second account or a failed sign-in.
+        if (error.code === '23505') {
+            const concurrentProfile = await getExistingProfileForAuthUser(authUser);
+            if (concurrentProfile)
+                return concurrentProfile;
+        }
         throw new Error(error.message);
     }
     const profile = normalizeUser(data);
@@ -501,6 +535,25 @@ export async function signupWithGoogle({ termsAccepted }) {
     if (termsAccepted !== true) {
         throw new SignupFlowError('You must agree to the Terms of Use and Privacy Policy to continue.', 'validation', 'terms_required');
     }
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const currentAuthUser = sessionData.session?.user;
+    const isGoogleSession = currentAuthUser?.app_metadata?.provider === 'google' || currentAuthUser?.identities?.some((identity) => identity.provider === 'google');
+    if (isGoogleSession) {
+        const existingProfile = await getExistingProfileForAuthUser(currentAuthUser);
+        if (existingProfile)
+            return { profile: existingProfile };
+        const { error: updateError } = await supabaseClient.auth.updateUser({
+            data: {
+                role: 'tenant',
+                username: `google_${safeRandomId().replace(/-/g, '').slice(0, 23)}`,
+                termsAccepted: true,
+            },
+        });
+        if (updateError)
+            throw new SignupFlowError('We could not finish setting up your Google account. Please try again.', 'profile', 'google_profile', { cause: updateError });
+        return { profile: await getCurrentAuthenticatedUser() };
+    }
+    setPendingGoogleOAuthFlow('signup');
     const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -520,6 +573,7 @@ export async function signupWithGoogle({ termsAccepted }) {
     }
 }
 export async function loginWithGoogle() {
+    setPendingGoogleOAuthFlow('login');
     const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {

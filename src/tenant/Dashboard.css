@@ -853,3 +853,54 @@
     height: 190px;
   }
 }
+
+/* Leaflet map shown directly on the tenant dashboard overview. */
+.tenant-dashboard-map-section {
+  margin-top: 24px;
+  overflow: hidden;
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
+}
+
+.tenant-dashboard-map-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e9edf1;
+}
+
+.tenant-dashboard-map-heading h2 {
+  margin: 0;
+  color: #111111;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.tenant-dashboard-map-heading p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.tenant-dashboard-map-canvas {
+  height: 360px;
+}
+
+.tenant-dashboard-map-canvas .map-view-container,
+.tenant-dashboard-map-canvas .leaflet-container {
+  height: 100%;
+}
+
+@media (max-width: 640px) {
+  .tenant-dashboard-map-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tenant-dashboard-map-heading > button { width: 100%; }
+  .tenant-dashboard-map-canvas { height: 260px; }
+}

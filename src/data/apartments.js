@@ -198,6 +198,13 @@ export const apartmentFormValuesFromApartment = (apartment) => {
         utilities: utilitiesToFormFlag(apartment.utilities),
         utilityItems: Array.isArray(apartment.utilities) ? apartment.utilities : [],
         customFeatures,
+        propertyType: apartment.propertyType ?? '',
+        securityDeposit: apartment.features && !Array.isArray(apartment.features) && typeof apartment.features.securityDeposit === 'string'
+            ? apartment.features.securityDeposit
+            : '',
+        houseRules: apartment.features && !Array.isArray(apartment.features) && Array.isArray(apartment.features.houseRules)
+            ? apartment.features.houseRules.filter((rule) => typeof rule === 'string')
+            : [],
         verification,
         lat: String(apartment.lat),
         lng: String(apartment.lng),
@@ -253,6 +260,11 @@ export const apartmentFormValuesToInsertRow = (values, landlordId) => {
         features: {
             availableDate: values.availableDate,
             customFeatures,
+            propertyType: typeof values.propertyType === 'string' ? values.propertyType.trim() : '',
+            securityDeposit: typeof values.securityDeposit === 'string' ? values.securityDeposit.trim() : '',
+            houseRules: Array.isArray(values.houseRules)
+                ? values.houseRules.map((rule) => rule.trim()).filter(Boolean)
+                : [],
             verification,
         },
     };

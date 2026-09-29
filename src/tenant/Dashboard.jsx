@@ -22,6 +22,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { EmptyState } from "@/tenant/EmptyState";
+import { MapView } from "@/components/MapView";
+import { DEFAULT_LA_PAZ_MAP_CENTER } from "@/utils/mapCoordinates";
 const DASHBOARD_SECTIONS = ["overview", "favorites", "suggested", "popular", "notifications", "settings", "report", "help"];
 export function Dashboard() {
     const { user, logout } = useAuth();
@@ -435,6 +437,19 @@ const DashboardOverview = ({ tenantGreeting, dashboardSubtitle, favoriteIds, ava
     </section>
 
     {availableApartments.length === 0 && (<EmptyState icon={Clock} message="No available apartments at the moment."/>)}
+
+    <section className="tenant-dashboard-map-section">
+      <div className="tenant-dashboard-map-heading">
+        <div>
+          <h2>Available apartments map</h2>
+          <p>Browse available listings around La Paz, Iloilo City.</p>
+        </div>
+        <Button variant="outline" onClick={() => navigate("/browse")}>Open full map</Button>
+      </div>
+      <div className="tenant-dashboard-map-canvas">
+        <MapView lat={DEFAULT_LA_PAZ_MAP_CENTER.lat} lng={DEFAULT_LA_PAZ_MAP_CENTER.lng} zoom={12} apartments={availableApartments} emptyMessage="No available apartments have an exact map pin yet."/>
+      </div>
+    </section>
 
     <section className="overview-section-section-3">
       <FeatureCard setActiveSection={setActiveSection} title={hasPersonalizationPreferences ? "Recommended for You" : "Find Apartments for You"} description={hasPersonalizationPreferences ? "Apartment suggestions based on your preferences." : "Set your preferences to receive personalized apartment suggestions."} count={suggestedApartments.length} icon={Sparkles} section="suggested" accent="orange"/>

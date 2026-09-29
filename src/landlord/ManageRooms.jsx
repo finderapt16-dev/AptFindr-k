@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useApartmentsContext } from "@/contexts/ApartmentsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/services/supabaseClient";
-import { createApartmentRoom, deleteApartmentRoom, fetchApartmentRooms, fetchApartmentWithImages, updateApartmentRoom, updateApartmentRoomStatus, uploadApartmentRoomImage, } from "@/data/apartments";
+import { createApartmentRoom, deleteApartmentRoom, fetchApartmentRooms, fetchApartmentWithImages, updateApartmentRoom, uploadApartmentRoomImage, } from "@/data/apartments";
 
 const ROOM_TYPES = ["Bedroom", "Studio", "Shared room", "Suite", "Loft", "Other"];
 const ROOM_STATUS_OPTIONS = [
@@ -58,7 +58,7 @@ const imagesFromRoom = (room) => normalizeImages((room?.images ?? []).filter(Boo
 const revokeIfBlob = (url) => { if (typeof url === "string" && url.startsWith("blob:"))
     URL.revokeObjectURL(url); };
 
-// Used to tell whether a card has unsaved edits (status is excluded: it is saved by its own buttons).
+// Used to tell whether a card has unsaved edits, including the status chosen in Edit Room.
 const DIRTY_FIELDS = ["name", "type", "price", "maxOccupants", "sqft", "description", "hasPrivateBath", "bathroomType", "sharedBathLocation", "hasAC", "status"];
 const snapshotOf = (form, images) => JSON.stringify([
     DIRTY_FIELDS.map((key) => form[key] ?? ""),
@@ -156,7 +156,7 @@ function Field({ label, prefix, suffix, chevron = false, className = "", childre
 /* -------------------------------------------------------------------------- */
 
 // room === null means "new room" (unsaved draft card).
-function RoomEditorCard({ room, busy, onSave, onDelete, onChangeStatus, onCancelNew }) {
+function RoomEditorCard({ room, busy, onSave, onDelete, onCancelNew }) {
     const isNew = room === null;
     const [draft, setDraft] = useState(() => (room ? roomToForm(room) : emptyRoomForm()));
     const [images, setImages] = useState(() => imagesFromRoom(room));
@@ -569,25 +569,6 @@ export function ManageRooms({ propertyId }) {
             return null;
         }
     };
-    const changeRoomStatus = async (room, status) => {
-        if (!id || !room.id || processingRoomId)
-            return;
-        setProcessingRoomId(room.id);
-        try {
-            await updateApartmentRoomStatus(id, room.id, status, user.id);
-            setRooms((current) => current.map((item) => item.id === room.id
-                ? { ...item, status, isOccupied: status === "occupied" }
-                : item));
-            await refreshApartments();
-            toast.success("Room status updated");
-        }
-        catch (error) {
-            toast.error(error instanceof Error ? error.message : "Unable to update room status.");
-        }
-        finally {
-            setProcessingRoomId(null);
-        }
-    };
     const removeRoom = async (room) => {
         if (!id || !room.id || processingRoomId)
             return false;
@@ -653,7 +634,7 @@ export function ManageRooms({ propertyId }) {
             }} onDelete={async (room) => {
               const removed = await removeRoom(room);
               if (removed) returnToRooms();
-            }} onChangeStatus={changeRoomStatus} onCancelNew={returnToRooms}/>
+            }} onCancelNew={returnToRooms}/>
           </div>
         </main>;
     }
@@ -693,7 +674,7 @@ export function ManageRooms({ propertyId }) {
                     <td><span className="manage-rooms-table-type">{room.type || "Room"}</span></td>
                     <td>{formatRent(room.price)}</td>
                     <td>{Number(room.maxOccupants || 1)} {Number(room.maxOccupants || 1) === 1 ? "pax" : "pax"}</td>
-                    <td><select aria-label={`Update status for ${room.name || "room"}`} value={statusForRoom(room)} disabled={processingRoomId === room.id} onChange={(event) => void changeRoomStatus(room, event.target.value)} className={`manage-rooms-table-status manage-rooms-table-status--${statusForRoom(room)}`}><option value="available">Available</option><option value="occupied">Occupied</option><option value="maintenance">Under Maintenance</option></select></td>
+                    <td><span className={`manage-rooms-table-status manage-rooms-table-status--${statusForRoom(room)}`}>{statusLabel(room)}</span></td>
                     <td><div className="manage-rooms-table-actions"><button type="button" onClick={() => navigate(`/landlord/properties/${id}/rooms/${room.id}/edit`)} disabled={processingRoomId !== null}><Pencil /> Edit</button><button type="button" onClick={() => void removeRoom(room)} disabled={processingRoomId !== null} className="manage-rooms-table-delete">Delete</button></div></td>
                   </tr>))}</tbody>
               </table>

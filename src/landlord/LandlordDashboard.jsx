@@ -10,7 +10,6 @@ import { LandlordOverview } from "@/landlord/LandlordOverview";
 import { LandlordSettings } from "@/landlord/LandlordSettings";
 import { LandlordSidebar } from "@/landlord/LandlordSidebar";
 import { AlertsTab } from "@/landlord/AlertsTab";
-import { BusinessTab } from "@/landlord/BusinessTab";
 import { ProfileTab } from "@/landlord/ProfileTab";
 import { SecurityTab } from "@/landlord/SecurityTab";
 
@@ -3338,35 +3337,6 @@ export function LandlordDashboard() {
             }
           />
         }
-
-
-        businessTab={
-          <BusinessTab
-            business={business}
-            setB={setB}
-            myApartments={
-              myApartments
-            }
-            allRooms={allRooms}
-            availableCount={
-              availableCount
-            }
-            setEditingApartment={
-              setEditingApartment
-            }
-            setBusiness={
-              setBusiness
-            }
-            savedBusiness={
-              savedBusiness
-            }
-            handleSaveBusiness={
-              handleSaveBusiness
-            }
-          />
-        }
-
-
         securityTab={
           <SecurityTab
             security={security}

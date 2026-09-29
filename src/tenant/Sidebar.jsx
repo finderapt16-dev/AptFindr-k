@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, ChevronRight, Heart, HelpCircle, LogOut, Search, Settings } from "lucide-react";
+import { AlertTriangle, Bell, Heart, HelpCircle, LogOut, Search, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogoutConfirmation } from "@/components/LogoutConfirmation";
 import { AppLogo } from "@/components/AppLogo";
@@ -129,8 +129,6 @@ export function Sidebar({ active = "apartments", unreadCount = 0, tenantNotifica
               {user?.email ?? "Tenant Portal"}
             </p>
           </div>
-
-          <ChevronRight className="tenant-sidebar-chevron-right-icon"/>
         </div>
       </div>
 
