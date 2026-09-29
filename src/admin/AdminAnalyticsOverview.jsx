@@ -62,9 +62,34 @@ export function AdminAnalyticsOverview() {
         }
     } }, []);
     useEffect(() => { mounted.current = true; void load(); return () => { mounted.current = false; }; }, [load]);
-    useEffect(() => { let timer = null; const refresh = () => { if (timer)
-        clearTimeout(timer); timer = setTimeout(() => void load(), 180); }; const channel = supabase.channel("admin-analytics-sync").on("postgres_changes", { event: "*", schema: "public", table: "apartments" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "apartment_rooms" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "apartment_views" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "favorites" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "apartment_ratings" }, refresh).on("postgres_changes", { event: "UPDATE", schema: "public", table: "app_users" }, refresh).subscribe(); return () => { if (timer)
-        clearTimeout(timer); void supabase.removeChannel(channel); }; }, [load]);
+    useEffect(() => {
+        let timer = null;
+        const refresh = () => {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(() => void load(), 180);
+        };
+        const channel = supabase.channel("admin-analytics-sync")
+            .on("postgres_changes", { event: "*", schema: "public", table: "apartments" }, refresh)
+            .on("postgres_changes", { event: "*", schema: "public", table: "apartment_rooms" }, refresh)
+            .on("postgres_changes", { event: "*", schema: "public", table: "apartment_views" }, refresh)
+            .on("postgres_changes", { event: "*", schema: "public", table: "favorites" }, refresh)
+            .on("postgres_changes", { event: "*", schema: "public", table: "apartment_ratings" }, refresh)
+            .on("postgres_changes", { event: "UPDATE", schema: "public", table: "app_users" }, refresh)
+            .subscribe();
+        const refreshOnVisibility = () => {
+            if (document.visibilityState === "visible") refresh();
+        };
+        window.addEventListener("focus", refresh);
+        window.addEventListener("online", refresh);
+        document.addEventListener("visibilitychange", refreshOnVisibility);
+        return () => {
+            if (timer) clearTimeout(timer);
+            window.removeEventListener("focus", refresh);
+            window.removeEventListener("online", refresh);
+            document.removeEventListener("visibilitychange", refreshOnVisibility);
+            void supabase.removeChannel(channel);
+        };
+    }, [load]);
     const a = useMemo(() => {
         const buckets = bucketsFor(period);
         const apartments = (data?.apartments ?? []).filter(item => !item.deleted_at && !item.is_archived), ids = new Set(apartments.map(item => item.id));

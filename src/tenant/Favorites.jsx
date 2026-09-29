@@ -230,10 +230,10 @@ export function Favorites() {
                   <option value="name">Name</option>
                 </select>
                 <div className="favorites-grid-2">
-                  <button onClick={() => setViewMode("grid")} className={`favorites-grid-view ${viewMode === "grid" ? "favorites-grid-view-2" : "favorites-grid-view-3"}`} aria-label="Grid view">
+                  <button type="button" onClick={() => setViewMode("grid")} className={`favorites-grid-view ${viewMode === "grid" ? "favorites-grid-view-2" : "favorites-grid-view-3"}`} aria-label="Grid view" aria-pressed={viewMode === "grid"}>
                     <Grid2X2 className="favorites-grid2-x2-icon"/>
                   </button>
-                  <button onClick={() => setViewMode("list")} className={`favorites-list-view ${viewMode === "list" ? "favorites-list-view-2" : "favorites-list-view-3"}`} aria-label="List view">
+                  <button type="button" onClick={() => setViewMode("list")} className={`favorites-list-view ${viewMode === "list" ? "favorites-list-view-2" : "favorites-list-view-3"}`} aria-label="List view" aria-pressed={viewMode === "list"}>
                     <List className="favorites-list-icon"/>
                   </button>
                 </div>
@@ -257,7 +257,7 @@ export function Favorites() {
                   <Search className="favorites-search-icon"/>
                   <h2 className="favorites-no-favorites-match-this-filter">No favorites match this filter</h2>
                   <Button variant="outline" onClick={() => setFilter("all")} className="favorites-show-all-favorites">Show All Favorites</Button>
-                </div>) : (<div className="apartment-browse-grid-11">
+                </div>) : (<div className={viewMode === "grid" ? "apartment-browse-grid-11" : "favorites-route-results-list"}>
                   {visibleFavorites.map((apartment) => (<FavoriteCard key={apartment.id} apartment={apartment}/>))}
                 </div>)}
             </section>

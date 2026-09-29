@@ -1,4 +1,15 @@
 /* Favorites page styles. Loaded once by src/styles/index.css to keep navigation order stable. */
+.favorites-route-results-list { display:flex; flex-direction:column; gap:clamp(16px, 2vw, 24px); }
+.favorites-route-results-list > .apartment-browse-article { display:grid; grid-template-columns:minmax(180px, 260px) minmax(0, 1fr); align-items:stretch; }
+.favorites-route-results-list > .apartment-browse-article > .apartment-browse-panel-5 { min-height:190px; height:100%; aspect-ratio:auto; }
+.favorites-route-results-list > .apartment-browse-article > .apartment-browse-panel-5 > img,
+.favorites-route-results-list > .apartment-browse-article > .apartment-browse-panel-5 > .apartment-browse-image-with-fallback { width:100%; height:100%; min-height:190px; object-fit:cover; }
+@media (max-width: 600px) {
+  .favorites-route-results-list > .apartment-browse-article { grid-template-columns:minmax(0, 1fr); }
+  .favorites-route-results-list > .apartment-browse-article > .apartment-browse-panel-5 { min-height:0; height:auto; aspect-ratio:16 / 10; }
+  .favorites-route-results-list > .apartment-browse-article > .apartment-browse-panel-5 > img,
+  .favorites-route-results-list > .apartment-browse-article > .apartment-browse-panel-5 > .apartment-browse-image-with-fallback { min-height:0; }
+}
 .favorites-link {
   color: #16a5e1;
   background-color: #e8eef3;

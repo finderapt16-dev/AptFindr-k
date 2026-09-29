@@ -21,11 +21,16 @@ export function useTenantNotifications(enabled = true) {
         void refresh();
         if (!enabled || !user?.id)
             return;
+        const refreshWhenOnline = () => void refresh();
+        window.addEventListener("online", refreshWhenOnline);
         const channel = supabase
             .channel(`tenant-notifications-${user.id}`)
             .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => void refresh())
             .subscribe();
-        return () => { void supabase.removeChannel(channel); };
+        return () => {
+            window.removeEventListener("online", refreshWhenOnline);
+            void supabase.removeChannel(channel);
+        };
     }, [enabled, refresh, user?.id]);
     const unreadCount = useMemo(() => notifications.filter((notification) => notification.read !== true).length, [notifications]);
     const markRead = useCallback(async (id) => {

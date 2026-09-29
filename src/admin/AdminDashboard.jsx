@@ -10,8 +10,8 @@ import { archiveAppeal, archiveReport, createAuditLog, createViolation, deleteNo
 import { getReportEvidence } from "@/services/reportEvidenceService";
 import { supabase } from "@/services/supabaseClient";
 import { formatAuditLogForDisplay, formatNotificationType, safeNotificationText } from "@/utils/auditLogDisplay";
-import { Activity, AlertOctagon, AlertTriangle, Archive, Bell, BellRing, Building2, Calendar, CheckCheck, CheckCircle2, ChevronRight, ClipboardList, Clock, Edit2, Eye, FileText, Flag, History, Lock, Mail, MailOpen, Menu, Phone, RefreshCw, RotateCcw, Save, Search, Settings, Shield, ShieldAlert, ShieldCheck, Smartphone, Trash2, User as UserIcon, Users, X, XCircle } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Activity, AlertOctagon, AlertTriangle, Archive, Bell, BellRing, Building2, Calendar, CheckCheck, CheckCircle2, ChevronRight, CircleHelp, ClipboardList, Clock, Edit2, Eye, FileText, Flag, History, Lock, Mail, MailOpen, Menu, Phone, RefreshCw, RotateCcw, Save, Search, Settings, Shield, ShieldAlert, ShieldCheck, Smartphone, Trash2, User as UserIcon, Users, X, XCircle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { AdminApartments } from './AdminApartments';
@@ -33,6 +33,7 @@ export function AdminDashboard() {
         : requestedSectionValue;
     const isAvailableSection = (value) => isAdminModule(value);
     const [activeSection, setActiveSection] = useState(() => isAvailableSection(requestedSection) ? requestedSection : "landlords");
+    const internalSectionNavigation = useRef(null);
     useEffect(() => {
         if (isAvailableSection(requestedSection))
             setActiveSection(requestedSection);
@@ -134,7 +135,7 @@ export function AdminDashboard() {
         const action = String(payload.action ?? "").toLowerCase();
         const value = `${type} ${title} ${message} ${action}`;
         if (type === "support_request" || payload.ticket_id || payload.support_ticket_id)
-            return "reports";
+            return "support";
         if (type === "landlord_activity" || payload.category === "landlord_activity" || payload.activity_type)
             return "activities";
         if (value.includes("report") || value.includes("violation"))
@@ -265,8 +266,7 @@ export function AdminDashboard() {
         if (user?.id)
             rememberAdminModuleLocation(user.id, "appeals", { view: "appeal-review", appealId });
         setSelectedAppeal(appeal);
-        setActiveSection("appeals");
-        navigate(`${portalBasePath}?section=appeals`);
+        handleSectionChange("appeals");
     };
     const refreshAdminNotifications = async () => {
         if (isRefreshingNotifs)
@@ -404,8 +404,10 @@ export function AdminDashboard() {
             ]);
             setActivityLogs(adminLogs);
             setRecentActivityLogs(platformLogs);
-        }
-        finally {
+        } catch (error) {
+            console.error("Unable to load admin activity logs:", error);
+            toast.error("Activity log could not be loaded. Please try again.");
+        } finally {
             setIsLoadingActivity(false);
         }
     };
@@ -503,34 +505,45 @@ export function AdminDashboard() {
         };
     }, [user?.id]);
     useEffect(() => {
+        let active = true;
         const loadData = async () => {
-            const [loadedReports, loadedViolations, loadedNotifications, loadedApartments, loadedAppeals, loadedArchivedReports, loadedArchivedAppeals, loadedActivityLogs, loadedUsers] = await Promise.all([
-                fetchAdminReports(),
-                fetchViolations(),
-                user?.id ? fetchNotifications(user.id, true) : Promise.resolve([]),
-                fetchApartments(),
-                fetchPendingAppeals(),
-                fetchArchivedReports(),
-                fetchArchivedAppeals(),
-                fetchRecentActivityLogs(),
-                fetchUsers(),
-            ]);
-            setReports(loadedReports);
-            setViolations(loadedViolations);
-            setAdminNotifs(loadedNotifications);
-            setAllApartments(loadedApartments);
-            setAppeals(loadedAppeals);
-            setArchivedReports(loadedArchivedReports);
-            setArchivedAppeals(loadedArchivedAppeals);
-            setRecentActivityLogs(loadedActivityLogs);
-
-            setLandlords(loadedUsers.filter((account) => account.role === "landlord"));
-            setNavigationDataReady(true);
+            try {
+                const [loadedReports, loadedViolations, loadedNotifications, loadedApartments, loadedAppeals, loadedArchivedReports, loadedArchivedAppeals, loadedActivityLogs, loadedUsers] = await Promise.all([
+                    fetchAdminReports(),
+                    fetchViolations(),
+                    user?.id ? fetchNotifications(user.id, true) : Promise.resolve([]),
+                    fetchApartments(),
+                    fetchPendingAppeals(),
+                    fetchArchivedReports(),
+                    fetchArchivedAppeals(),
+                    fetchRecentActivityLogs(),
+                    fetchUsers(),
+                ]);
+                if (!active) return;
+                setReports(loadedReports);
+                setViolations(loadedViolations);
+                setAdminNotifs(loadedNotifications);
+                setAllApartments(loadedApartments);
+                setAppeals(loadedAppeals);
+                setArchivedReports(loadedArchivedReports);
+                setArchivedAppeals(loadedArchivedAppeals);
+                setRecentActivityLogs(loadedActivityLogs);
+                setLandlords(loadedUsers.filter((account) => account.role === "landlord"));
+            } catch (error) {
+                console.error("Unable to load admin dashboard data:", error);
+            } finally {
+                if (active) setNavigationDataReady(true);
+            }
         };
         void loadData();
+        window.addEventListener("online", loadData);
+        return () => {
+            active = false;
+            window.removeEventListener("online", loadData);
+        };
     }, [user?.id]);
     useEffect(() => {
-        if (activeSection === "notifications") {
+        if (activeSection === "notifications" || activeSection === "support") {
             void loadAdminNotifications();
         }
         if (activeSection === "reports") {
@@ -563,6 +576,10 @@ export function AdminDashboard() {
             void fetchAdminReports().then(setReports);
             void fetchViolations().then(setViolations);
             void fetchPendingAppeals().then(setAppeals);
+            void fetchArchivedReports().then(setArchivedReports);
+            void fetchArchivedAppeals().then(setArchivedAppeals);
+            void fetchRecentActivityLogs().then(setRecentActivityLogs);
+            void loadAdminNotifications();
         };
         const channel = supabase
             .channel(`admin-dashboard-${user.id}`)
@@ -588,9 +605,11 @@ export function AdminDashboard() {
                 refreshVisibleData();
         };
         window.addEventListener("focus", refreshOnFocus);
+        window.addEventListener("online", refreshOnFocus);
         document.addEventListener("visibilitychange", refreshOnVisibility);
         return () => {
             window.removeEventListener("focus", refreshOnFocus);
+            window.removeEventListener("online", refreshOnFocus);
             document.removeEventListener("visibilitychange", refreshOnVisibility);
             void supabase.removeChannel(channel);
         };
@@ -708,46 +727,84 @@ export function AdminDashboard() {
             toast.error(error instanceof Error ? error.message : "Unable to update landlord verification.", { id: toastId });
         });
     };
-    const resolveReport = (id) => {
+    const resolveReport = async (id) => {
         if (isResolvingReportId === id) {
             toast.error("Operation in progress...");
             return;
         }
         setIsResolvingReportId(id);
-        void updateReportStatus(id, "resolved").then(async (updated) => {
-            if (updated) {
-                setReports((p) => p.map((r) => (r.id === id ? updated : r)));
-                // Send notifications to landlord and reporter
-                if (selectedReportDetails?.report?.id && selectedReportDetails?.landlord?.id && selectedReportDetails?.reporter?.id) {
-                    await notifyReportResolved(selectedReportDetails.report.id, selectedReportDetails.landlord.id, selectedReportDetails.reporter.id, selectedReportDetails.report.apartment_title || selectedReportDetails.report.apartment || "Reported Apartment");
-                }
-                setSelectedReport(null);
-                toast.success("Report marked as resolved and notifications sent");
+        try {
+            const updated = await updateReportStatus(id, "resolved");
+            if (!updated) {
+                toast.error("The report could not be resolved. Please try again.");
+                return;
             }
-        }).finally(() => {
+            setReports((previous) => previous.map((report) => report.id === id ? updated : report));
+            let notificationSent = false;
+            const details = selectedReportDetails?.report?.id === id ? selectedReportDetails : null;
+            if (details?.landlord?.id && details?.reporter?.id) {
+                try {
+                    notificationSent = await notifyReportResolved(
+                        id,
+                        details.landlord.id,
+                        details.reporter.id,
+                        details.report.apartment_title || details.report.apartment || "Reported Apartment",
+                    );
+                } catch (error) {
+                    console.error("Report was resolved but notification delivery failed:", error);
+                    notificationSent = false;
+                }
+            }
+            setSelectedReport(null);
+            toast.success(notificationSent
+                ? "Report marked as resolved and notifications sent"
+                : "Report resolved, but a notification could not be sent.");
+        } catch (error) {
+            console.error("Unable to resolve report:", error);
+            toast.error(error instanceof Error ? error.message : "Unable to resolve report.");
+        } finally {
             setIsResolvingReportId(null);
-        });
+        }
     };
-    const dismissReport = (id, reason) => {
+    const dismissReport = async (id, reason) => {
         if (isDismissingReportId === id) {
             toast.error("Operation in progress...");
             return;
         }
         setIsDismissingReportId(id);
-        void updateReportStatus(id, "dismissed").then(async (updated) => {
-            if (updated) {
-                setReports((p) => p.map((r) => (r.id === id ? updated : r)));
-                // Send notification to reporter
-                if (selectedReportDetails?.report?.id && selectedReportDetails?.reporter?.id) {
-                    await notifyReportDismissed(selectedReportDetails.report.id, selectedReportDetails.reporter.id, selectedReportDetails.report.apartment_title || selectedReportDetails.report.apartment || "Reported Apartment", reason);
-                }
-                setSelectedReport(null);
-                setDismissReportModal(null);
-                toast.success("Report dismissed and notification sent to reporter");
+        try {
+            const updated = await updateReportStatus(id, "dismissed");
+            if (!updated) {
+                toast.error("The report could not be dismissed. Please try again.");
+                return;
             }
-        }).finally(() => {
+            setReports((previous) => previous.map((report) => report.id === id ? updated : report));
+            let notificationSent = false;
+            const details = selectedReportDetails?.report?.id === id ? selectedReportDetails : null;
+            if (details?.reporter?.id) {
+                try {
+                    notificationSent = await notifyReportDismissed(
+                        id,
+                        details.reporter.id,
+                        details.report.apartment_title || details.report.apartment || "Reported Apartment",
+                        reason,
+                    );
+                } catch (error) {
+                    console.error("Report was dismissed but notification delivery failed:", error);
+                    notificationSent = false;
+                }
+            }
+            setSelectedReport(null);
+            setDismissReportModal(null);
+            toast.success(notificationSent
+                ? "Report dismissed and notification sent to reporter"
+                : "Report dismissed, but a notification could not be sent.");
+        } catch (error) {
+            console.error("Unable to dismiss report:", error);
+            toast.error(error instanceof Error ? error.message : "Unable to dismiss report.");
+        } finally {
             setIsDismissingReportId(null);
-        });
+        }
     };
     const executeCaseAction = async () => {
         if (!caseAction || !user?.id || processingCaseAction)
@@ -981,6 +1038,19 @@ export function AdminDashboard() {
     const navigateToAdminModule = (section) => {
         setSidebarOpen(false);
         if (!isAdminModule(section)) return;
+        if (section === "support") {
+            setNotifFilter("all");
+            setNotifTypeFilter("support");
+            setNotifActivityFilter("all");
+            setActiveSection("support");
+            navigate(`${portalBasePath}?section=support`);
+            return;
+        }
+        if (section === "notifications") {
+            setNotifFilter("all");
+            setNotifTypeFilter("all");
+            setNotifActivityFilter("all");
+        }
         if (!user?.id) {
             setActiveSection(section);
             navigate(`${portalBasePath}?section=${section}`);
@@ -997,9 +1067,35 @@ export function AdminDashboard() {
         setActiveSection(section);
         navigate(path);
     };
+    const handleSectionChange = (section) => {
+        if (!isAdminModule(section)) return;
+        if (section === "support") {
+            setNotifFilter("all");
+            setNotifTypeFilter("support");
+            setNotifActivityFilter("all");
+        } else if (section === "notifications") {
+            setNotifFilter("all");
+            setNotifTypeFilter("all");
+            setNotifActivityFilter("all");
+        }
+        setSidebarOpen(false);
+        if (section !== requestedSection) internalSectionNavigation.current = section;
+        setActiveSection(section);
+        navigate(`${portalBasePath}?section=${section}`);
+    };
+    const navigateToSupport = () => handleSectionChange("support");
     useEffect(() => {
         if (!navigationDataReady || !user?.id || !isAdminModule(requestedSection))
             return;
+        if (internalSectionNavigation.current === requestedSection) {
+            internalSectionNavigation.current = null;
+            return;
+        }
+        if (requestedSection === "support") {
+            setNotifFilter("all");
+            setNotifTypeFilter("support");
+            setNotifActivityFilter("all");
+        }
         restoreAdminModule(requestedSection);
     }, [navigationDataReady, requestedSection, user?.id]);
     useEffect(() => {
@@ -1029,7 +1125,7 @@ export function AdminDashboard() {
     const handleLogout = () => { if (user?.id)
         clearAdminNavigationMemory(user.id); logout?.(); navigate("/"); };
     // ── Sidebar ───────────────────────────────────────────────────────────────
-    const PortalSidebarContent = () => (<AdminSidebar activeSection={activeSection} pendingReports={pendingReports} activeAppealsCount={activeAppealsCount} unreadNotifsCount={unreadNotifsCount} navigateToAdminModule={navigateToAdminModule} handleLogout={handleLogout}/>);
+    const PortalSidebarContent = () => (<AdminSidebar activeSection={activeSection} isSupportView={activeSection === "support"} pendingReports={pendingReports} activeAppealsCount={activeAppealsCount} unreadNotifsCount={unreadNotifsCount} navigateToAdminModule={navigateToAdminModule} navigateToSupport={navigateToSupport} handleLogout={handleLogout}/>);
     // ── Section: Notifications ────────────────────────────────────────────────
     const renderOverview = () => {
         const pendingAppealCount = appeals.filter((appeal) => ["pending", "under_review", "needs_information"].includes(String(appeal.status ?? "").toLowerCase())).length;
@@ -1184,6 +1280,11 @@ export function AdminDashboard() {
         const activeNotifications = notificationCenterItems.filter((notification) => !notification.is_deleted);
         const unreadCount = activeNotifications.filter((notification) => !isNotificationRead(notification)).length;
         const selectNotificationView = (status, type = "all") => {
+            if (type === "support") {
+                handleSectionChange("support");
+            } else if (activeSection === "support") {
+                handleSectionChange("notifications");
+            }
             setNotifFilter(status);
             setNotifTypeFilter(type);
             setNotifActivityFilter("all");
@@ -1207,8 +1308,8 @@ export function AdminDashboard() {
         const visibleNotifs = filteredNotifs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
         return (<div className="admin-dashboard-container-3">
         <header>
-          <h1 className="admin-dashboard-notifications">Notifications</h1>
-          <p className="admin-dashboard-text-6">Review system updates and items relevant to administration.</p>
+          <h1 className="admin-dashboard-notifications">{activeSection === "support" ? "Help & Support" : "Notifications"}</h1>
+          <p className="admin-dashboard-text-6">{activeSection === "support" ? "Review submitted support requests and open their details." : "Review system updates and items relevant to administration."}</p>
         </header>
         <div className="admin-dashboard-row-17">
           <label className="admin-dashboard-label">
@@ -1231,6 +1332,7 @@ export function AdminDashboard() {
                 { label: "System", status: "all", type: "system", icon: ShieldAlert },
                 { label: "Landlord", status: "all", type: "landlord", icon: Users },
                 { label: "Activity", status: "all", type: "activities", icon: Activity },
+                { label: "Support", status: "all", type: "support", icon: CircleHelp },
                 { label: "Archived", status: "archived", type: "all", icon: Archive },
             ].map(({ label, status, type, icon: Icon }) => {
                 const selected = isViewActive(status, type);
@@ -1413,11 +1515,11 @@ export function AdminDashboard() {
       </div>);
     };
     const renderLandlords = () => (<AdminLandlordVerification landlords={landlords} onViewVerification={setSelectedLandlord}/>);
-    const renderApartments = () => (<AdminApartments allApartments={allApartments} getApartmentReportCount={getApartmentReportCount} setActiveSection={setActiveSection} unreadNotifsCount={unreadNotifsCount} aptSearch={aptSearch} setAptSearch={setAptSearch} aptStatusFilter={aptStatusFilter} setAptStatusFilter={setAptStatusFilter} aptPropertyTypeFilter={aptPropertyTypeFilter} setAptPropertyTypeFilter={setAptPropertyTypeFilter} aptSort={aptSort} setAptSort={setAptSort} filteredApts={filteredApts} aptFilter={aptFilter} getLandlordForApt={getLandlordForApt} setSelectedApt={setSelectedApt} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} setAptFilter={setAptFilter} violations={violations} openViolationModal={openViolationModal} selectedApt={selectedApt} reports={reports} setSelectedLandlord={setSelectedLandlord} resolveReport={resolveReport} dismissReport={dismissReport} handleApproveAndPublishApartment={handleApproveAndPublishApartment} publishingApartmentId={publishingApartmentId}/>);
+    const renderApartments = () => (<AdminApartments allApartments={allApartments} getApartmentReportCount={getApartmentReportCount} setActiveSection={handleSectionChange} unreadNotifsCount={unreadNotifsCount} aptSearch={aptSearch} setAptSearch={setAptSearch} aptStatusFilter={aptStatusFilter} setAptStatusFilter={setAptStatusFilter} aptPropertyTypeFilter={aptPropertyTypeFilter} setAptPropertyTypeFilter={setAptPropertyTypeFilter} aptSort={aptSort} setAptSort={setAptSort} filteredApts={filteredApts} aptFilter={aptFilter} getLandlordForApt={getLandlordForApt} setSelectedApt={setSelectedApt} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} setAptFilter={setAptFilter} violations={violations} openViolationModal={openViolationModal} selectedApt={selectedApt} reports={reports} setSelectedLandlord={setSelectedLandlord} resolveReport={resolveReport} dismissReport={dismissReport} handleApproveAndPublishApartment={handleApproveAndPublishApartment} publishingApartmentId={publishingApartmentId}/>);
     // ── Section: Reports ──────────────────────────────────────────────────────
-    const renderReports = () => (<AdminReports reports={reports} reportArchiveView={reportArchiveView} archivedReports={archivedReports} reportSearch={reportSearch} allApartments={allApartments} reportStatusFilter={reportStatusFilter} reportTypeFilter={reportTypeFilter} reportSort={reportSort} selectedReport={selectedReport} selectedReportDetails={selectedReportDetails} setSelectedReport={setSelectedReport} setActiveSection={setActiveSection} unreadNotifsCount={unreadNotifsCount} setViewingUserProfile={setViewingUserProfile} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} selectedReportEvidence={selectedReportEvidence} resolveReport={resolveReport} setDismissReportModal={setDismissReportModal} setCaseAction={setCaseAction} setReportSearch={setReportSearch} setReportStatusFilter={setReportStatusFilter} setReportTypeFilter={setReportTypeFilter} setReportSort={setReportSort} setReportArchiveView={setReportArchiveView} dismissReportModal={dismissReportModal} dismissReport={dismissReport} viewingUserProfile={viewingUserProfile}/>);
+    const renderReports = () => (<AdminReports reports={reports} reportArchiveView={reportArchiveView} archivedReports={archivedReports} reportSearch={reportSearch} allApartments={allApartments} reportStatusFilter={reportStatusFilter} reportTypeFilter={reportTypeFilter} reportSort={reportSort} selectedReport={selectedReport} selectedReportDetails={selectedReportDetails} setSelectedReport={setSelectedReport} setActiveSection={handleSectionChange} unreadNotifsCount={unreadNotifsCount} setViewingUserProfile={setViewingUserProfile} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} selectedReportEvidence={selectedReportEvidence} resolveReport={resolveReport} setDismissReportModal={setDismissReportModal} setCaseAction={setCaseAction} setReportSearch={setReportSearch} setReportStatusFilter={setReportStatusFilter} setReportTypeFilter={setReportTypeFilter} setReportSort={setReportSort} setReportArchiveView={setReportArchiveView} dismissReportModal={dismissReportModal} dismissReport={dismissReport} viewingUserProfile={viewingUserProfile}/>);
     // ── Section: Appeals Management ─────────────────────────────────────────
-    const renderAppeals = () => (<AdminAppeals landlords={landlords} reports={reports} archivedReports={archivedReports} violations={violations} allApartments={allApartments} appealSearch={appealSearch} appealArchiveView={appealArchiveView} archivedAppeals={archivedAppeals} appeals={appeals} appealTypeFilter={appealTypeFilter} appealSort={appealSort} selectedAppeal={selectedAppeal} user={user} appealStatus={appealStatus} appealResponse={appealResponse} setAppeals={setAppeals} setSelectedAppeal={setSelectedAppeal} setAppealResponse={setAppealResponse} setAppealStatus={setAppealStatus} setActiveSection={setActiveSection} unreadNotifsCount={unreadNotifsCount} setSelectedReport={setSelectedReport} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} setCaseAction={setCaseAction} setAppealSearch={setAppealSearch} setAppealTypeFilter={setAppealTypeFilter} setAppealSort={setAppealSort} setAppealArchiveView={setAppealArchiveView}/>);
+    const renderAppeals = () => (<AdminAppeals landlords={landlords} reports={reports} archivedReports={archivedReports} violations={violations} allApartments={allApartments} appealSearch={appealSearch} appealArchiveView={appealArchiveView} archivedAppeals={archivedAppeals} appeals={appeals} appealTypeFilter={appealTypeFilter} appealSort={appealSort} selectedAppeal={selectedAppeal} user={user} appealStatus={appealStatus} appealResponse={appealResponse} setAppeals={setAppeals} setSelectedAppeal={setSelectedAppeal} setAppealResponse={setAppealResponse} setAppealStatus={setAppealStatus} setActiveSection={handleSectionChange} unreadNotifsCount={unreadNotifsCount} setSelectedReport={setSelectedReport} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} setCaseAction={setCaseAction} setAppealSearch={setAppealSearch} setAppealTypeFilter={setAppealTypeFilter} setAppealSort={setAppealSort} setAppealArchiveView={setAppealArchiveView}/>);
     const renderAdminInfo = () => {
         const inputClass = "admin-dashboard-input-3";
         const adminName = `${adminProfile.firstName} ${adminProfile.lastName}`.trim();
@@ -1688,6 +1790,7 @@ export function AdminDashboard() {
     const sectionMap = {
         overview: renderLandlords,
         notifications: renderNotifications,
+        support: renderNotifications,
         landlords: renderLandlords,
         apartments: renderApartments,
         reports: renderReports,

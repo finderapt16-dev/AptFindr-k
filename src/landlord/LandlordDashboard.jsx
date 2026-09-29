@@ -101,7 +101,7 @@ export function LandlordDashboard() {
 
   const navigate = useNavigate();
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // The former `properties` section was a second, card-grid version of My
   // Properties. Keep old links working, but always show the single dashboard
@@ -202,6 +202,22 @@ export function LandlordDashboard() {
       setActiveSection(requestedSection);
     }
   }, [requestedSection]);
+
+  const handleSectionChange = (section) => {
+    const nextSection = LANDLORD_DASHBOARD_SECTIONS.has(section)
+      ? section
+      : "overview";
+    setActiveSection(nextSection);
+    setSearchParams((current) => {
+      const nextParams = new URLSearchParams(current);
+      if (nextSection === "overview") {
+        nextParams.delete("section");
+      } else {
+        nextParams.set("section", nextSection);
+      }
+      return nextParams;
+    });
+  };
 
 
   /*
@@ -887,6 +903,7 @@ export function LandlordDashboard() {
       "focus",
       refreshOnFocus
     );
+    window.addEventListener("online", refreshOnFocus);
 
     document.addEventListener(
       "visibilitychange",
@@ -903,6 +920,7 @@ export function LandlordDashboard() {
         "focus",
         refreshOnFocus
       );
+      window.removeEventListener("online", refreshOnFocus);
 
       document.removeEventListener(
         "visibilitychange",
@@ -1127,6 +1145,7 @@ export function LandlordDashboard() {
       "focus",
       refreshOnFocus
     );
+    window.addEventListener("online", refreshOnFocus);
 
 
     return () => {
@@ -1136,6 +1155,7 @@ export function LandlordDashboard() {
         "focus",
         refreshOnFocus
       );
+      window.removeEventListener("online", refreshOnFocus);
 
       if (notificationChannel) {
         void supabase.removeChannel(
@@ -1165,18 +1185,18 @@ export function LandlordDashboard() {
 
 
     const loadAppeals = async () => {
-      const rows =
-        await fetchAppealsByLandlord(
-          user.id
-        );
-
-      if (active) {
-        setLandlordAppeals(rows);
+      try {
+        const rows = await fetchAppealsByLandlord(user.id);
+        if (active) {
+          setLandlordAppeals(rows);
+        }
+      } catch (error) {
+        console.error("Failed to load landlord appeals:", error);
       }
     };
 
-
     void loadAppeals();
+    window.addEventListener("online", loadAppeals);
 
 
     const channel = supabase
@@ -1198,6 +1218,7 @@ export function LandlordDashboard() {
 
     return () => {
       active = false;
+      window.removeEventListener("online", loadAppeals);
       void supabase.removeChannel(channel);
     };
   }, [user?.id]);
@@ -1312,7 +1333,7 @@ export function LandlordDashboard() {
       });
 
 
-      setActiveSection("notifications");
+      handleSectionChange("notifications");
 
       return;
     }
@@ -1365,7 +1386,7 @@ export function LandlordDashboard() {
             }
           );
         } else {
-          setActiveSection(
+          handleSectionChange(
             "notifications"
           );
         }
@@ -1804,6 +1825,9 @@ export function LandlordDashboard() {
   const [savedProfile, setSavedProfile] =
     useState(profile);
 
+  const [settingsLoadError, setSettingsLoadError] = useState(false);
+  const [settingsRetryKey, setSettingsRetryKey] = useState(0);
+
   const [savedBusiness, setSavedBusiness] =
     useState(business);
 
@@ -1833,25 +1857,29 @@ export function LandlordDashboard() {
         }
 
 
-        const [
-          userRow,
-          landlordRow,
-          preferenceSections,
-          mfaFactors,
-        ] = await Promise.all([
-          fetchUserById(user.id),
-          fetchLandlordProfile(user.id),
-          fetchUserPreferenceSections(
-            user.id
-          ),
-          supabase.auth.mfa.listFactors(),
-        ]);
-
+        let settingsData;
+        try {
+          settingsData = await Promise.all([
+            fetchUserById(user.id),
+            fetchLandlordProfile(user.id),
+            fetchUserPreferenceSections(user.id),
+            supabase.auth.mfa.listFactors(),
+          ]);
+        } catch (error) {
+          console.error("Failed to load landlord settings:", error);
+          if (active) {
+            setSettingsLoadError(true);
+          }
+          return;
+        }
 
         if (!active) {
           return;
         }
 
+
+        const [userRow, landlordRow, preferenceSections, mfaFactors] = settingsData;
+        setSettingsLoadError(false);
 
         const fullName = (
           userRow?.name ||
@@ -1985,12 +2013,13 @@ export function LandlordDashboard() {
 
 
     void loadSettingsData();
-
+    window.addEventListener("online", loadSettingsData);
 
     return () => {
       active = false;
+      window.removeEventListener("online", loadSettingsData);
     };
-  }, [user?.id]);
+  }, [user?.id, settingsRetryKey]);
 
 
   const updateProfile = (
@@ -2039,6 +2068,10 @@ export function LandlordDashboard() {
 
   const handleUpdateProfile =
     async () => {
+      if (settingsLoadError) {
+        toast.error("Reconnect and reload Settings before saving changes.");
+        return;
+      }
       if (isUpdatingProfile) {
         toast.error(
           "Please wait for your update to complete..."
@@ -2195,6 +2228,10 @@ export function LandlordDashboard() {
 
   const handleSaveAlerts =
     async () => {
+      if (settingsLoadError) {
+        toast.error("Reconnect and reload Settings before saving changes.");
+        return;
+      }
       if (!user) {
         return;
       }
@@ -2226,6 +2263,10 @@ export function LandlordDashboard() {
 
   const handleSaveBusiness =
     async () => {
+      if (settingsLoadError) {
+        toast.error("Reconnect and reload Settings before saving changes.");
+        return;
+      }
       if (
         business.taxId.trim() &&
         !/^\d{3}-\d{3}-\d{3}-\d{3}$/.test(
@@ -2304,6 +2345,10 @@ export function LandlordDashboard() {
 
   const handleSaveSecurity =
     async () => {
+      if (settingsLoadError) {
+        toast.error("Reconnect and reload Settings before saving changes.");
+        return;
+      }
       if (
         security.recoveryEmail &&
         !validateEmail(
@@ -3162,7 +3207,7 @@ export function LandlordDashboard() {
         landlordVerified={landlordVerified}
         landlordPermit={landlordPermit}
         setSettingsTab={setSettingsTab}
-        setActiveSection={setActiveSection}
+        setActiveSection={handleSectionChange}
         isLoadingApartments={isLoadingApartments}
         ratingSummary={ratingSummary}
         ratingsLoading={ratingsLoading}
@@ -3285,6 +3330,13 @@ export function LandlordDashboard() {
 
 
     settings: () => (
+      <>
+      {settingsLoadError && (
+        <div className="landlord-settings-load-error" role="alert">
+          <span>Settings could not be loaded. Reconnect to the internet, then try again before saving.</span>
+          <button type="button" onClick={() => setSettingsRetryKey((current) => current + 1)}>Retry</button>
+        </div>
+      )}
       <LandlordSettings
         settingsTab={
           settingsTab
@@ -3376,6 +3428,7 @@ export function LandlordDashboard() {
           />
         }
       />
+      </>
     ),
 
 
@@ -3433,7 +3486,7 @@ export function LandlordDashboard() {
               unreadNotificationCount
             }
             onSectionChange={
-              setActiveSection
+              handleSectionChange
             }
             onClose={() =>
               setSidebarOpen(false)
@@ -3490,7 +3543,7 @@ export function LandlordDashboard() {
               unreadNotificationCount
             }
             onSectionChange={
-              setActiveSection
+              handleSectionChange
             }
             onClose={() =>
               setSidebarOpen(false)

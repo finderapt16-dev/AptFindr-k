@@ -31,7 +31,7 @@ export function Dashboard() {
     const location = useLocation();
     const { favorites: favoriteIds, toggleFavorite, refreshFavorites } = useFavorites();
     const tenantNotifications = useTenantNotifications();
-    const [activeSection, setActiveSection] = useState("suggested");
+    const [activeSection, setActiveSection] = useState("overview");
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [favoriteFilter, setFavoriteFilter] = useState("all");
     const [favoriteSort, setFavoriteSort] = useState("newest");
@@ -64,10 +64,16 @@ export function Dashboard() {
     };
     useEffect(() => {
         const section = new URLSearchParams(location.search).get("section");
-        if (section && DASHBOARD_SECTIONS.includes(section)) {
-            setActiveSection(section);
-        }
+        setActiveSection(DASHBOARD_SECTIONS.includes(section) ? section : "overview");
     }, [location.search]);
+    const selectDashboardSection = (section) => {
+        if (!DASHBOARD_SECTIONS.includes(section)) return;
+        setActiveSection(section);
+        const params = new URLSearchParams(location.search);
+        if (params.get("section") === section) return;
+        params.set("section", section);
+        navigate({ pathname: location.pathname, search: `?${params.toString()}` });
+    };
     useEffect(() => {
         let mounted = true;
         const loadRankingData = () => Promise.all([fetchDashboardFavorites(), fetchApartmentViews(), fetchApartmentRatings()])
@@ -314,14 +320,14 @@ export function Dashboard() {
     };
     const renderSettings = () => <AccountSettings embedded/>;
     const sectionMap = {
-        overview: () => (<DashboardOverview tenantGreeting={tenantGreeting} dashboardSubtitle={dashboardSubtitle} favoriteIds={favoriteIds} availableApartments={availableApartments} availableRoomsCount={availableRoomsCount} hasPersonalizationPreferences={hasPersonalizationPreferences} suggestedApartments={suggestedApartments} popularApartments={popularApartments} setActiveSection={setActiveSection} navigate={navigate}/>),
+        overview: () => (<DashboardOverview tenantGreeting={tenantGreeting} dashboardSubtitle={dashboardSubtitle} favoriteIds={favoriteIds} availableApartments={availableApartments} availableRoomsCount={availableRoomsCount} hasPersonalizationPreferences={hasPersonalizationPreferences} suggestedApartments={suggestedApartments} popularApartments={popularApartments} setActiveSection={selectDashboardSection} navigate={navigate}/>),
         favorites: () => (<FavoritesOverview favoriteApartments={favoriteApartments} visibleFavoriteApartments={visibleFavoriteApartments} favoriteFilter={favoriteFilter} setFavoriteFilter={setFavoriteFilter} favoriteSort={favoriteSort} setFavoriteSort={setFavoriteSort} favoriteView={favoriteView} setFavoriteView={setFavoriteView} removingFavoriteId={removingFavoriteId} removeFavorite={removeFavorite} ratingSummary={ratingSummary} ratingsLoading={ratingsLoading} navigate={navigate}/>),
         suggested: () => (<SuggestedSection hasPersonalizationPreferences={hasPersonalizationPreferences} preferencesLoading={preferencesLoading} suggestedApartments={suggestedApartments} ratingSummary={ratingSummary} ratingsLoading={ratingsLoading} navigate={navigate}/>),
         popular: () => (<PopularSection popularApartments={popularApartments} ratingSummary={ratingSummary} ratingsLoading={ratingsLoading} navigate={navigate}/>),
         notifications: () => <Notifications state={tenantNotifications}/>,
         report: () => (<ReportProblem reportSubmitted={reportSubmitted} resetReport={resetReport} reportForm={reportForm} setReportForm={setReportForm} publishedApartments={publishedApartments} reportEvidenceFiles={reportEvidenceFiles} setReportEvidenceFiles={setReportEvidenceFiles} user={user} handleReportSubmit={handleReportSubmit} isSubmittingReport={isSubmittingReport}/>),
         settings: renderSettings,
-        help: () => (<HelpSupport navigate={navigate} setActiveSection={setActiveSection} supportSubmitted={supportSubmitted} setSupportSubmitted={setSupportSubmitted} supportForm={supportForm} setSupportForm={setSupportForm} handleSupportSubmit={handleSupportSubmit} isSubmittingSupport={isSubmittingSupport}/>),
+        help: () => (<HelpSupport navigate={navigate} setActiveSection={selectDashboardSection} supportSubmitted={supportSubmitted} setSupportSubmitted={setSupportSubmitted} supportForm={supportForm} setSupportForm={setSupportForm} handleSupportSubmit={handleSupportSubmit} isSubmittingSupport={isSubmittingSupport}/>),
     };
     const renderDashboardLoading = () => (<div className="tenant-dashboard-container">
       <section className="tenant-dashboard-section">
@@ -387,7 +393,7 @@ export function Dashboard() {
     return (<div className="tenant-browse app-shell">
       <div className="app-shell-frame">
         <aside className="app-shell-sidebar">
-          <Sidebar mode="dashboard" displayName={displayName} favoriteIds={favoriteIds} tenantNotifications={tenantNotifications} activeSection={activeSection} setActiveSection={setActiveSection} setSidebarOpen={setSidebarOpen} handleLogout={handleLogout}/>
+          <Sidebar mode="dashboard" displayName={displayName} favoriteIds={favoriteIds} tenantNotifications={tenantNotifications} activeSection={activeSection} setActiveSection={selectDashboardSection} setSidebarOpen={setSidebarOpen} handleLogout={handleLogout}/>
         </aside>
 
         {sidebarOpen && (<div className="app-sidebar-overlay" onClick={() => setSidebarOpen(false)}/>)}
@@ -396,7 +402,7 @@ export function Dashboard() {
           <button aria-label="Close navigation" onClick={() => setSidebarOpen(false)} className="app-sidebar-close">
             <X className="tenant-dashboard-x-icon"/>
           </button>
-          <Sidebar mode="dashboard" displayName={displayName} favoriteIds={favoriteIds} tenantNotifications={tenantNotifications} activeSection={activeSection} setActiveSection={setActiveSection} setSidebarOpen={setSidebarOpen} handleLogout={handleLogout}/>
+          <Sidebar mode="dashboard" displayName={displayName} favoriteIds={favoriteIds} tenantNotifications={tenantNotifications} activeSection={activeSection} setActiveSection={selectDashboardSection} setSidebarOpen={setSidebarOpen} handleLogout={handleLogout}/>
         </aside>
 
         <button aria-label="Open navigation" onClick={() => setSidebarOpen(true)} className="app-sidebar-trigger">
@@ -452,8 +458,8 @@ const DashboardOverview = ({ tenantGreeting, dashboardSubtitle, favoriteIds, ava
     </section>
 
     <section className="overview-section-section-3">
-      <FeatureCard setActiveSection={setActiveSection} title={hasPersonalizationPreferences ? "Recommended for You" : "Find Apartments for You"} description={hasPersonalizationPreferences ? "Apartment suggestions based on your preferences." : "Set your preferences to receive personalized apartment suggestions."} count={suggestedApartments.length} icon={Sparkles} section="suggested" accent="orange"/>
-      <FeatureCard setActiveSection={setActiveSection} title="Popular Apartments" description="Apartments receiving more interest from AptFindr users through views and favorites." count={popularApartments.length} icon={TrendingUp} section="popular" accent="indigo"/>
+      <FeatureCard setActiveSection={selectDashboardSection} title={hasPersonalizationPreferences ? "Recommended for You" : "Find Apartments for You"} description={hasPersonalizationPreferences ? "Apartment suggestions based on your preferences." : "Set your preferences to receive personalized apartment suggestions."} count={suggestedApartments.length} icon={Sparkles} section="suggested" accent="orange"/>
+      <FeatureCard setActiveSection={selectDashboardSection} title="Popular Apartments" description="Apartments receiving more interest from AptFindr users through views and favorites." count={popularApartments.length} icon={TrendingUp} section="popular" accent="indigo"/>
     </section>
 
     <section className="overview-section-section-4">

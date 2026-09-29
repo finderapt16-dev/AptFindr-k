@@ -23,18 +23,21 @@ const MANAGEMENT_ITEMS = [
 
 const ACCOUNT_ITEMS = [
   { icon: Settings, label: "Settings", section: "admininfo" },
-  { icon: CircleHelp, label: "Help & Support", section: "admininfo" },
+  { icon: CircleHelp, label: "Help & Support", section: "support" },
 ];
 
 export function AdminSidebar({
   activeSection,
+  isSupportView = false,
   pendingReports,
   activeAppealsCount,
   unreadNotifsCount,
   navigateToAdminModule,
+  navigateToSupport,
   handleLogout,
 }) {
-  const countFor = (section) => {
+  const countFor = (section, label) => {
+    if (label === "Help & Support") return 0;
     if (section === "reports") return pendingReports;
     if (section === "appeals") return activeAppealsCount;
     if (section === "notifications") return unreadNotifsCount;
@@ -45,16 +48,17 @@ export function AdminSidebar({
     <nav aria-label={label} className="admin-figma-sidebar-group">
       <p>{label}</p>
       {items.map(({ icon: Icon, label: itemLabel, section }) => {
-        const count = countFor(section);
-        const isCurrent =
-          activeSection === section && itemLabel !== "Help & Support";
+        const count = countFor(section, itemLabel);
+        const isCurrent = itemLabel === "Help & Support"
+          ? isSupportView
+          : activeSection === section && !(isSupportView && section === "notifications");
 
         return (
           <button
             aria-current={isCurrent ? "page" : undefined}
             className={`admin-figma-sidebar-item ${isCurrent ? "is-active" : ""}`}
             key={itemLabel}
-            onClick={() => navigateToAdminModule(section)}
+            onClick={() => itemLabel === "Help & Support" ? navigateToSupport?.() : navigateToAdminModule(section)}
             type="button"
           >
             <Icon aria-hidden="true" />

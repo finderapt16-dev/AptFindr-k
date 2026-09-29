@@ -633,3 +633,35 @@
     padding: 32px 18px;
   }
 }
+.landlord-settings-load-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid #f2c76e;
+  border-radius: 10px;
+  background: #fff9e9;
+  color: #694b0b;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.landlord-settings-load-error button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid #d7a83e;
+  border-radius: 7px;
+  background: #fff;
+  color: #694b0b;
+  font-weight: 650;
+  cursor: pointer;
+}
+.landlord-settings-load-error button:focus-visible {
+  outline: 3px solid rgba(22, 165, 225, .35);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .landlord-settings-load-error { align-items: flex-start; flex-direction: column; }
+}

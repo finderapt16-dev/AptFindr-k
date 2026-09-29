@@ -3,6 +3,16 @@ import { hasSupabaseConfig } from "@/services/supabaseClient";
 import { AuthProvider } from "../contexts/AuthContext";
 export function AppRuntime({ children }) {
     const [waitingWorker, setWaitingWorker] = useState(null);
+    const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+    useEffect(() => {
+        const updateConnectionStatus = () => setIsOffline(!navigator.onLine);
+        window.addEventListener("online", updateConnectionStatus);
+        window.addEventListener("offline", updateConnectionStatus);
+        return () => {
+            window.removeEventListener("online", updateConnectionStatus);
+            window.removeEventListener("offline", updateConnectionStatus);
+        };
+    }, []);
     useEffect(() => {
         const registerServiceWorker = () => {
             navigator.serviceWorker
@@ -84,6 +94,9 @@ export function AppRuntime({ children }) {
     </AuthProvider>);
     return (<>
       {app}
+      {isOffline && (<div className="runtime-offline-banner" role="status" aria-live="polite">
+          You’re offline. Cached screens are available; listings and changes need a connection.
+        </div>)}
       {waitingWorker && (<div className="runtime-update-banner" role="status">
           <p className="runtime-update-text">A new AptFindr version is ready.</p>
           <button type="button" className="runtime-update-button" onClick={() => waitingWorker.postMessage({ type: "SKIP_WAITING" })}>

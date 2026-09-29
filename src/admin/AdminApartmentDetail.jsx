@@ -268,10 +268,18 @@ export function AdminApartmentDetail() {
     useEffect(() => {
         if (!id)
             return;
+        let active = true;
         const refreshInspection = () => {
-            void fetchApartmentInspectionDetails(id).then((details) => {
+            void Promise.all([
+                fetchApartmentInspectionDetails(id),
+                fetchApartmentVerificationDocuments(id),
+            ]).then(([details, documents]) => {
+                if (!active) return;
                 setInspectionDetails(details);
                 setApartment(details?.apartment ?? null);
+                setVerificationDocuments(documents);
+            }).catch((error) => {
+                console.error("Unable to refresh admin apartment details:", error);
             });
         };
         const channel = supabase
@@ -289,9 +297,12 @@ export function AdminApartmentDetail() {
                 refreshInspection();
         };
         window.addEventListener("focus", refreshOnFocus);
+        window.addEventListener("online", refreshOnFocus);
         document.addEventListener("visibilitychange", refreshOnVisibility);
         return () => {
+            active = false;
             window.removeEventListener("focus", refreshOnFocus);
+            window.removeEventListener("online", refreshOnFocus);
             document.removeEventListener("visibilitychange", refreshOnVisibility);
             void supabase.removeChannel(channel);
         };

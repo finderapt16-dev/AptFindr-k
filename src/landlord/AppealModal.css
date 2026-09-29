@@ -23,8 +23,8 @@
 }
 
 .appeal-modal-overlay-2 {
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 .appeal-modal-card {
@@ -46,8 +46,8 @@
 }
 
 .appeal-modal-card {
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 25px 50px -12px #00000040;
 }
 

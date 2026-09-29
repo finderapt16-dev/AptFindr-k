@@ -4701,8 +4701,8 @@
 }
 
 .admin-apartment-detail-overlay-2 {
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 .admin-apartment-detail-card-23 {
@@ -6074,8 +6074,8 @@
 
 .admin-apartments-card-5 {
   padding: calc(var(--spacing, .25rem) * 1.5);
-  -webkit-backdrop-filter: blur(var(--blur-md, 12px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-md, 12px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-md, 12px));
+  backdrop-filter: blur(var(--blur-md, 12px));
   box-shadow: 0 1px 3px #0000001a, 0 1px 2px -1px #0000001a;
 }
 
@@ -6243,8 +6243,8 @@
 }
 
 .admin-apartments-input-2 {
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 1px 3px #0000001a, 0 1px 2px -1px #0000001a;
 }
 
@@ -6295,8 +6295,8 @@
 }
 
 .admin-apartments-card-6 {
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   transition-property: all;
   transition-timing-function: var(--default-transition-timing-function, cubic-bezier(.4, 0, .2, 1));
   transition-duration: var(--default-transition-duration, .15s);
@@ -6468,8 +6468,8 @@
 .admin-apartments-row-15 {
   padding-inline: calc(var(--spacing, .25rem) * 2.5);
   padding-block: var(--spacing, .25rem);
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 .admin-apartments-row-16 {
@@ -6822,8 +6822,8 @@
 }
 
 .admin-apartments-overlay-2 {
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 .admin-apartments-card-8 {
@@ -6855,8 +6855,8 @@
 }
 
 .admin-apartments-card-8 {
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 25px 50px -12px #00000040;
 }
 
@@ -6912,8 +6912,8 @@
 
 .admin-apartments-button-2 {
   color: var(--color-white, #fff);
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
   transition-property: all;
   transition-timing-function: var(--default-transition-timing-function, cubic-bezier(.4, 0, .2, 1));
   transition-duration: var(--default-transition-duration, .15s);
@@ -14977,8 +14977,8 @@
 }
 
 .app-sidebar-overlay {
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 @media (min-width: 64rem) {
@@ -15507,8 +15507,8 @@
 }
 
 .admin-dashboard-overlay-2 {
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 .admin-dashboard-card-15 {
@@ -15807,8 +15807,8 @@
 }
 
 .admin-dashboard-overlay-3 {
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 .admin-dashboard-card-17 {
@@ -15837,8 +15837,8 @@
 }
 
 .admin-dashboard-card-17 {
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 25px 50px -12px #00000040;
 }
 
@@ -16184,8 +16184,8 @@
 }
 
 .admin-dashboard-card-19 {
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 25px 50px -12px #00000040;
 }
 
@@ -18577,8 +18577,8 @@
 .admin-reports-card-9 {
   padding: calc(var(--spacing, .25rem) * 4);
   text-align: center;
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 1px 3px #0000001a, 0 1px 2px -1px #0000001a;
 }
 
@@ -18635,8 +18635,8 @@
 }
 
 .admin-reports-card-10 {
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 20px 25px -5px #0000001a, 0 8px 10px -6px #0000001a;
 }
 
@@ -18732,8 +18732,8 @@
 }
 
 .admin-reports-card-11 {
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 20px 25px -5px #0000001a, 0 8px 10px -6px #0000001a;
 }
 
@@ -18860,8 +18860,8 @@
 }
 
 .admin-reports-overlay-2 {
-  -webkit-backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-sm, 8px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-sm, 8px));
+  backdrop-filter: blur(var(--blur-sm, 8px));
 }
 
 .admin-reports-card-12 {
@@ -18890,8 +18890,8 @@
 
 .admin-reports-card-12 {
   padding: calc(var(--spacing, .25rem) * 6);
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 20px 25px -5px #0000001a, 0 8px 10px -6px #0000001a;
 }
 
@@ -19037,8 +19037,8 @@
 }
 
 .admin-reports-card-13 {
-  -webkit-backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
-  backdrop-filter: blur(var(--blur-xl, 24px)) initial initial initial initial initial initial initial initial;
+  -webkit-backdrop-filter: blur(var(--blur-xl, 24px));
+  backdrop-filter: blur(var(--blur-xl, 24px));
   box-shadow: 0 20px 25px -5px #0000001a, 0 8px 10px -6px #0000001a;
 }
 
