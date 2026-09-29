@@ -294,11 +294,11 @@
 .signup-review-ok { max-width: 280px; margin-inline: auto; }
 /* Policy popups opened from the consent checkbox keep the signup viewport
    clamping (so they stay above the mobile keyboard) while the shared legal
-   panel supplies the header / scroll / footer layout. */
+   panel supplies the header and scroll layout. */
 .ui-dialog-content.signup-review-dialog.signup-policy-dialog {
   display: flex;
   flex-direction: column;
-  width: min(660px, calc(100% - 32px));
+  width: min(450px, calc(100% - 32px));
   max-height: calc(var(--signup-viewport-height, 100dvh) - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   padding: 0;
   overflow: hidden;

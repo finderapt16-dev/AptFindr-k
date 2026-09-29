@@ -1,6 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { BadgeCheck, FileText, ShieldCheck } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/components/ui/utils";
 import { getCachedPolicy, loadPolicy } from "./policyLoader";
 
@@ -8,7 +7,7 @@ import { getCachedPolicy, loadPolicy } from "./policyLoader";
  * A single floating popup used for every Terms of Service / Privacy Policy
  * link in the application (signup, landing footer, tenant pages, landlord
  * pages). Nothing navigates when a link is clicked - the document opens on top
- * of the current screen and closes with the X, the Close button, Escape, or a
+ * of the current screen and closes with the X, Escape, or a
  * click outside.
  *
  * The panel is rendered from a memory cache when the text has already been
@@ -58,12 +57,10 @@ export const PolicyDialog = memo(function PolicyDialog({
   returnFocusRef,
   contentClassName,
   overlayClassName,
-  closeLabel = "Close",
 }) {
   const [policy, setPolicy] = useState(() => getCachedPolicy(policyId));
   const contentRef = useRef(null);
   const labels = fallbackLabels(policyId);
-  const isLandlord = (policy?.audience ?? labels.audienceLabel.toLowerCase()) === "landlord";
 
   useEffect(() => {
     const cached = getCachedPolicy(policyId);
@@ -88,6 +85,7 @@ export const PolicyDialog = memo(function PolicyDialog({
         className={cn("apf-policy-dialog", contentClassName)}
         overlayClassName={cn("apf-policy-overlay", overlayClassName)}
         aria-busy={!policy}
+        aria-describedby={undefined}
         // Nested dialogs (for example inside the landing signup modal) must
         // close only this panel when Escape is pressed.
         onEscapeKeyDown={(event) => { event.preventDefault(); event.stopPropagation(); closeDialog(); }}
@@ -107,46 +105,17 @@ export const PolicyDialog = memo(function PolicyDialog({
         }}
       >
         <header className="apf-policy-head">
-          <div className="apf-policy-badges">
-            <span className={cn("apf-policy-badge", isLandlord ? "apf-policy-badge--landlord" : "apf-policy-badge--tenant")}>
-              {isLandlord ? <BadgeCheck aria-hidden="true" /> : <ShieldCheck aria-hidden="true" />}
-              {policy?.audienceLabel ?? labels.audienceLabel}
-            </span>
-            <span className="apf-policy-badge apf-policy-badge--kind">
-              <FileText aria-hidden="true" />
-              {policy?.kindLabel ?? labels.kindLabel}
-            </span>
-          </div>
           <DialogTitle className="apf-policy-title">{policy?.title ?? labels.kindLabel}</DialogTitle>
-          <DialogDescription className="apf-policy-summary">
-            {policy?.summary ?? "AptFindr legal document."}
-          </DialogDescription>
         </header>
 
         <div className="apf-policy-scroll" tabIndex={-1} role="region" aria-label={`${policy?.title ?? labels.kindLabel} content`}>
           {policy ? (
             <>
-              {policy.highlights?.length ? (
-                <div className="apf-policy-highlights">
-                  <p className="apf-policy-highlights-title">In short</p>
-                  <ul className="apf-policy-list apf-policy-list--tight">
-                    {policy.highlights.map((highlight) => <li key={highlight} className="apf-policy-list-item">{highlight}</li>)}
-                  </ul>
-                </div>
-              ) : null}
               {policy.sections.map((section) => <PolicySection key={section.heading} section={section} />)}
             </>
           ) : <PolicySkeleton />}
         </div>
 
-        <footer className="apf-policy-foot">
-          <span className="apf-policy-updated">
-            {policy?.updated ? `Last updated ${policy.updated}` : "Loading document..."}
-          </span>
-          <button type="button" className="apf-policy-done" onClick={closeDialog}>
-            {closeLabel}
-          </button>
-        </footer>
       </DialogContent>
     </Dialog>
   );

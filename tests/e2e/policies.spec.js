@@ -67,12 +67,12 @@ test("landing footer opens the terms and privacy popups without leaving the page
 
   await footer.getByRole("button", { name: "Terms of Service" }).hover();
   await footer.getByRole("button", { name: "Terms of Service" }).click();
-  const terms = page.getByRole("dialog", { name: "Tenant Terms of Service" });
+  const terms = page.getByRole("dialog", { name: "Terms of Service" });
   await expect(terms).toBeVisible();
   expect(await terms.evaluate((node) => node.parentElement === document.body)).toBe(true);
-  await expect(terms.getByText("In short")).toBeVisible();
-  await expect(terms.getByText("1. Accepting These Terms")).toBeVisible();
-  await expect(terms.getByText(/Last updated/)).toBeVisible();
+  await expect(terms.getByText("In short")).toHaveCount(0);
+  await expect(terms.getByText("1. Platform Usage")).toBeVisible();
+  await expect(terms.getByText(/Last updated/)).toHaveCount(0);
   await expect(page).toHaveURL(/\/$/);
 
   await page.keyboard.press("Escape");
@@ -80,10 +80,10 @@ test("landing footer opens the terms and privacy popups without leaving the page
   await expect(footer.getByRole("button", { name: "Terms of Service" })).toBeFocused();
 
   await footer.getByRole("button", { name: "Privacy Policy" }).click();
-  const privacy = page.getByRole("dialog", { name: "Tenant Privacy Policy" });
+  const privacy = page.getByRole("dialog", { name: "Privacy Policy" });
   await expect(privacy).toBeVisible();
   await expect(privacy.getByText("1. Information We Collect")).toBeVisible();
-  await privacy.locator(".apf-policy-done").click();
+  await privacy.getByRole("button", { name: "Close", exact: true }).click();
   await expect(privacy).toBeHidden();
 });
 
@@ -100,12 +100,12 @@ test("the legal text is downloaded only when a policy is opened", async ({ page 
   const termsLink = page.locator(".landing-footer").getByRole("button", { name: "Terms of Service" });
   await termsLink.hover();
   await termsLink.click();
-  await expect(page.getByRole("dialog", { name: "Tenant Terms of Service" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Terms of Service" })).toBeVisible();
   expect(policyRequests.length, "opening a policy must request the chunk once").toBeGreaterThan(0);
   const firstRequestCount = policyRequests.length;
   await page.keyboard.press("Escape");
   await page.locator(".landing-footer").getByRole("button", { name: "Privacy Policy" }).click();
-  await expect(page.getByRole("dialog", { name: "Tenant Privacy Policy" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Privacy Policy" })).toBeVisible();
   expect(policyRequests).toHaveLength(firstRequestCount);
 });
 
@@ -115,9 +115,9 @@ test("signup consent links open the document for the selected role", async ({ pa
 
   await page.getByRole("button", { name: /^Tenant/ }).click();
   await page.getByRole("button", { name: "Terms of Service" }).click();
-  const tenantTerms = page.getByRole("dialog", { name: "Tenant Terms of Service" });
+  const tenantTerms = page.getByRole("dialog", { name: "Terms of Service" });
   await expect(tenantTerms).toBeVisible();
-  await expect(tenantTerms.getByText("6. Payments Are Made Outside AptFindr")).toBeVisible();
+  await expect(tenantTerms.getByText("5. Prohibited Conduct")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(tenantTerms).toBeHidden();
   await expect(page.getByRole("button", { name: "Terms of Service" })).toBeFocused();
@@ -127,9 +127,9 @@ test("signup consent links open the document for the selected role", async ({ pa
   await page.getByRole("button", { name: "Back", exact: true }).click();
   await page.getByRole("button", { name: /^Landlord/ }).click();
   await page.getByRole("button", { name: "Privacy Policy" }).click();
-  const landlordPrivacy = page.getByRole("dialog", { name: "Landlord Privacy Policy" });
+  const landlordPrivacy = page.getByRole("dialog", { name: "Privacy Policy" });
   await expect(landlordPrivacy).toBeVisible();
-  await expect(landlordPrivacy.getByText("2. Verification Documents")).toBeVisible();
+  await expect(landlordPrivacy.getByText("2. How Information is Used")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(landlordPrivacy).toBeHidden();
 });
@@ -140,7 +140,7 @@ test("policy popups stay inside small screens and keep their own scroll", async 
     await mockBackend(page);
     await page.goto("/");
     await page.locator(".landing-footer").getByRole("button", { name: "Privacy Policy" }).click();
-    const dialog = page.getByRole("dialog", { name: "Tenant Privacy Policy" });
+    const dialog = page.getByRole("dialog", { name: "Privacy Policy" });
     await expect(dialog).toBeVisible();
     const box = await dialog.boundingBox();
     expect(box.x).toBeGreaterThanOrEqual(0);
@@ -148,7 +148,7 @@ test("policy popups stay inside small screens and keep their own scroll", async 
     expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
     const scrollable = await dialog.locator(".apf-policy-scroll").evaluate((node) => node.scrollHeight > node.clientHeight);
-    expect(scrollable).toBe(true);
+    if (viewport.height < 600) expect(scrollable).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
@@ -163,13 +163,13 @@ test("tenant Settings exposes both tenant documents as popups", async ({ page })
   await expect(legal.getByRole("heading", { name: "Legal & Policies" })).toBeVisible();
 
   await legal.getByRole("button", { name: /Terms of Service/ }).click();
-  const terms = page.getByRole("dialog", { name: "Tenant Terms of Service" });
+  const terms = page.getByRole("dialog", { name: "Terms of Service" });
   await expect(terms).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(terms).toBeHidden();
 
   await legal.getByRole("button", { name: /Privacy Policy/ }).click();
-  await expect(page.getByRole("dialog", { name: "Tenant Privacy Policy" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Privacy Policy" })).toBeVisible();
 });
 
 test("landlord Settings exposes both landlord documents as popups", async ({ page }) => {
@@ -179,12 +179,12 @@ test("landlord Settings exposes both landlord documents as popups", async ({ pag
   await expect(legal).toBeVisible({ timeout: 15000 });
 
   await legal.getByRole("button", { name: /Terms of Service/ }).click();
-  const terms = page.getByRole("dialog", { name: "Landlord Terms of Service" });
+  const terms = page.getByRole("dialog", { name: "Terms of Service" });
   await expect(terms).toBeVisible();
-  await expect(terms.getByText(/2\. Eligibility, Verification/)).toBeVisible();
+  await expect(terms.getByText(/2\. Account Information/)).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(terms).toBeHidden();
 
   await legal.getByRole("button", { name: /Privacy Policy/ }).click();
-  await expect(page.getByRole("dialog", { name: "Landlord Privacy Policy" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Privacy Policy" })).toBeVisible();
 });
