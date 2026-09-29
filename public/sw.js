@@ -1,13 +1,13 @@
-const VERSION = "v6";
+const VERSION = "v7";
 const SHELL_CACHE = `aptfindr-shell-${VERSION}`;
 const RUNTIME_CACHE = `aptfindr-runtime-${VERSION}`;
 const APP_SHELL = [
   "/",
   "/index.html",
   "/offline.html",
-  "/manifest.webmanifest?v=6",
+  "/manifest.webmanifest?v=7",
   "/icon.svg?v=6",
-  "/aptfindr-logo-exact.svg?v=6",
+  "/aptFindr-logo-exact.svg?v=7",
 ];
 
 async function cacheAppShell() {
@@ -18,8 +18,8 @@ async function cacheAppShell() {
   if (!indexResponse.ok) return;
   const markup = await indexResponse.text();
   const buildAssets = [...markup.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((match) => match[1]);
-  const manifestResponse = await fetch("/.vite/manifest.json", { cache: "no-store" });
-  if (manifestResponse.ok) {
+  const manifestResponse = await fetch("/asset-manifest.json", { cache: "no-store" });
+  if (manifestResponse.ok && manifestResponse.headers.get("content-type")?.includes("json")) {
     const buildManifest = await manifestResponse.json();
     const visitedEntries = new Set();
     const addEntry = (key) => {
@@ -66,7 +66,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response.ok) caches.open(SHELL_CACHE).then((cache) => cache.put("/index.html", response.clone()));
+          if (response.ok) {
+            const copy = response.clone();
+            event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.put("/index.html", copy)));
+          }
           return response;
         })
         .catch(async () => (await caches.match("/index.html")) || caches.match("/offline.html")),
@@ -80,7 +83,8 @@ self.addEventListener("fetch", (event) => {
         const network = fetch(request)
           .then((response) => {
             if (response.ok && (response.type === "basic" || response.type === "cors")) {
-              caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone()));
+              const copy = response.clone();
+              event.waitUntil(caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy)));
             }
             return response;
           })

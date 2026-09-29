@@ -17,15 +17,15 @@ const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => {
     return (<DialogPrimitive.Overlay ref={ref} data-slot="dialog-overlay" className={cn("ui-dialog-overlay", className)} {...props}/>);
 });
 DialogOverlay.displayName = "DialogOverlay";
-const DialogContent = React.forwardRef(({ className, children, ...props }, ref) => {
+const DialogContent = React.forwardRef(({ className, children, overlayClassName, showCloseButton = true, ...props }, ref) => {
     return (<DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content ref={ref} data-slot="dialog-content" className={cn("ui-dialog-content", className)} {...props}>
         {children}
-        <DialogPrimitive.Close className="ui-dialog-close">
+        {showCloseButton && <DialogPrimitive.Close className="ui-dialog-close">
           <XIcon />
           <span className="ui-sr-only">Close</span>
-        </DialogPrimitive.Close>
+        </DialogPrimitive.Close>}
       </DialogPrimitive.Content>
     </DialogPortal>);
 });

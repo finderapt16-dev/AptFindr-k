@@ -1,5 +1,7 @@
 import { supabase as supabaseClient } from './supabaseClient';
 import { safeRandomId } from '../utils/safeRandomId';
+import { validateSignupPassword } from '../auth/signupValidation.js';
+import { seedLandlordSignupBusinessName } from './landlordSignupProfile.js';
 export class SignupFlowError extends Error {
     stage;
     code;
@@ -179,6 +181,9 @@ async function ensureRoleProfile(userId, role, input) {
     if (error) {
         throw new Error(`Failed to sync ${table}: ${error.message}`);
     }
+    if (role === 'landlord') {
+        await seedLandlordSignupBusinessName(supabaseClient, userId, input.signupBusinessName);
+    }
 }
 async function uploadLandlordSignupDocuments(userId, input) {
     if (input.role !== 'landlord')
@@ -261,6 +266,7 @@ async function ensureProfileForAuthUser(authUser) {
     if (existingByAuthId) {
         assertValidRole(existingByAuthId.role);
         await ensureRoleProfile(existingByAuthId.id, existingByAuthId.role, {
+            signupBusinessName: authUser.user_metadata?.businessName,
             permitNumber: existingByAuthId.permitNumber,
             adminLevel: existingByAuthId.adminLevel,
             department: existingByAuthId.department,
@@ -284,6 +290,7 @@ async function ensureProfileForAuthUser(authUser) {
         const profile = normalizeUser(data);
         assertValidRole(profile.role);
         await ensureRoleProfile(profile.id, profile.role, {
+            signupBusinessName: authUser.user_metadata?.businessName,
             adminLevel: profile.adminLevel,
             department: profile.department,
             permitNumber: profile.permitNumber,
@@ -330,6 +337,7 @@ async function ensureProfileForAuthUser(authUser) {
     }
     const profile = normalizeUser(data);
     await ensureRoleProfile(profile.id, profile.role, {
+        signupBusinessName: authUser.user_metadata?.businessName,
         permitNumber: typeof authUser.user_metadata?.permitNumber === 'string' ? authUser.user_metadata.permitNumber : undefined,
         isVerified: profile.isVerified,
     });
@@ -455,8 +463,12 @@ export async function signupUser(input) {
         throw new SignupFlowError('You must agree to the Terms of Use and Landlord Verification Policy to continue.', 'validation', 'landlord_policy_required');
     if (!/^[a-z0-9_]{4,30}$/.test(username))
         throw new SignupFlowError('Username must be 4–30 characters using only letters, numbers, or underscores.', 'validation', 'invalid_username');
-    if (!/^\S+@\S+\.\S+$/.test(email))
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
         throw new SignupFlowError('Enter a valid email address.', 'validation', 'invalid_email');
+    const passwordError = validateSignupPassword(input.password);
+    if (passwordError) throw new SignupFlowError(passwordError, 'validation', 'weak_password');
+    if (typeof input.businessName === 'string' && input.businessName.trim().length > 150)
+        throw new SignupFlowError('Business name must be 150 characters or fewer.', 'validation', 'invalid_business_name');
     signupLog('[AUTH] Signup started', { email, role });
     const { data: authData, error: authError } = await supabaseClient.auth.signUp({
         email,
@@ -471,6 +483,7 @@ export async function signupUser(input) {
                 middleInitial: input.middleInitial,
                 address: input.address,
                 permitNumber: role === 'landlord' ? input.permitNumber : undefined,
+                businessName: role === 'landlord' ? nonEmptyString(input.businessName) ?? undefined : undefined,
                 termsAccepted: true,
                 landlordVerificationAccepted: role === 'landlord' ? true : undefined,
                 requires_email_verification: true,

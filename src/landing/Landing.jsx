@@ -4,6 +4,7 @@ import { Login } from "@/auth/Signin";
 import { Signup } from "@/auth/Signup";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 import {
     Sheet,
@@ -30,6 +31,7 @@ import {
 import {
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from "react";
 
@@ -232,6 +234,8 @@ export function Landing() {
         setSignupOpen,
     ] = useState(false);
 
+    const signupTriggerRef = useRef(null);
+
     const [
         mobileMenuOpen,
         setMobileMenuOpen,
@@ -257,9 +261,11 @@ export function Landing() {
     // direct navigation has the same presentation as clicking Sign In.
     useEffect(() => {
         if (location.pathname === "/login") {
+            setSignupOpen(false);
+            setSignupRedirect(null);
             setLoginOpen(true);
         }
-    }, [location.pathname]);
+    }, [location.pathname, location.key]);
 
 
     /* =====================================================
@@ -376,7 +382,8 @@ export function Landing() {
     ===================================================== */
 
     useEffect(() => {
-        if (!loginOpen && !signupOpen) {
+        // Signup and its nested dialogs use Radix scroll locking / Escape.
+        if (!loginOpen) {
             return;
         }
 
@@ -394,7 +401,7 @@ export function Landing() {
             (event) => {
                 if (
                     event.key ===
-                    "Escape"
+                    "Escape" && !event.defaultPrevented
                 ) {
                     setLoginOpen(
                         false
@@ -435,7 +442,7 @@ export function Landing() {
                 handleKeyDown
             );
         };
-    }, [loginOpen, signupOpen, location.pathname, navigate]);
+    }, [loginOpen, location.pathname, navigate]);
 
 
     /* =====================================================
@@ -465,6 +472,7 @@ export function Landing() {
     };
 
     const openSignup = (destination = null) => {
+        signupTriggerRef.current = document.activeElement;
         setLoginOpen(false);
         setSignupRedirect(destination);
         setSignupOpen(true);
@@ -1239,33 +1247,25 @@ export function Landing() {
 
             )}
 
-            {signupOpen && (
-                <div
-                    className="landing-login-overlay"
-                    onMouseDown={(event) => {
-                        if (event.target === event.currentTarget) {
-                            closeSignup();
-                        }
+            <Dialog open={signupOpen} onOpenChange={(open) => { if (!open) closeSignup(); }}>
+                <DialogContent
+                    className="landing-login-modal landing-signup-modal"
+                    overlayClassName="landing-signup-overlay"
+                    onEscapeKeyDown={(event) => {
+                        if (document.querySelector(".signup-review-dialog")) event.preventDefault();
+                    }}
+                    onCloseAutoFocus={(event) => {
+                        event.preventDefault();
+                        const trigger = signupTriggerRef.current;
+                        if (trigger?.isConnected) trigger.focus();
+                        else document.querySelector(".landing-account-button, .landing-mobile-menu-button")?.focus();
                     }}
                 >
-                    <div
-                        className="landing-login-modal landing-signup-modal"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="Create an AptFindr account"
-                    >
-                        <button
-                            type="button"
-                            className="landing-login-close"
-                            onClick={closeSignup}
-                            aria-label="Close sign up"
-                        >
-                            <X size={18} />
-                        </button>
-                        <Signup embedded redirect={signupRedirect} />
-                    </div>
-                </div>
-            )}
+                    <DialogTitle className="ui-sr-only">Create an AptFindr account</DialogTitle>
+                    <DialogDescription className="ui-sr-only">Choose Tenant or Landlord and complete your registration.</DialogDescription>
+                    <Signup embedded redirect={signupRedirect} />
+                </DialogContent>
+            </Dialog>
 
         </div>
     );

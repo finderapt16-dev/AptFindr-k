@@ -1730,6 +1730,9 @@
 
     width: 100%;
     max-width: 430px;
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 
     padding: 32px;
 
@@ -1746,288 +1749,6 @@
         landingLoginModalIn
         160ms ease-out;
 }
-
-.landing-signup-modal {
-    width: min(550px, calc(100vw - 48px));
-    height: min(535px, calc(100dvh - 48px));
-    min-height: 0;
-    max-width: none;
-    max-height: calc(100dvh - 48px);
-    padding: 32px 75px;
-    border-color: #4b5563;
-    border-radius: 12px;
-    overflow-y: auto;
-}
-
-.landing-signup-modal .landing-login-close {
-    top: 10px;
-    right: 10px;
-}
-
-.landing-signup-modal .signup-form-shell {
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-}
-
-.landing-signup-modal .signup-form-heading {
-    margin-bottom: 3.25rem;
-}
-
-.landing-signup-modal .signup-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-}
-
-.landing-signup-modal .signup-description {
-    margin-top: 1rem;
-    color: #1e293b;
-    font-size: 1rem;
-}
-
-.landing-signup-modal .signup-account-type-options {
-    gap: 1.75rem;
-}
-
-.landing-signup-modal .signup-account-type-option {
-    box-sizing: border-box;
-    min-height: 122px;
-    padding: 1.25rem 2.15rem;
-    gap: 2rem;
-    border-color: #64748b;
-    border-radius: 0.55rem;
-}
-
-.landing-signup-modal .signup-account-type-icon {
-    width: 3rem;
-    height: 3rem;
-}
-
-.landing-signup-modal .signup-account-type-content strong {
-    font-size: 1.25rem;
-    font-weight: 500;
-}
-
-.landing-signup-modal .signup-account-type-content span {
-    margin-top: 0.3rem;
-    color: #71717a;
-    font-size: 1rem;
-    line-height: 1.2;
-}
-
-.landing-signup-modal .signup-account-type-chevron {
-    width: 1.25rem;
-    height: 1.25rem;
-}
-
-/* The tenant form is deliberately compact enough to remain a single, complete
-   modal instead of becoming an independently scrollable panel. */
-.landing-signup-modal:has(.signup-page--tenant) {
-    height: min(670px, calc(100dvh - 24px));
-    min-height: 0;
-    max-height: calc(100dvh - 24px);
-    padding: clamp(20px, 3dvh, 28px) clamp(30px, 8vw, 68px);
-    overflow: visible;
-}
-
-.landing-signup-modal:has(.signup-page--landlord) {
-    height: min(670px, calc(100dvh - 24px));
-    min-height: 0;
-    max-height: calc(100dvh - 24px);
-    padding: clamp(20px, 3dvh, 28px) clamp(30px, 8vw, 68px);
-    overflow: visible;
-}
-
-.landing-login-overlay:has(.landing-signup-modal) {
-    padding: 12px;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-form-heading,
-.landing-signup-modal:has(.signup-page--landlord) .signup-form-heading {
-    margin-bottom: 0.75rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-title,
-.landing-signup-modal:has(.signup-page--landlord) .signup-title {
-    font-size: 1.5rem !important;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-description,
-.landing-signup-modal:has(.signup-page--landlord) .signup-description {
-    margin-top: 0.4rem;
-    font-size: 0.875rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-change-role {
-    margin-top: 0.25rem;
-    font-size: 0.75rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-form {
-    gap: 0.75rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-tenant-simple-form {
-    gap: 0.625rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-account-field {
-    gap: 0.25rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .auth-field > :not(:last-child) {
-    margin-bottom: 0.25rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .auth-field-label {
-    font-size: 0.8125rem;
-    line-height: 1rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .auth-field-control {
-    height: 2.625rem;
-    border-radius: 0.625rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-tenant-password-help,
-.landing-signup-modal:has(.signup-page--tenant) .signup-agreement {
-    padding: 0.75rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-tenant-password-help {
-    gap: 0.25rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-tenant-password-help span {
-    font-size: 0.625rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-agreement {
-    font-size: 0.6875rem;
-    line-height: 1.3;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-checkbox {
-    width: 0.8125rem;
-    height: 0.8125rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-submit-button,
-.landing-signup-modal:has(.signup-page--tenant) .signup-google-button {
-    height: 2.625rem;
-    font-size: 0.75rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-social-divider,
-.landing-signup-modal:has(.signup-page--tenant) .signup-tenant-login-prompt {
-    font-size: 0.625rem;
-}
-
-/* Validation feedback sits outside the card, leaving the form's internal
-   spacing and field positions unchanged. */
-.landing-signup-modal:has(.signup-page--tenant) .signup-message--reserved,
-.landing-signup-modal:has(.signup-page--landlord) .signup-message--reserved {
-    position: absolute;
-    right: 0;
-    bottom: calc(100% + 12px);
-    left: 0;
-    z-index: 2;
-    min-height: 0;
-    margin: 0;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-message--reserved:empty,
-.landing-signup-modal:has(.signup-page--landlord) .signup-message--reserved:empty {
-    display: none;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-error-alert {
-    padding: 0.5rem 0.625rem;
-}
-
-.landing-signup-modal:has(.signup-page--tenant) .signup-error-text {
-    font-size: 0.6875rem;
-    line-height: 1.35;
-}
-
-/* On shorter displays, scale the same layout down just enough to keep the
-   complete modal visible without introducing an inner scrollbar. */
-@media (max-height: 700px) {
-    .landing-signup-modal:has(.signup-page--tenant) .signup-form {
-        gap: 0.5rem;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .signup-tenant-simple-form {
-        gap: 0.4rem;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .auth-field > :not(:last-child) {
-        margin-bottom: 0.125rem;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .auth-field-label {
-        font-size: 0.6875rem;
-        line-height: 0.875rem;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .auth-field-control {
-        height: 2.25rem;
-        border-radius: 0.5rem;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .signup-tenant-password-help,
-    .landing-signup-modal:has(.signup-page--tenant) .signup-agreement {
-        padding: 0.5rem 0.75rem;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .signup-tenant-password-help {
-        gap: 0.125rem;
-        font-size: 0.625rem;
-        line-height: 1.3;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .signup-tenant-password-help span {
-        font-size: 0.5625rem;
-        line-height: 1.3;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .signup-agreement {
-        padding: 0.125rem 0;
-        font-size: 0.625rem;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .signup-checkbox {
-        width: 0.75rem;
-        height: 0.75rem;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .signup-submit-button,
-    .landing-signup-modal:has(.signup-page--tenant) .signup-google-button {
-        height: 2.25rem;
-        font-size: 0.6875rem;
-    }
-
-    .landing-signup-modal:has(.signup-page--tenant) .signup-social-divider,
-    .landing-signup-modal:has(.signup-page--tenant) .signup-tenant-login-prompt {
-        font-size: 0.5625rem;
-    }
-}
-
-@media (max-width: 600px) {
-    .landing-signup-modal {
-        height: auto;
-        max-height: calc(100dvh - 32px);
-        min-height: 0;
-        padding: 2.5rem 1.5rem;
-    }
-
-    .landing-signup-modal .signup-account-type-option {
-        padding-inline: 1.25rem;
-        gap: 1rem;
-    }
-}
-
-
 
 @keyframes landingLoginModalIn {
     from {
@@ -2277,8 +1998,7 @@
 
     /* Keep every auth dialog a centered, floating card on phones. */
 
-    .landing-login-overlay,
-    .landing-login-overlay:has(.landing-signup-modal) {
+    .landing-login-overlay {
         align-items: center;
 
         padding:
@@ -2315,74 +2035,69 @@
     }
 
 
-    .landing-signup-modal,
-    .landing-signup-modal:has(.signup-page--tenant),
-    .landing-signup-modal:has(.signup-page--landlord) {
-        width: min(100%, 400px);
 
-        height: auto;
+}
 
-        min-height: 0;
-        max-width: none;
-        max-height: 100%;
 
-        overflow-y: auto;
+/* Signup is a viewport-level portal. Its review editor has its own, higher
+   layer and cannot be clipped by the card or the landing page backdrop. */
+.ui-dialog-overlay.landing-signup-overlay {
+    z-index: 9999;
+    background: rgba(15, 23, 42, 0.42);
+    backdrop-filter: blur(4px);
+}
 
-        padding: 2rem 1.5rem 1.5rem;
+.ui-dialog-content.landing-signup-modal {
+    position: fixed;
+    top: calc(var(--signup-viewport-top, 0px) + var(--signup-viewport-height, 100dvh) / 2);
+    left: 50%;
+    z-index: 10000;
+    display: block;
+    box-sizing: border-box;
+    width: min(550px, calc(100% - 32px));
+    height: auto;
+    min-height: 0;
+    max-width: none;
+    max-height: calc(var(--signup-viewport-height, 100dvh) - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 32px 64px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transform: translate(-50%, -50%);
+    border: 1px solid #edf0f4;
+    border-radius: 12px;
+    background: #fff;
+    animation: signupModalIn 160ms ease-out;
+}
+
+.landing-signup-modal > .ui-dialog-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 6px;
+    right: 6px;
+    width: 44px;
+    height: 44px;
+    color: #64748b;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.landing-signup-modal > .ui-dialog-close:hover { background: #f1f5f9; }
+
+@keyframes signupModalIn {
+    from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(0.98); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (max-width: 640px) {
+    .ui-dialog-content.landing-signup-modal {
+        width: min(430px, calc(100% - 24px));
+        max-height: calc(var(--signup-viewport-height, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        padding: 28px 24px 24px;
     }
+}
 
-
-    /* Validation feedback stays inside the scrollable card on mobile. */
-
-    .landing-signup-modal:has(.signup-page--tenant) .signup-message--reserved,
-    .landing-signup-modal:has(.signup-page--landlord) .signup-message--reserved {
-        position: static;
-
-        margin: 0 0 0.75rem;
-    }
-
-
-    .landing-signup-modal .signup-form-heading {
-        margin-bottom: 1.25rem;
-    }
-
-
-    .landing-signup-modal .signup-title {
-        font-size: 1.5rem;
-    }
-
-
-    .landing-signup-modal .signup-account-type-options {
-        gap: 1rem;
-    }
-
-
-    .landing-signup-modal .signup-account-type-option {
-        min-height: 0;
-
-        padding: 1rem 1.15rem;
-
-        gap: 1rem;
-    }
-
-
-    .landing-signup-modal .signup-account-type-icon {
-        width: 2.5rem;
-        height: 2.5rem;
-    }
-
-
-    .landing-signup-modal .signup-account-type-content strong {
-        font-size: 1.05rem;
-    }
-
-
-    .landing-signup-modal .signup-account-type-content span {
-        margin-top: 0.25rem;
-
-        font-size: 0.8125rem;
-
-        line-height: 1.3;
-    }
-
+@media (prefers-reduced-motion: reduce) {
+    .ui-dialog-content.landing-signup-modal { animation: none; }
 }
