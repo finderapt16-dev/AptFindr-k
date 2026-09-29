@@ -36,3 +36,16 @@ See [the tenant source guide](docs/TENANT_STRUCTURE.md) for tenant page location
 ## Supabase
 
 The local `supabase-master-migration.sql` is intentionally ignored and must not be committed. Run the current migration manually in the Supabase SQL Editor when required. Configure production Site URL, allowed `/auth/callback` and `/reset-password` redirects, and custom SMTP in Supabase.
+
+## Registration and mobile/PWA checks
+
+- Tenant registration is a single card with username, email, password confirmation, consent, and Google signup.
+- Landlord registration progresses through **Account Details → Personal Information → Review**. Business Name is optional. Review edits use a separate floating, validated draft form; Cancel discards changes and Save shows a confirmation without leaving Review.
+- New password accounts require at least 8 characters, uppercase/lowercase letters, a number, and a special character. Existing sign-in behavior is unchanged.
+- Optional landlord business names are retained in signup metadata and copied into an empty `landlord_profiles.business_name` after authenticated profile setup. This does not overwrite a name subsequently edited in Settings.
+- Cards scroll on short screens and use the visual viewport to remain accessible above mobile keyboards. PWA PNG/maskable and Apple icons are generated from the actual logo during `npm run build`.
+- `npm test` runs validation, business-name persistence, and PWA asset checks.
+- `npx playwright install chromium` then `npm run test:e2e` runs browser tests with **mocked Supabase traffic** on desktop, small phones, and landscape. Do not run these tests against a live backend. Stop any differently configured server on port 5173 first.
+- A production PWA needs HTTPS and the real Supabase environment configuration. Installation uses the browser's install/Add to Home Screen controls; registration and live listings still need an internet connection.
+
+The agreement popups provide short in-context policy summaries. The site owner should review their wording before production use.

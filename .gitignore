@@ -43,3 +43,7 @@ yarn-debug.log*
 
 # Local Supabase migration export
 supabase-master-migration.sql
+
+# Browser test reports and temporary test captures
+playwright-report/
+test-results/

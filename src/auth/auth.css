@@ -220,3 +220,7 @@
   line-height: 1.5;
 }
 
+
+/* Inline validation shared by authentication fields. */
+.auth-field--invalid .auth-field-control { border-color: #e11d48; }
+.auth-field-error { margin: .375rem 0 0; color: #be123c; font-size: .75rem; line-height: 1.45; }

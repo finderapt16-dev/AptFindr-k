@@ -18,6 +18,6 @@ export default defineConfig({
         allowedHosts: ['.e2b.app'],
     },
     build: {
-        manifest: true,
+        manifest: "asset-manifest.json",
     },
 });
