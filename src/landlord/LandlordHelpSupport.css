@@ -62,3 +62,9 @@
   .landlord-help-contact-button { width: 100%; }
   .landlord-help-dialog.ui-dialog-content { padding: 20px; }
 }
+
+/* Terms & Privacy card: same chrome as the support call-to-action. */
+.landlord-help-legal { display: block; margin-top: 16px; padding: 15px 20px; border: 1px solid #e1e7ec; border-radius: 7px; background: #fff; }
+.landlord-help-legal .apf-legal-heading h2 { color: #17212b; font-size: 15px; }
+.landlord-help-legal .apf-legal-heading p { color: #687787; font-size: 12px; }
+@media (max-width: 520px) { .landlord-help-legal { padding: 14px; } }

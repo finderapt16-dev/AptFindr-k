@@ -1,0 +1,153 @@
+import { memo, useEffect, useRef, useState } from "react";
+import { BadgeCheck, FileText, ShieldCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "@/components/ui/utils";
+import { getCachedPolicy, loadPolicy } from "./policyLoader";
+
+/**
+ * A single floating popup used for every Terms of Service / Privacy Policy
+ * link in the application (signup, landing footer, tenant pages, landlord
+ * pages). Nothing navigates when a link is clicked - the document opens on top
+ * of the current screen and closes with the X, the Close button, Escape, or a
+ * click outside.
+ *
+ * The panel is rendered from a memory cache when the text has already been
+ * prefetched, which is the normal case because every link warms the chunk on
+ * hover, focus, or touch.
+ */
+
+function fallbackLabels(policyId) {
+  const [audience, kind] = String(policyId ?? "").split("-");
+  return {
+    audienceLabel: audience === "landlord" ? "Landlord" : "Tenant",
+    kindLabel: kind === "privacy" ? "Privacy Policy" : "Terms of Service",
+  };
+}
+
+function PolicySkeleton() {
+  return (
+    <div className="apf-policy-skeleton" aria-hidden="true">
+      {[92, 78, 84, 66, 88, 72, 80, 60].map((width, index) => (
+        <span key={index} className="apf-policy-skeleton-line" style={{ width: `${width}%` }} />
+      ))}
+    </div>
+  );
+}
+
+function PolicySection({ section }) {
+  return (
+    <section className="apf-policy-section">
+      <h3 className="apf-policy-section-title">{section.heading}</h3>
+      {section.paragraphs?.map((paragraph) => (
+        <p key={paragraph} className="apf-policy-paragraph">{paragraph}</p>
+      ))}
+      {section.bullets?.length ? (
+        <ul className="apf-policy-list">
+          {section.bullets.map((bullet) => (
+            <li key={bullet} className="apf-policy-list-item">{bullet}</li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
+export const PolicyDialog = memo(function PolicyDialog({
+  policyId,
+  onClose,
+  returnFocusRef,
+  contentClassName,
+  overlayClassName,
+  closeLabel = "Close",
+}) {
+  const [policy, setPolicy] = useState(() => getCachedPolicy(policyId));
+  const contentRef = useRef(null);
+  const labels = fallbackLabels(policyId);
+  const isLandlord = (policy?.audience ?? labels.audienceLabel.toLowerCase()) === "landlord";
+
+  useEffect(() => {
+    const cached = getCachedPolicy(policyId);
+    if (cached) {
+      setPolicy(cached);
+      return undefined;
+    }
+    let active = true;
+    setPolicy(null);
+    loadPolicy(policyId)
+      .then((loaded) => { if (active && loaded) setPolicy(loaded); })
+      .catch((error) => { console.error("[LEGAL] Unable to open policy", error); });
+    return () => { active = false; };
+  }, [policyId]);
+
+  const closeDialog = () => onClose?.();
+
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) closeDialog(); }}>
+      <DialogContent
+        ref={contentRef}
+        className={cn("apf-policy-dialog", contentClassName)}
+        overlayClassName={cn("apf-policy-overlay", overlayClassName)}
+        aria-busy={!policy}
+        // Nested dialogs (for example inside the landing signup modal) must
+        // close only this panel when Escape is pressed.
+        onEscapeKeyDown={(event) => { event.preventDefault(); event.stopPropagation(); closeDialog(); }}
+        onKeyDownCapture={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); closeDialog(); } }}
+        onOpenAutoFocus={(event) => {
+          // Start keyboard focus on the scroll region so the document can be
+          // read with the arrow keys, and the page never scrolls on open.
+          event.preventDefault();
+          contentRef.current?.querySelector(".apf-policy-scroll")?.focus({ preventScroll: true });
+        }}
+        onCloseAutoFocus={(event) => {
+          const trigger = returnFocusRef?.current;
+          if (trigger?.isConnected) {
+            event.preventDefault();
+            trigger.focus({ preventScroll: true });
+          }
+        }}
+      >
+        <header className="apf-policy-head">
+          <div className="apf-policy-badges">
+            <span className={cn("apf-policy-badge", isLandlord ? "apf-policy-badge--landlord" : "apf-policy-badge--tenant")}>
+              {isLandlord ? <BadgeCheck aria-hidden="true" /> : <ShieldCheck aria-hidden="true" />}
+              {policy?.audienceLabel ?? labels.audienceLabel}
+            </span>
+            <span className="apf-policy-badge apf-policy-badge--kind">
+              <FileText aria-hidden="true" />
+              {policy?.kindLabel ?? labels.kindLabel}
+            </span>
+          </div>
+          <DialogTitle className="apf-policy-title">{policy?.title ?? labels.kindLabel}</DialogTitle>
+          <DialogDescription className="apf-policy-summary">
+            {policy?.summary ?? "AptFindr legal document."}
+          </DialogDescription>
+        </header>
+
+        <div className="apf-policy-scroll" tabIndex={-1} role="region" aria-label={`${policy?.title ?? labels.kindLabel} content`}>
+          {policy ? (
+            <>
+              {policy.highlights?.length ? (
+                <div className="apf-policy-highlights">
+                  <p className="apf-policy-highlights-title">In short</p>
+                  <ul className="apf-policy-list apf-policy-list--tight">
+                    {policy.highlights.map((highlight) => <li key={highlight} className="apf-policy-list-item">{highlight}</li>)}
+                  </ul>
+                </div>
+              ) : null}
+              {policy.sections.map((section) => <PolicySection key={section.heading} section={section} />)}
+            </>
+          ) : <PolicySkeleton />}
+        </div>
+
+        <footer className="apf-policy-foot">
+          <span className="apf-policy-updated">
+            {policy?.updated ? `Last updated ${policy.updated}` : "Loading document..."}
+          </span>
+          <button type="button" className="apf-policy-done" onClick={closeDialog}>
+            {closeLabel}
+          </button>
+        </footer>
+      </DialogContent>
+    </Dialog>
+  );
+});

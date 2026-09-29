@@ -48,4 +48,23 @@ The local `supabase-master-migration.sql` is intentionally ignored and must not 
 - `npx playwright install chromium` then `npm run test:e2e` runs browser tests with **mocked Supabase traffic** on desktop, small phones, and landscape. Do not run these tests against a live backend. Stop any differently configured server on port 5173 first.
 - A production PWA needs HTTPS and the real Supabase environment configuration. Installation uses the browser's install/Add to Home Screen controls; registration and live listings still need an internet connection.
 
-The agreement popups provide short in-context policy summaries. The site owner should review their wording before production use.
+## Terms of Service and Privacy Policy popups
+
+- Four documents are published: `tenant-terms`, `tenant-privacy`, `landlord-terms`, and `landlord-privacy`. They live in `src/legal/policyContent.js` as plain data (title, summary, highlights, sections) and are rendered by one shared popup, `src/legal/PolicyDialog.jsx`. Update the text there and, when the wording changes, the `POLICY_UPDATED` constant beside it.
+- Clicking **Terms of Service** or **Privacy Policy** opens the document in a floating popup on top of the current screen. Nothing navigates, so the page, scroll position, and any form data stay exactly as they were. Close it with the X, the **Close** button, Escape, or a click on the backdrop.
+- The popup is role-aware: tenants read the tenant documents, landlords read the landlord documents, and the signup screen follows the role selected in the form.
+- Links that open the popups: the signup consent checkbox, the landing footer, tenant **Settings** and **Help & Support**, and landlord **Settings** and **Help & Support**.
+- New surfaces can use the hook (`usePolicyDialog` in `src/legal/usePolicyDialog.js`) or drop in the ready-made card (`<PolicyLinks audience="tenant" />` from `src/legal/PolicyLinks.jsx`).
+
+### Faster loading
+
+- The policy text is code-split: it is only ever fetched through `src/legal/policyLoader.js`, so it is not part of the first page load. The loader caches every document after the first request, and links warm the chunk on hover, focus, or touch-start, so a tap usually opens the popup with no visible wait.
+- The landing page no longer bundles the login and signup screens. `src/landing/Landing.jsx` loads them with `React.lazy`, prefetches them once the browser is idle, and warms them again on hover or focus. The landing page's own script payload drops from about 204 kB gzip to 5 kB gzip; the signup code is fetched only when someone actually signs in or registers.
+- `tests/policies.test.mjs` fails if the policy text is imported statically anywhere, so the split cannot regress silently.
+
+### Verifying
+
+- `npm test` covers the document structure, the tenant/landlord split, the lazy loader cache, and every page that links to a policy.
+- `npm run test:e2e` runs `tests/e2e/policies.spec.js` (landing footer, signup consent, tenant Settings, landlord Settings, small screens, and the "downloaded only when opened" check) together with the existing signup suite. Browser tests use mocked Supabase traffic.
+
+The documents are written for AptFindr's current tenant and landlord flows. The site owner should review their wording - and the contact address - before production use.
