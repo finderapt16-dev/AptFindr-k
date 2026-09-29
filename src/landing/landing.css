@@ -2275,26 +2275,33 @@
 
 @media (max-width: 640px) {
 
-    .landing-login-overlay {
-        align-items: flex-end;
+    /* Keep every auth dialog a centered, floating card on phones. */
 
-        padding: 12px;
+    .landing-login-overlay,
+    .landing-login-overlay:has(.landing-signup-modal) {
+        align-items: center;
+
+        padding:
+            max(20px, env(safe-area-inset-top))
+            20px
+            max(20px, env(safe-area-inset-bottom));
     }
 
 
     .landing-login-modal {
+        width: min(100%, 400px);
+
         max-width: none;
+        max-height: 100%;
+
+        overflow-y: auto;
 
         padding:
             28px
             22px
             24px;
 
-        border-radius:
-            18px
-            18px
-            14px
-            14px;
+        border-radius: 18px;
     }
 
 
@@ -2305,6 +2312,77 @@
 
     .landing-login-description {
         font-size: 13px;
+    }
+
+
+    .landing-signup-modal,
+    .landing-signup-modal:has(.signup-page--tenant),
+    .landing-signup-modal:has(.signup-page--landlord) {
+        width: min(100%, 400px);
+
+        height: auto;
+
+        min-height: 0;
+        max-width: none;
+        max-height: 100%;
+
+        overflow-y: auto;
+
+        padding: 2rem 1.5rem 1.5rem;
+    }
+
+
+    /* Validation feedback stays inside the scrollable card on mobile. */
+
+    .landing-signup-modal:has(.signup-page--tenant) .signup-message--reserved,
+    .landing-signup-modal:has(.signup-page--landlord) .signup-message--reserved {
+        position: static;
+
+        margin: 0 0 0.75rem;
+    }
+
+
+    .landing-signup-modal .signup-form-heading {
+        margin-bottom: 1.25rem;
+    }
+
+
+    .landing-signup-modal .signup-title {
+        font-size: 1.5rem;
+    }
+
+
+    .landing-signup-modal .signup-account-type-options {
+        gap: 1rem;
+    }
+
+
+    .landing-signup-modal .signup-account-type-option {
+        min-height: 0;
+
+        padding: 1rem 1.15rem;
+
+        gap: 1rem;
+    }
+
+
+    .landing-signup-modal .signup-account-type-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+
+    .landing-signup-modal .signup-account-type-content strong {
+        font-size: 1.05rem;
+    }
+
+
+    .landing-signup-modal .signup-account-type-content span {
+        margin-top: 0.25rem;
+
+        font-size: 0.8125rem;
+
+        line-height: 1.3;
     }
 
 }
