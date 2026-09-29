@@ -1554,6 +1554,8 @@ export async function notifyReportResolved(reportId, landlordId, reporterId, apa
             type: "report_resolved",
             title: "Report Resolved",
             message: `A report for "${apartmentTitle}" has been reviewed and resolved by admin.`,
+            action_target_id: reportId,
+            action_target_type: "report",
             payload: {
                 report_id: reportId,
                 apartment_title: apartmentTitle,
@@ -1567,6 +1569,8 @@ export async function notifyReportResolved(reportId, landlordId, reporterId, apa
             type: "report_status_updated",
             title: "Your Report Has Been Resolved",
             message: `Your report for "${apartmentTitle}" has been resolved and closed.`,
+            action_target_id: reportId,
+            action_target_type: "report",
             payload: {
                 report_id: reportId,
                 apartment_title: apartmentTitle,
@@ -1595,6 +1599,8 @@ export async function notifyReportDismissed(reportId, reporterId, apartmentTitle
             message: dismissalReason
                 ? `Your report for "${apartmentTitle}" was dismissed. Reason: ${dismissalReason}`
                 : `Your report for "${apartmentTitle}" was dismissed after admin review.`,
+            action_target_id: reportId,
+            action_target_type: "report",
             payload: {
                 report_id: reportId,
                 apartment_title: apartmentTitle,
