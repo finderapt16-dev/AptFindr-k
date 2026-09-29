@@ -1,7 +1,6 @@
 import { AppLogo } from "@/components/AppLogo";
 import { LandingListingsSection } from "./LandingApartmentPreview";
-import { Login } from "@/auth/Signin";
-import { Signup } from "@/auth/Signup";
+import { usePolicyDialog } from "@/legal/usePolicyDialog";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -29,6 +28,8 @@ import {
 } from "lucide-react";
 
 import {
+    lazy,
+    Suspense,
     useEffect,
     useMemo,
     useRef,
@@ -182,6 +183,44 @@ const getInventoryLocation = (
 
 
 /* =========================================================
+   AUTH SCREENS (LAZY)
+
+   The login and signup screens are only needed after a visitor clicks
+   Login or Sign Up, so they are downloaded on demand instead of blocking
+   the first paint of the landing page. The chunk is warmed as soon as the
+   page is idle (and again on hover / focus), which is why the modal still
+   opens instantly.
+========================================================= */
+
+const loadLoginChunk = () =>
+    import("@/auth/Signin");
+
+const loadSignupChunk = () =>
+    import("@/auth/Signup");
+
+const Login = lazy(() =>
+    loadLoginChunk().then((module) => ({
+        default: module.Login,
+    }))
+);
+
+const Signup = lazy(() =>
+    loadSignupChunk().then((module) => ({
+        default: module.Signup,
+    }))
+);
+
+const authScreensFallback = (
+    <div
+        className="landing-auth-loading"
+        role="status"
+    >
+        Loading...
+    </div>
+);
+
+
+/* =========================================================
    LANDING
 ========================================================= */
 
@@ -202,6 +241,64 @@ export function Landing() {
 
     const location =
         useLocation();
+
+
+    /* =====================================================
+       LEGAL POPUPS (Terms of Service / Privacy Policy)
+    ===================================================== */
+
+    const {
+        policyDialog,
+        policyLinkProps,
+    } =
+        usePolicyDialog("tenant");
+
+
+    /* =====================================================
+       WARM THE AUTH CHUNKS
+
+       Runs once the browser is idle so the landing page stays fast while
+       the login / signup modal still opens without a visible delay.
+    ===================================================== */
+
+    useEffect(() => {
+        const warmAuthScreens =
+            () => {
+                void loadLoginChunk();
+                void loadSignupChunk();
+            };
+
+
+        if (
+            typeof window.requestIdleCallback ===
+            "function"
+        ) {
+            const idle =
+                window.requestIdleCallback(
+                    warmAuthScreens,
+                    {
+                        timeout: 2500,
+                    }
+                );
+
+
+            return () =>
+                window.cancelIdleCallback(
+                    idle
+                );
+        }
+
+
+        const timer =
+            window.setTimeout(
+                warmAuthScreens,
+                1200
+            );
+
+
+        return () =>
+            window.clearTimeout(timer);
+    }, []);
 
 
     /* =====================================================
@@ -771,6 +868,12 @@ export function Landing() {
                                             variant="ghost"
                                             size="sm"
                                             className="landing-login-button"
+                                            onPointerEnter={() =>
+                                                void loadLoginChunk()
+                                            }
+                                            onFocus={() =>
+                                                void loadLoginChunk()
+                                            }
                                             onClick={() =>
                                                 openLogin()
                                             }
@@ -785,7 +888,15 @@ export function Landing() {
                                             type="button"
                                             size="sm"
                                             className="landing-account-button"
-                                            onClick={() => openSignup()}
+                                            onPointerEnter={() =>
+                                                void loadSignupChunk()
+                                            }
+                                            onFocus={() =>
+                                                void loadSignupChunk()
+                                            }
+                                            onClick={() =>
+                                                openSignup()
+                                            }
                                         >
                                             Sign Up
                                         </Button>
@@ -855,6 +966,12 @@ export function Landing() {
                                             <button
                                                 type="button"
                                                 className="landing-mobile-link landing-mobile-login-button"
+                                                onPointerEnter={() =>
+                                                    void loadLoginChunk()
+                                                }
+                                                onFocus={() =>
+                                                    void loadLoginChunk()
+                                                }
                                                 onClick={() => {
                                                     setMobileMenuOpen(false);
                                                     openLogin();
@@ -867,6 +984,12 @@ export function Landing() {
                                             <button
                                                 type="button"
                                                 className="landing-mobile-link landing-mobile-link-primary"
+                                                onPointerEnter={() =>
+                                                    void loadSignupChunk()
+                                                }
+                                                onFocus={() =>
+                                                    void loadSignupChunk()
+                                                }
                                                 onClick={() => {
                                                     setMobileMenuOpen(false);
                                                     openSignup();
@@ -1144,9 +1267,26 @@ export function Landing() {
 
 
                                 <li>
-                                    <span className="landing-footer-link">
+                                    <button
+                                        {...policyLinkProps(
+                                            "tenant-terms"
+                                        )}
+                                        className="landing-footer-link landing-footer-link-button"
+                                    >
                                         Terms of Service
-                                    </span>
+                                    </button>
+                                </li>
+
+
+                                <li>
+                                    <button
+                                        {...policyLinkProps(
+                                            "tenant-privacy"
+                                        )}
+                                        className="landing-footer-link landing-footer-link-button"
+                                    >
+                                        Privacy Policy
+                                    </button>
                                 </li>
 
                             </ul>
@@ -1227,19 +1367,25 @@ export function Landing() {
 
                         {/* REUSABLE SIGNIN */}
 
-                        <Login
-                            onSuccess={
-                                handleLoginSuccess
+                        <Suspense
+                            fallback={
+                                authScreensFallback
                             }
+                        >
+                            <Login
+                                    onSuccess={
+                                    handleLoginSuccess
+                                }
 
-                            onCreateAccount={
-                                handleCreateAccount
-                            }
+                                onCreateAccount={
+                                    handleCreateAccount
+                                }
 
-                            onForgotPassword={
-                                handleForgotPassword
-                            }
-                        />
+                                onForgotPassword={
+                                    handleForgotPassword
+                                }
+                            />
+                        </Suspense>
 
                     </div>
 
@@ -1263,9 +1409,27 @@ export function Landing() {
                 >
                     <DialogTitle className="ui-sr-only">Create an AptFindr account</DialogTitle>
                     <DialogDescription className="ui-sr-only">Choose Tenant or Landlord and complete your registration.</DialogDescription>
-                    <Signup embedded redirect={signupRedirect} />
+                    <Suspense
+                        fallback={
+                            authScreensFallback
+                        }
+                    >
+                        <Signup
+                            embedded
+                            redirect={
+                                signupRedirect
+                            }
+                        />
+                    </Suspense>
                 </DialogContent>
             </Dialog>
+
+
+            {/* =================================================
+                TERMS OF SERVICE / PRIVACY POLICY POPUP
+            ================================================= */}
+
+            {policyDialog}
 
         </div>
     );

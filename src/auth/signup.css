@@ -292,9 +292,17 @@
 .signup-review-dialog--success .ui-dialog-title { padding: 0; color: #111; font-size: 20px; }
 .signup-review-dialog--success .ui-dialog-description { max-width: 290px; margin: 8px auto 24px; color: #64748b; font-size: 14px; }
 .signup-review-ok { max-width: 280px; margin-inline: auto; }
-.signup-policy-copy { margin-bottom: 24px; color: #64748b; font-size: 14px; line-height: 1.6; }
-.signup-policy-copy p { margin: 0 0 16px; }
-.signup-policy-dialog .ui-dialog-title { padding-right: 24px; }
+/* Policy popups opened from the consent checkbox keep the signup viewport
+   clamping (so they stay above the mobile keyboard) while the shared legal
+   panel supplies the header / scroll / footer layout. */
+.ui-dialog-content.signup-review-dialog.signup-policy-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(660px, calc(100% - 32px));
+  max-height: calc(var(--signup-viewport-height, 100dvh) - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  padding: 0;
+  overflow: hidden;
+}
 
 .signup-page button:focus-visible,
 .signup-page a:focus-visible,

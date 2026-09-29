@@ -2101,3 +2101,37 @@
 @media (prefers-reduced-motion: reduce) {
     .ui-dialog-content.landing-signup-modal { animation: none; }
 }
+
+/* Legal links in the footer behave like the other footer links but open the
+   Terms of Service / Privacy Policy popup in place. */
+.landing-footer-link-button {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.landing-footer-link-button:hover {
+  color: #00a6f7;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.landing-footer-link-button:focus-visible {
+  outline: 3px solid rgb(0 166 247 / 28%);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Shown only while the lazily loaded login / signup screen is downloading. */
+.landing-auth-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  color: #64748b;
+  font-size: 14px;
+}

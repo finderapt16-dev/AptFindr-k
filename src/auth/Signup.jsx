@@ -229,7 +229,7 @@ export function Signup({ embedded = false, redirect = null }) {
   };
 
   const loginPrompt = <p className="signup-login-prompt">Already have an account? <Link to={loginPath}>Sign In</Link></p>;
-  const agreement = <SignupAgreement checked={termsAccepted} onChange={changeAgreement} disabled={loading} onPolicyClick={openPolicy} />;
+  const agreement = <SignupAgreement checked={termsAccepted} onChange={changeAgreement} disabled={loading} onPolicyClick={openPolicy} role={isLandlord ? "landlord" : "tenant"} />;
   const createButton = <button type="submit" disabled={loading} className="signup-primary-button signup-submit-button">{busy === "account" ? <><span className="signup-spinner" aria-hidden="true" /> Creating your account...</> : "Create Account"}</button>;
 
   return (
@@ -331,7 +331,7 @@ export function Signup({ embedded = false, redirect = null }) {
         </div>
       </div>
       {reviewEditor && <SignupReviewDialog key={reviewEditor} section={reviewEditor} values={values} onSave={(draft) => setValues((current) => ({ ...current, ...draft }))} onClose={() => setReviewEditor(null)} returnFocusRef={reviewTriggerRef} />}
-      {policy && <SignupPolicyDialog policy={policy} onClose={() => setPolicy(null)} returnFocusRef={policyTriggerRef} />}
+      {policy && <SignupPolicyDialog policy={policy} role={isLandlord ? "landlord" : "tenant"} onClose={() => setPolicy(null)} returnFocusRef={policyTriggerRef} />}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle, ChevronDown, Send } from "lucide-react";
+import { PolicyLinks } from "@/legal/PolicyLinks";
 
 const helpCategories = [
   ["Listing Setup", [["How do I add a property?", "Use Add Property to enter the listing address, rent, amenities, house rules, and property photos."], ["How do I add or edit rooms?", "Open a property and select Manage Rooms to add rooms, update rent and capacity, or upload room photos."], ["Why is my listing not visible?", "A listing must be complete, published, and have at least one available room before tenants can see it."]]],
@@ -30,6 +31,12 @@ export const LandlordHelpSupport = ({ supportSubmitted, setSupportSubmitted, sup
         </div>
       </div>)}
     </div>
+    <PolicyLinks
+      audience="landlord"
+      className="landlord-help-legal"
+      title="Terms & Privacy"
+      description="Open the landlord Terms of Service or Privacy Policy without leaving this page."
+    />
     <div className="landlord-help-contact-cta"><div><h2>Still need help?</h2><p>Send us your landlord concern and our support team will assist you.</p></div><Button type="button" onClick={() => setSupportOpen(true)} className="landlord-help-contact-button">Contact Support</Button></div>
     <Dialog open={supportOpen} onOpenChange={setSupportOpen}><DialogContent className="landlord-help-dialog"><DialogHeader><DialogTitle>Send a Support Request</DialogTitle><DialogDescription>Share your landlord concern and our team will get back to you.</DialogDescription></DialogHeader>
       {supportSubmitted ? <div className="landlord-help-success"><CheckCircle className="landlord-help-success-icon"/><p className="landlord-help-success-title">Support request received</p><p className="landlord-help-success-text">Our team will review your concern and contact you using the details provided.</p><Button type="button" onClick={() => setSupportSubmitted(false)}>Send Another Request</Button></div> :

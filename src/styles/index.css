@@ -126,3 +126,7 @@
 @import 'leaflet/dist/leaflet.css';
 
 @import '../admin/admin_dashboard.css';
+
+/* Legal / Terms of Service and Privacy Policy popups (shared by every role). */
+
+@import '../legal/legal.css';

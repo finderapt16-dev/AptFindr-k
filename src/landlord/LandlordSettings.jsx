@@ -6,6 +6,8 @@ import {
   uploadUserAvatar,
 } from "@/services/dashboardSupabaseService";
 
+import { PolicyLinks } from "@/legal/PolicyLinks";
+
 import "./LandlordSettings.css";
 
 export const LandlordSettings = () => {
@@ -250,6 +252,14 @@ export const LandlordSettings = () => {
                 Update Password
               </button>
             </div>
+          </section>
+
+          <section className="settings-panel landlord-settings-legal">
+            <PolicyLinks
+              audience="landlord"
+              title="Terms & Privacy"
+              description="Open the landlord Terms of Service or Privacy Policy in a popup."
+            />
           </section>
 
           <section className="settings-panel settings-danger-zone">
