@@ -19,7 +19,7 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    width: min(660px, calc(100% - 2rem));
+    width: min(450px, calc(100% - 2rem));
     max-width: none;
     max-height: min(88dvh, 760px);
     padding: 0;
@@ -45,60 +45,16 @@
 .apf-policy-head {
     flex: 0 0 auto;
     padding: 18px 56px 14px 22px;
-    border-bottom: 1px solid #e8edf3;
-    background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-}
-
-.apf-policy-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 8px;
-}
-
-.apf-policy-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 9px;
-    border-radius: 999px;
-    background: #e8f6ff;
-    color: #0b7cb8;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    line-height: 1.5;
-}
-
-.apf-policy-badge svg {
-    width: 13px;
-    height: 13px;
-}
-
-.apf-policy-badge--landlord {
-    background: #eef2ff;
-    color: #4338ca;
-}
-
-.apf-policy-badge--kind {
-    background: #f1f5f9;
-    color: #475569;
+    border-bottom: none;
+    background: #ffffff;
 }
 
 .ui-dialog-content.apf-policy-dialog .apf-policy-title {
     margin: 0;
     color: #1e293b;
-    font-size: 19px;
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.3;
-}
-
-.ui-dialog-content.apf-policy-dialog .apf-policy-summary {
-    margin: 6px 0 0;
-    color: #64748b;
-    font-size: 13px;
-    font-weight: 400;
-    line-height: 1.5;
 }
 
 /* ------------------------------ body ------------------------------------ */
@@ -106,7 +62,10 @@
 .apf-policy-scroll {
     flex: 1 1 auto;
     min-height: 0;
-    padding: 16px 22px 20px;
+    margin: 8px 24px 24px;
+    padding: 18px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
@@ -118,28 +77,9 @@
     outline: none;
 }
 
-.apf-policy-highlights {
-    padding: 12px 14px;
-    border: 1px solid #cfe9fb;
-    border-radius: 10px;
-    background: #f2f9ff;
-}
-
-.apf-policy-highlights-title {
-    margin: 0 0 6px;
-    color: #0b7cb8;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-/* Off-screen sections are skipped during paint, which keeps long documents
-   scrolling smoothly on low-end phones. */
 .apf-policy-section {
     padding-top: 16px;
-    content-visibility: auto;
-    contain-intrinsic-size: auto 220px;
+
 }
 
 .apf-policy-section-title {
@@ -152,9 +92,9 @@
 
 .apf-policy-paragraph {
     margin: 0 0 8px;
-    color: #475569;
-    font-size: 13px;
-    line-height: 1.65;
+    color: #7486a3;
+    font-size: 14px;
+    line-height: 1.2;
 }
 
 .apf-policy-list {
@@ -167,8 +107,8 @@
     position: relative;
     margin: 0 0 6px;
     padding-left: 18px;
-    color: #475569;
-    font-size: 13px;
+    color: #7486a3;
+    font-size: 14px;
     line-height: 1.6;
 }
 
@@ -205,47 +145,7 @@
     animation: apf-policy-shimmer 1.1s ease-in-out infinite;
 }
 
-/* ------------------------------ footer ---------------------------------- */
-
-.apf-policy-foot {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 20px;
-    border-top: 1px solid #e8edf3;
-    background: #fbfcfe;
-}
-
-.apf-policy-updated {
-    color: #7c8390;
-    font-size: 11.5px;
-    line-height: 1.4;
-}
-
-.apf-policy-done {
-    min-height: 38px;
-    padding: 0 20px;
-    border: 0;
-    border-radius: 8px;
-    background: #00a6f7;
-    color: #ffffff;
-    font: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background-color 120ms ease;
-}
-
-.apf-policy-done:hover {
-    background: #008fd7;
-}
-
-.apf-policy-done:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgb(0 166 247 / 30%);
-}
+/* --------------------------- close control ------------------------------ */
 
 /* The shared dialog ships its own close button styling because the panel is
    used outside the signup card as well. */
@@ -287,14 +187,6 @@
         padding: 12px 16px 16px;
     }
 
-    .apf-policy-foot {
-        padding: 10px 14px;
-    }
-
-    .apf-policy-done {
-        min-height: 36px;
-        padding: 0 16px;
-    }
 }
 
 /* ------------------------- shared legal card ----------------------------- */
@@ -316,7 +208,7 @@
 .apf-legal-heading p {
     margin: 4px 0 0;
     color: #7c8390;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.5;
 }
 
@@ -419,3 +311,5 @@
         animation: none;
     }
 }
+
+.apf-policy-section:first-child { padding-top: 0; }

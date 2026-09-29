@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { getPolicy, POLICY_IDS, POLICY_UPDATED, SUPPORT_EMAIL } from "../src/legal/policyContent.js";
+import { getPolicy, POLICY_IDS } from "../src/legal/policyContent.js";
 import { policyIdFor } from "../src/legal/policyIds.js";
 import { getCachedPolicy, loadPolicy, prefetchPolicy, resetPolicyCache } from "../src/legal/policyLoader.js";
 
@@ -40,19 +40,16 @@ test("policy ids fall back safely for unknown roles and links", () => {
 });
 
 test("every document is complete enough to render the popup", () => {
-  const trimmedSupportEmail = SUPPORT_EMAIL.trim();
-  assert.ok(trimmedSupportEmail.includes("@"));
   for (const id of POLICY_IDS) {
     const policy = getPolicy(id);
-    assert.ok(policy.title.length > 5, `${id} title`);
-    assert.ok(policy.summary.length > 20, `${id} summary`);
-    assert.equal(policy.updated, POLICY_UPDATED);
-    assert.ok(policy.highlights.length >= 3, `${id} highlights`);
-    assert.ok(policy.sections.length >= 8, `${id} section count`);
+    assert.equal(policy.title, policy.kindLabel);
+    assert.equal(policy.sections.length, policy.audience === "tenant" ? 5 : 4);
+    for (const removed of ["summary", "updated", "highlights"]) {
+      assert.equal(policy[removed], undefined, `${id} must not include ${removed}`);
+    }
     const headings = policy.sections.map((section) => section.heading);
     assert.equal(new Set(headings).size, headings.length, `${id} duplicate headings`);
     assert.match(headings[0], /^1\.\s/, `${id} first heading numbering`);
-    assert.ok(policy.sections.some((section) => (section.paragraphs ?? []).some((paragraph) => paragraph.includes(trimmedSupportEmail))), `${id} contact details`);
     for (const section of policy.sections) {
       assert.ok(/^\d+\.\s\S/.test(section.heading), `${id} heading format: ${section.heading}`);
       assert.ok((section.paragraphs?.length ?? 0) + (section.bullets?.length ?? 0) > 0, `${id} empty section: ${section.heading}`);
@@ -69,9 +66,9 @@ test("tenant and landlord documents say different things for the same topic", ()
   const landlordTerms = getPolicy("landlord-terms");
   const tenantText = tenantTerms.sections.flatMap((section) => section.paragraphs ?? []).join(" ");
   const landlordText = landlordTerms.sections.flatMap((section) => section.paragraphs ?? []).join(" ");
-  assert.match(tenantText, /deposit|advance payment/i);
-  assert.match(landlordText, /permit|BIR|tax/i);
-  assert.notEqual(tenantTerms.summary, landlordTerms.summary);
+  assert.match(tenantText, /Prohibited|fake accounts/i);
+  assert.match(landlordText, /property and business information/i);
+  assert.notEqual(tenantText, landlordText);
   assert.match(getPolicy("landlord-privacy").sections.map((section) => (section.paragraphs ?? []).join(" ")).join(" "), /verification/i);
 });
 
@@ -90,12 +87,12 @@ test("policy loader caches documents and survives repeated opens", async () => {
   resetPolicyCache();
   assert.equal(getCachedPolicy("tenant-terms"), null);
   const first = await loadPolicy("tenant-terms");
-  assert.equal(first.title, "Tenant Terms of Service");
+  assert.equal(first.title, "Terms of Service");
   assert.equal(getCachedPolicy("tenant-terms"), first);
   const second = await loadPolicy("tenant-terms");
   assert.equal(second, first, "second load must reuse the cached object");
   await prefetchPolicy("landlord-privacy");
-  assert.equal(getCachedPolicy("landlord-privacy")?.title, "Landlord Privacy Policy");
+  assert.equal(getCachedPolicy("landlord-privacy")?.title, "Privacy Policy");
   assert.doesNotThrow(() => prefetchPolicy("tenant-cookies"), "prefetch must never throw");
   await new Promise((resolve) => setTimeout(resolve, 20));
   assert.equal(getCachedPolicy("tenant-cookies"), null, "unknown ids must not be cached");
