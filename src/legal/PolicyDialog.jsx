@@ -5,10 +5,9 @@ import { getCachedPolicy, loadPolicy } from "./policyLoader";
 
 /**
  * A single floating popup used for every Terms of Service / Privacy Policy
- * link in the application (signup, landing footer, tenant pages, landlord
- * pages). Nothing navigates when a link is clicked - the document opens on top
- * of the current screen and closes with the X, Escape, or a
- * click outside.
+ * link in the application (signup and the landing footer). Nothing navigates
+ * when a link is clicked - the document opens on top of the current screen and
+ * closes with the X, Escape, or a click outside.
  *
  * The panel is rendered from a memory cache when the text has already been
  * prefetched, which is the normal case because every link warms the chunk on

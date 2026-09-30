@@ -1,9 +1,5 @@
 /* Shared component layout and presentation classes. */
 .evidence-uploader-style-1 { @apply space-y-4; }
-.evidence-uploader-style-2 { @apply flex items-start gap-3 rounded-lg border border-[#F3EFEA] bg-[#FAF8F5] p-3; }
-.evidence-uploader-style-3 { @apply mt-0.5 h-5 w-5 shrink-0 text-[#756A60]; }
-.evidence-uploader-style-4 { @apply text-sm font-black text-[#302820]; }
-.evidence-uploader-style-5 { @apply mt-1 text-xs font-medium text-[#5F5145]; }
 .evidence-uploader-style-6 { @apply absolute inset-0 h-full w-full cursor-pointer opacity-0; }
 .evidence-uploader-style-7 { @apply flex items-center gap-2; }
 .evidence-uploader-style-8 { @apply flex h-14 w-14 items-center justify-center rounded-full border border-violet-200 bg-white text-violet-600 shadow-sm; }
@@ -35,7 +31,6 @@
 .evidence-uploader-style-34 { @apply h-4 w-4; }
 .evidence-uploader-style-35 { @apply h-8 w-8 text-slate-600 hover:text-red-600; }
 .evidence-uploader-style-36 { @apply h-4 w-4; }
-.evidence-uploader-style-37 { @apply text-sm font-medium text-red-600; }
 .multi-image-uploader-style-1 { @apply space-y-4; }
 .multi-image-uploader-style-2 { @apply h-8 w-8 mx-auto mb-3 text-[#756A60]; }
 .multi-image-uploader-style-3 { @apply font-semibold text-slate-900 mb-1; }

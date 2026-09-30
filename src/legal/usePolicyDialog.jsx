@@ -34,7 +34,7 @@ export function usePolicyDialog(audience = "tenant") {
 
   const closePolicy = useCallback(() => setActivePolicyId(null), []);
 
-  /** Warms both documents for this audience, used when a settings or help page mounts. */
+  /** Warms both documents for this audience ahead of a click. */
   const warmPolicies = useCallback(() => prefetchAudience(resolvedAudience), [resolvedAudience]);
 
   const policyLinkProps = useCallback((policyId) => ({

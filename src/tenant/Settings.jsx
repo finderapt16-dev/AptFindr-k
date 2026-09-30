@@ -6,7 +6,6 @@ import {
     Trash2,
 } from "lucide-react";
 import { useState } from "react";
-import { PolicyLinks } from "@/legal/PolicyLinks";
 
 const personalFields = [
     {
@@ -724,19 +723,6 @@ export function Settings({
                 </div>
 
             </form>
-
-
-            {/* =====================================================
-                LEGAL & POLICIES
-                Both links open a popup; nothing leaves this page.
-            ===================================================== */}
-
-            <PolicyLinks
-                audience="tenant"
-                className="tenant-profile-legal"
-                title="Legal & Policies"
-                description="Read the tenant terms and the privacy practices that apply to your account."
-            />
 
 
             {/* =====================================================

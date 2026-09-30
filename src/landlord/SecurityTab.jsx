@@ -10,8 +10,6 @@ import {
     SettingsToggle as Toggle,
 } from "@/landlord/SettingsFormFields";
 
-import { PolicyLinks } from "@/legal/PolicyLinks";
-
 import { toast } from "sonner";
 
 import {
