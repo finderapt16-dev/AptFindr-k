@@ -46,13 +46,30 @@ The local `supabase-master-migration.sql` is intentionally ignored and must not 
 - Cards scroll on short screens and use the visual viewport to remain accessible above mobile keyboards. PWA PNG/maskable and Apple icons are generated from the actual logo during `npm run build`. The production service worker precaches the app shell and app chunks for offline navigation; live listings, authentication, and writes still require internet.
 - A production PWA needs HTTPS and the real Supabase environment configuration. Installation uses the browser's install/Add to Home Screen controls; registration and live listings still need an internet connection.
 
-## Terms of Service and Privacy Policy popups
+## Terms of Service and Privacy Policy
 
-- Four documents are published: `tenant-terms`, `tenant-privacy`, `landlord-terms`, and `landlord-privacy`. They live in `src/legal/policyContent.js` as plain data (title, summary, highlights, sections) and are rendered by one shared popup, `src/legal/PolicyDialog.jsx`. Update the text there and, when the wording changes, the `POLICY_UPDATED` constant beside it.
-- Clicking **Terms of Service** or **Privacy Policy** opens the document in a floating popup on top of the current screen. Nothing navigates, so the page, scroll position, and any form data stay exactly as they were. Close it with the X, the **Close** button, Escape, or a click on the backdrop.
-- The signup screen follows the role selected in the form (tenant or landlord documents); the landing footer opens the tenant documents.
-- Links that open the popups: the signup consent checkbox and the landing footer.
+- Four documents are published: `tenant-terms`, `tenant-privacy`, `landlord-terms`, and `landlord-privacy`. They live in `src/legal/policyContent.js` as plain data (title, summary, highlights, sections) and are rendered by one shared body component, `src/legal/PolicyDocument.jsx`, so the popup and the public page can never disagree. Update the text there and, when the wording changes, bump `POLICY_UPDATED` in `src/legal/policyMeta.js`.
+- Each document has **two** surfaces, because they serve different purposes:
+
+  | Surface | Entry point | Behaviour |
+  | --- | --- | --- |
+  | Popup - `src/legal/PolicyDialog.jsx` | Signup consent checkbox | Opens over the current screen. Nothing navigates, so the page, scroll position, and any half-filled form stay exactly as they were. Close with the X, Escape, or a click on the backdrop. |
+  | Public page - `src/legal/PolicyPage.jsx` | Landing footer, and any shared URL | Navigates to a real, bookmarkable route that works with no account. |
+
+- The public routes are **`/privacy-policy`** and **`/terms-of-service`**. The landing footer links to them, so the URLs are discoverable from the site itself.
+- Tenant and landlord wording differs, but only one URL can be submitted to a third party, so the public page switches audience with a segmented control. The choice lives in the query string (`/privacy-policy?audience=landlord`) and each button is a real anchor, so a shared link always opens the version you meant.
 - New surfaces can use the hook (`usePolicyDialog` in `src/legal/usePolicyDialog.jsx`).
+
+### Supabase URL Configuration
+
+Supabase's Authentication settings ask for two public URLs. Set them after the first deploy:
+
+| Supabase field | Value |
+| --- | --- |
+| **Application privacy policy link** | `https://<your-domain>/privacy-policy` |
+| **Application terms of service link** | `https://<your-domain>/terms-of-service` |
+
+Both routes are public, need no session, and are served by the SPA rewrite in `vercel.json`, so they resolve on a direct visit, a refresh, and a shared link. The review screen only checks that the URL is reachable and publicly readable, not that it requires a login.
 
 ### Faster loading
 

@@ -1,6 +1,6 @@
 import { AppLogo } from "@/components/AppLogo";
 import { LandingListingsSection } from "./LandingApartmentPreview";
-import { usePolicyDialog } from "@/legal/usePolicyDialog";
+import { POLICY_ROUTES } from "@/legal/policyMeta";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -242,17 +242,6 @@ export function Landing() {
 
     const location =
         useLocation();
-
-
-    /* =====================================================
-       LEGAL POPUPS (Terms of Service / Privacy Policy)
-    ===================================================== */
-
-    const {
-        policyDialog,
-        policyLinkProps,
-    } =
-        usePolicyDialog("tenant");
 
 
     /* =====================================================
@@ -1704,26 +1693,22 @@ export function Landing() {
 
 
                                 <li>
-                                    <button
-                                        {...policyLinkProps(
-                                            "tenant-terms"
-                                        )}
-                                        className="landing-footer-link landing-footer-link-button"
+                                    <Link
+                                        to={POLICY_ROUTES.terms}
+                                        className="landing-footer-link landing-footer-policy-link"
                                     >
                                         Terms of Service
-                                    </button>
+                                    </Link>
                                 </li>
 
 
                                 <li>
-                                    <button
-                                        {...policyLinkProps(
-                                            "tenant-privacy"
-                                        )}
-                                        className="landing-footer-link landing-footer-link-button"
+                                    <Link
+                                        to={POLICY_ROUTES.privacy}
+                                        className="landing-footer-link landing-footer-policy-link"
                                     >
                                         Privacy Policy
-                                    </button>
+                                    </Link>
                                 </li>
 
                             </ul>
@@ -1863,10 +1848,13 @@ export function Landing() {
 
 
             {/* =================================================
-                TERMS OF SERVICE / PRIVACY POLICY POPUP
-            ================================================= */}
+                TERMS OF SERVICE / PRIVACY POLICY
 
-            {policyDialog}
+                The footer above links to the public documents at
+                /privacy-policy and /terms-of-service. Those are the real,
+                shareable URLs submitted to Supabase, so they must be
+                discoverable from the page itself.
+            ================================================= */}
 
         </div>
     );

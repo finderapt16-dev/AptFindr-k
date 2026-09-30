@@ -2,12 +2,16 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/components/ui/utils";
 import { getCachedPolicy, loadPolicy } from "./policyLoader";
+import { PolicyDocument } from "./PolicyDocument";
 
 /**
- * A single floating popup used for every Terms of Service / Privacy Policy
- * link in the application (signup and the landing footer). Nothing navigates
- * when a link is clicked - the document opens on top of the current screen and
- * closes with the X, Escape, or a click outside.
+ * The floating popup for Terms of Service / Privacy Policy, used where the
+ * visitor must keep their place on the page - currently the signup consent
+ * checkbox. Nothing navigates when it is opened: the document sits on top of
+ * the current screen and closes with the X, Escape, or a click outside.
+ *
+ * The shareable, linkable version of the same documents is the public page,
+ * `PolicyPage.jsx`; both render the identical body via `PolicyDocument.jsx`.
  *
  * The panel is rendered from a memory cache when the text has already been
  * prefetched, which is the normal case because every link warms the chunk on
@@ -29,24 +33,6 @@ function PolicySkeleton() {
         <span key={index} className="apf-policy-skeleton-line" style={{ width: `${width}%` }} />
       ))}
     </div>
-  );
-}
-
-function PolicySection({ section }) {
-  return (
-    <section className="apf-policy-section">
-      <h3 className="apf-policy-section-title">{section.heading}</h3>
-      {section.paragraphs?.map((paragraph) => (
-        <p key={paragraph} className="apf-policy-paragraph">{paragraph}</p>
-      ))}
-      {section.bullets?.length ? (
-        <ul className="apf-policy-list">
-          {section.bullets.map((bullet) => (
-            <li key={bullet} className="apf-policy-list-item">{bullet}</li>
-          ))}
-        </ul>
-      ) : null}
-    </section>
   );
 }
 
@@ -108,11 +94,7 @@ export const PolicyDialog = memo(function PolicyDialog({
         </header>
 
         <div className="apf-policy-scroll" tabIndex={-1} role="region" aria-label={`${policy?.title ?? labels.kindLabel} content`}>
-          {policy ? (
-            <>
-              {policy.sections.map((section) => <PolicySection key={section.heading} section={section} />)}
-            </>
-          ) : <PolicySkeleton />}
+          {policy ? <PolicyDocument policy={policy} /> : <PolicySkeleton />}
         </div>
 
       </DialogContent>

@@ -9,9 +9,23 @@
 export const POLICY_AUDIENCES = ["tenant", "landlord"];
 export const POLICY_KINDS = ["terms", "privacy"];
 
+/** Normalizes any user-supplied value to a known audience. */
+export function resolveAudience(value) {
+  return value === "landlord" ? "landlord" : "tenant";
+}
+
+/** Normalizes any user-supplied value to a known document kind. */
+export function resolveKind(value) {
+  return value === "privacy" ? "privacy" : "terms";
+}
+
 /** Maps an audience ("tenant" | "landlord") and kind ("terms" | "privacy") to a policy id. */
 export function policyIdFor(audience, kind) {
-  const resolvedAudience = audience === "landlord" ? "landlord" : "tenant";
-  const resolvedKind = kind === "privacy" ? "privacy" : "terms";
-  return `${resolvedAudience}-${resolvedKind}`;
+  return `${resolveAudience(audience)}-${resolveKind(kind)}`;
+}
+
+/** Reads a policy id back into its parts, e.g. "landlord-privacy". */
+export function parsePolicyId(policyId) {
+  const [audience, kind] = String(policyId ?? "").split("-");
+  return { audience: resolveAudience(audience), kind: resolveKind(kind) };
 }
