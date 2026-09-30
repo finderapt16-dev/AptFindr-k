@@ -37,6 +37,8 @@ See [the tenant source guide](docs/TENANT_STRUCTURE.md) for tenant page location
 
 The local `supabase-master-migration.sql` is intentionally ignored and must not be committed. Run the current migration manually in the Supabase SQL Editor when required. Configure production Site URL, allowed `/auth/callback` and `/reset-password` redirects, and custom SMTP in Supabase.
 
+If Google sign-in fails with "Database error saving new user", the `auth.users` profile trigger is raising inside the signup transaction. Run `scripts/database/hardenAuthUserTrigger.sql` in the Supabase SQL Editor — it replaces `public.handle_new_auth_user` with an idempotent, `SECURITY DEFINER` version that links existing email profiles instead of colliding with the unique constraints and never raises for public signups.
+
 ## Registration and mobile/PWA checks
 
 - Tenant registration is a single card with username, email, password confirmation, consent, and Google signup.
