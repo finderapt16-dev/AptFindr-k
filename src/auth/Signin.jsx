@@ -19,6 +19,8 @@ import {
 import {
     AlertCircle,
     CheckCircle2,
+    Eye,
+    EyeOff,
 } from "lucide-react";
 
 import {
@@ -63,6 +65,11 @@ export function Login({
         password,
         setPassword,
     ] = useState("");
+
+    const [
+        showPassword,
+        setShowPassword,
+    ] = useState(false);
 
     const [
         error,
@@ -556,7 +563,11 @@ export function Login({
                         <AuthField
                             id="login-password"
                             label="Password"
-                            type="password"
+                            type={
+                                showPassword
+                                    ? "text"
+                                    : "password"
+                            }
                             value={
                                 password
                             }
@@ -564,6 +575,32 @@ export function Login({
                                 setPassword
                             }
                             required
+                            suffix={
+                                <button
+                                    type="button"
+                                    className="auth-password-toggle login-password-toggle"
+                                    onClick={() =>
+                                        setShowPassword(
+                                            (current) =>
+                                                !current
+                                        )
+                                    }
+                                    aria-label={
+                                        showPassword
+                                            ? "Hide password"
+                                            : "Show password"
+                                    }
+                                    aria-pressed={
+                                        showPassword
+                                    }
+                                >
+                                    {showPassword ? (
+                                        <EyeOff aria-hidden="true" />
+                                    ) : (
+                                        <Eye aria-hidden="true" />
+                                    )}
+                                </button>
+                            }
                         />
 
 
