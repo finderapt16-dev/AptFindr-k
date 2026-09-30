@@ -880,10 +880,21 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #7dd3fc;
+  color: #009fe3;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.manage-rooms-editor-back:hover {
+  color: #087fb6;
+  text-decoration: underline;
+}
+
+.manage-rooms-editor-back:focus-visible {
+  outline: 2px solid rgb(22 165 225 / 45%);
+  outline-offset: 2px;
 }
 
 .manage-rooms-editor-back svg { width: 19px; height: 19px; }

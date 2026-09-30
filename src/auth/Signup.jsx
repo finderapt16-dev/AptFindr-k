@@ -17,6 +17,9 @@ const INITIAL_VALUES = {
 };
 const LANDLORD_STEPS = ["Account Details", "Personal Information", "Review"];
 
+const dashboardPathForRole = (role) =>
+  isTenantRole(role) ? "/dashboard?section=overview" : "/dashboard";
+
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" className="signup-google-icon" aria-hidden="true">
@@ -170,12 +173,20 @@ export function Signup({ embedded = false, redirect = null }) {
       } else if (result.signup?.existingAccount) {
         setError("An account may already exist for this email. Sign in, resend verification, or reset your password instead of registering again.");
       } else {
-        const message = result.signup?.profileSetupError || (result.signup?.requiresEmailVerification
-          ? `Account created. A verification link was requested for ${normalized.email}. Check your inbox and spam folder before signing in.`
-          : "Account created successfully. You can now sign in.");
+        if (!result.signup?.profileSetupError && !result.signup?.requiresEmailVerification) {
+          const profile = await hydrateSession();
+          if (!profile) {
+            throw new Error("The account was created, but its session is not available.");
+          }
+
+          navigate(dashboardPathForRole(profile.role), { replace: true });
+          return;
+        }
+
+        const message = result.signup?.profileSetupError || `Account created. A verification link was requested for ${normalized.email}. Check your inbox and spam folder before signing in.`;
         navigate(loginPath, { state: {
           message,
-          ...(result.signup?.profileSetupError || result.signup?.requiresEmailVerification ? { verificationEmail: normalized.email } : {}),
+          verificationEmail: normalized.email,
         } });
       }
     } catch (submitError) {
@@ -216,7 +227,7 @@ export function Signup({ embedded = false, redirect = null }) {
         const profile = await hydrateSession();
         if (!profile) throw new Error("Your Google account was created, but its profile is not available yet.");
         clearPendingGoogleOAuthFlow();
-        navigate(isTenantRole(profile.role) ? redirectTo || "/browse" : profile.role === "admin" ? "/admin" : "/dashboard", { replace: true });
+        navigate(isTenantRole(profile.role) ? redirectTo || dashboardPathForRole(profile.role) : profile.role === "admin" ? "/admin" : "/dashboard", { replace: true });
       }
       // Otherwise Supabase is redirecting the browser to Google; keep actions locked.
     } catch (googleError) {

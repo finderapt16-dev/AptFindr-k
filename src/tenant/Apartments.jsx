@@ -1457,7 +1457,7 @@ function TenantBrowse() {
         </p>
 
         <h1 className="apartment-browse-available-apartments">
-            Available Apartments
+            Apartments
         </h1>
 
         <p className="apartment-browse-text-7">

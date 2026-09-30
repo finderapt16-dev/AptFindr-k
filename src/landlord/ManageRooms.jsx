@@ -689,7 +689,7 @@ export function ManageRooms({ propertyId }) {
           </>)}
       </section>
     </main>);
-    return (<div className="landlord-manage-rooms">
+    return (<div className="landlord-manage-rooms landlord-shell">
       <aside className="app-shell-fixed-sidebar">
         <LandlordSidebar
           user={user}

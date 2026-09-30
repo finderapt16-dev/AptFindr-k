@@ -530,9 +530,6 @@ export async function signupUser(input) {
             console.error('[PROFILE] Auth account exists but profile finalization failed', error);
             profileSetupError = 'Your account was created, but we could not finish setting up your profile. Verify your email, then try signing in or contact support.';
         }
-        finally {
-            await supabaseClient.auth.signOut();
-        }
     }
     signupLog('[AUTH] Signup flow complete', { requiresEmailVerification, profileSetupError: Boolean(profileSetupError) });
     return {

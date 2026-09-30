@@ -50,7 +50,10 @@ const listFromUnknown = (value) => Array.isArray(value)
     ? value.filter((item) => typeof item === "string" && item.trim().length > 0)
     : typeof value === "string" ? value.split(/[,\n]/).map((item) => item.trim()).filter(Boolean) : [];
 
-function LandlordPropertyView({ apartment, images, imageIndex, setImageIndex, locationText, mapPinAvailable, rules, navigate, onBack }) {
+function LandlordPropertyView({ apartment, images, imageIndex, setImageIndex, locationText, mapPinAvailable, rules, navigate, onBack, user, onLogout }) {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const navigateToDashboardSection = (section) =>
+        navigate(section === "overview" ? "/dashboard" : `/dashboard?section=${section}`);
     const roomRents = (apartment.rooms ?? []).map((room) => Number(room.price)).filter((price) => Number.isFinite(price) && price > 0);
     const savedPriceRange = apartment.features && !Array.isArray(apartment.features) ? apartment.features.priceRange : null;
     const savedMinimumRent = Number(savedPriceRange?.min);
@@ -59,7 +62,23 @@ function LandlordPropertyView({ apartment, images, imageIndex, setImageIndex, lo
     const minimumRent = hasSavedPriceRange ? savedMinimumRent : roomRents.length ? Math.min(...roomRents) : Number(apartment.price ?? 0);
     const maximumRent = hasSavedPriceRange ? savedMaximumRent : roomRents.length ? Math.max(...roomRents) : Number(apartment.price ?? 0);
     const formatRent = (price) => price > 0 ? `₱${price.toLocaleString("en-PH")}` : "Not specified";
-    return <main className="landlord-view-property landlord-view-property-page">
+    return <div className="landlord-property-view-shell landlord-shell">
+            <aside className="app-shell-fixed-sidebar">
+              <LandlordSidebar user={user} activeSection="overview" onSectionChange={navigateToDashboardSection} onLogout={onLogout}/>
+            </aside>
+
+            {sidebarOpen && <div className="app-sidebar-overlay" role="presentation">
+              <button type="button" className="landlord-property-close-navigation" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>
+              <aside className="app-sidebar-drawer is-open">
+                <button type="button" className="app-sidebar-close" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}><X className="apartment-detail-x-icon"/></button>
+                <LandlordSidebar user={user} activeSection="overview" onSectionChange={navigateToDashboardSection} onClose={() => setSidebarOpen(false)} onLogout={onLogout}/>
+              </aside>
+            </div>}
+
+            <div className="app-shell-page-main">
+              <button type="button" className="app-sidebar-trigger" aria-label="Open navigation" onClick={() => setSidebarOpen(true)}><Menu className="apartment-detail-menu-icon"/></button>
+              <div className="app-shell-content app-shell-content-mobile-nav">
+                <main className="landlord-view-property landlord-view-property-page">
             <header className="landlord-view-property-header">
               <div><button type="button" className="landlord-view-back" onClick={onBack}><ArrowLeft/> Back to Dashboard</button><h1>View Property</h1><p>{locationText}</p></div>
               <Button type="button" className="landlord-view-edit" onClick={() => navigate(`/landlord/properties/${apartment.id}/edit`)}>Edit Property</Button>
@@ -76,7 +95,10 @@ function LandlordPropertyView({ apartment, images, imageIndex, setImageIndex, lo
                 <section className="landlord-view-card"><h2>House Rules &amp; Policies</h2><div className="landlord-view-rules">{(rules.length ? rules : ["No rules specified."]).slice(0, 4).map((rule) => <span key={rule}>{rule}</span>)}</div></section>
               </aside>
             </div>
-    </main>;
+                </main>
+              </div>
+            </div>
+    </div>;
 }
 
 function InlinePropertyInfo({ label, fields = [], apartment, enabled, onSave, children, photos = false, location = false }) {
@@ -372,7 +394,7 @@ export function ApartmentDetails() {
     const editableApartment = { ...apartment, amenitiesText: (apartment.amenities || []).join(", "), featuresText: propertyFeatures.join(", "), utilitiesText: Array.isArray(apartment.utilities) ? apartment.utilities.join(", ") : "", rulesText: rules.join("\n") };
     const missingValue = ownListing ? "Not specified" : "Not provided";
     if (ownListing && !landlordMarketDetail)
-        return <LandlordPropertyView apartment={apartment} images={images} imageIndex={imageIndex} setImageIndex={setImageIndex} locationText={locationText} mapPinAvailable={mapPinAvailable} rules={rules} navigate={navigate} onBack={handleBack}/>;
+        return <LandlordPropertyView apartment={apartment} images={images} imageIndex={imageIndex} setImageIndex={setImageIndex} locationText={locationText} mapPinAvailable={mapPinAvailable} rules={rules} navigate={navigate} onBack={handleBack} user={user} onLogout={() => { logout(); navigate("/"); }}/>;
     const renderSidebar = () => {
         if (user?.role === "landlord") {
             return <LandlordSidebar user={user} verified={user.isVerified} activeSection={landlordMarketDetail ? "market" : "overview"} onSectionChange={(section) => navigate(`/dashboard?section=${section}`)} onClose={() => setMobileNav(false)} onLogout={() => { logout(); navigate("/"); }}/>;

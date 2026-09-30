@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { clearPendingGoogleOAuthFlow, exchangeAuthCode, getAuthUser, getExistingProfileForAuthUser, getPendingGoogleOAuthFlow, isTenantRole, signOutAuthSession } from "@/services/authService";
+
+const dashboardPathForRole = (role) => isTenantRole(role) ? "/dashboard?section=overview" : role === "admin" ? "/admin" : "/dashboard";
 export function AuthCallback() {
     const navigate = useNavigate();
     const { hydrateSession } = useAuth();
@@ -60,14 +62,14 @@ export function AuthCallback() {
                         throw new Error("The Google account profile is not available.");
                     clearPendingGoogleOAuthFlow();
                     if (active)
-                        navigate(isTenantRole(profile.role) ? "/browse" : profile.role === "admin" ? "/admin" : "/dashboard", { replace: true });
+                            navigate(dashboardPathForRole(profile.role), { replace: true });
                     return;
                 }
                 const profile = await hydrateSession();
                 if (!profile)
                     throw new Error("The verified account profile is not available.");
                 if (active)
-                    navigate(isTenantRole(profile.role) ? "/browse" : profile.role === "admin" ? "/admin" : "/dashboard", { replace: true });
+                    navigate(dashboardPathForRole(profile.role), { replace: true });
             }
             catch (profileError) {
                 console.error("Email was verified but profile recovery failed:", profileError);
