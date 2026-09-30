@@ -44,8 +44,6 @@ The local `supabase-master-migration.sql` is intentionally ignored and must not 
 - New password accounts require at least 8 characters, uppercase/lowercase letters, a number, and a special character. Existing sign-in behavior is unchanged.
 - Optional landlord business names are retained in signup metadata and copied into an empty `landlord_profiles.business_name` after authenticated profile setup. This does not overwrite a name subsequently edited in Settings.
 - Cards scroll on short screens and use the visual viewport to remain accessible above mobile keyboards. PWA PNG/maskable and Apple icons are generated from the actual logo during `npm run build`. The production service worker precaches the app shell and app chunks for offline navigation; live listings, authentication, and writes still require internet.
-- `npm test` runs validation, business-name persistence, and PWA asset checks.
-- `npx playwright install chromium` then `npm run test:e2e` runs browser tests with **mocked Supabase traffic** on desktop, small phones, and landscape. Do not run these tests against a live backend. Stop any differently configured server on port 5173 first.
 - A production PWA needs HTTPS and the real Supabase environment configuration. Installation uses the browser's install/Add to Home Screen controls; registration and live listings still need an internet connection.
 
 ## Terms of Service and Privacy Policy popups
@@ -60,11 +58,5 @@ The local `supabase-master-migration.sql` is intentionally ignored and must not 
 
 - The policy text is code-split: it is only ever fetched through `src/legal/policyLoader.js`, so it is not part of the first page load. The loader caches every document after the first request, and links warm the chunk on hover, focus, or touch-start, so a tap usually opens the popup with no visible wait.
 - The landing page no longer bundles the login and signup screens. `src/landing/Landing.jsx` loads them with `React.lazy`, prefetches them once the browser is idle, and warms them again on hover or focus. The landing page's own script payload drops from about 204 kB gzip to 5 kB gzip; the signup code is fetched only when someone actually signs in or registers.
-- `tests/policies.test.mjs` fails if the policy text is imported statically anywhere, so the split cannot regress silently.
-
-### Verifying
-
-- `npm test` covers the document structure, the tenant/landlord split, the lazy loader cache, and every page that links to a policy.
-- `npm run test:e2e` runs `tests/e2e/policies.spec.js` (landing footer, signup consent, tenant Settings, landlord Settings, small screens, and the "downloaded only when opened" check) together with the existing signup suite. Browser tests use mocked Supabase traffic.
 
 The documents are written for AptFindr's current tenant and landlord flows. The site owner should review their wording - and the contact address - before production use.

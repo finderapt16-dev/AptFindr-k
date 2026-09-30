@@ -25,13 +25,22 @@ import { EmptyState } from "@/tenant/EmptyState";
 import { MapView } from "@/components/MapView";
 import { DEFAULT_LA_PAZ_MAP_CENTER } from "@/utils/mapCoordinates";
 const DASHBOARD_SECTIONS = ["overview", "favorites", "suggested", "popular", "notifications", "settings", "report", "help"];
+const DEFAULT_DASHBOARD_SECTION = "overview";
+// Sections live in the query string (?section=notifications), so the active
+// section has to be readable straight from the URL: the dashboard can remount
+// (route change, reload, back/forward) and must never fall back to the
+// overview while another section is requested.
+const readDashboardSection = (search) => {
+    const section = new URLSearchParams(search).get("section");
+    return DASHBOARD_SECTIONS.includes(section) ? section : DEFAULT_DASHBOARD_SECTION;
+};
 export function Dashboard() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const { favorites: favoriteIds, toggleFavorite, refreshFavorites } = useFavorites();
     const tenantNotifications = useTenantNotifications();
-    const [activeSection, setActiveSection] = useState("overview");
+    const [activeSection, setActiveSection] = useState(() => readDashboardSection(location.search));
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [favoriteFilter, setFavoriteFilter] = useState("all");
     const [favoriteSort, setFavoriteSort] = useState("newest");
@@ -63,8 +72,8 @@ export function Dashboard() {
         setTenantPreferences(preferences);
     };
     useEffect(() => {
-        const section = new URLSearchParams(location.search).get("section");
-        setActiveSection(DASHBOARD_SECTIONS.includes(section) ? section : "overview");
+        const section = readDashboardSection(location.search);
+        setActiveSection((current) => (current === section ? current : section));
     }, [location.search]);
     const selectDashboardSection = (section) => {
         if (!DASHBOARD_SECTIONS.includes(section)) return;
@@ -458,8 +467,8 @@ const DashboardOverview = ({ tenantGreeting, dashboardSubtitle, favoriteIds, ava
     </section>
 
     <section className="overview-section-section-3">
-      <FeatureCard setActiveSection={selectDashboardSection} title={hasPersonalizationPreferences ? "Recommended for You" : "Find Apartments for You"} description={hasPersonalizationPreferences ? "Apartment suggestions based on your preferences." : "Set your preferences to receive personalized apartment suggestions."} count={suggestedApartments.length} icon={Sparkles} section="suggested" accent="orange"/>
-      <FeatureCard setActiveSection={selectDashboardSection} title="Popular Apartments" description="Apartments receiving more interest from AptFindr users through views and favorites." count={popularApartments.length} icon={TrendingUp} section="popular" accent="indigo"/>
+      <FeatureCard setActiveSection={setActiveSection} title={hasPersonalizationPreferences ? "Recommended for You" : "Find Apartments for You"} description={hasPersonalizationPreferences ? "Apartment suggestions based on your preferences." : "Set your preferences to receive personalized apartment suggestions."} count={suggestedApartments.length} icon={Sparkles} section="suggested" accent="orange"/>
+      <FeatureCard setActiveSection={setActiveSection} title="Popular Apartments" description="Apartments receiving more interest from AptFindr users through views and favorites." count={popularApartments.length} icon={TrendingUp} section="popular" accent="indigo"/>
     </section>
 
     <section className="overview-section-section-4">

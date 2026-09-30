@@ -5,6 +5,7 @@ import { PageLoader } from "./components/PageLoader";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import { ApartmentsProvider } from "./contexts/ApartmentsContext";
 import { Root } from "./components/Root";
+import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
 import { useAuth } from "./contexts/AuthContext";
 import { isTenantRole } from "./services/authService";
 // Public
@@ -48,16 +49,17 @@ function PublicLandingRoute() {
 }
 export const router = createBrowserRouter([
     // Public landing and standalone authentication pages
-    { path: "/", element: <PublicLandingRoute /> },
+    { path: "/", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
     // Keep direct login links on the landing page so they use the same modal
     // experience as the Sign In button on the home screen.
-    { path: "/login", element: <PublicLandingRoute /> },
-    { path: "/auth/callback", element: <PageLoader><AuthCallback /></PageLoader> },
-    { path: "/reset-password", element: <PageLoader><ResetPassword /></PageLoader> },
+    { path: "/login", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
+    { path: "/auth/callback", element: <PageLoader><AuthCallback /></PageLoader>, errorElement: <RouteErrorBoundary /> },
+    { path: "/reset-password", element: <PageLoader><ResetPassword /></PageLoader>, errorElement: <RouteErrorBoundary /> },
     // Main app wrapped in Root layout
     {
         path: "/",
         element: <Root />,
+        errorElement: <RouteErrorBoundary />,
         children: [
             // Tenant browsing (including the existing landlord access).
             { path: "browse", element: <ProtectedRoute allowedRoles={["tenant", "landlord"]} preserveReturnDestination loginMessage={APARTMENT_LOGIN_MESSAGE}><PageLoader><Apartments /></PageLoader></ProtectedRoute> },
