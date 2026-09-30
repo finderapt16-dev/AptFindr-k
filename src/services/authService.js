@@ -591,6 +591,16 @@ export async function loginWithGoogle() {
         provider: 'google',
         options: {
             redirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+                // A first-time Google sign-in through the LOGIN form still
+                // creates the auth user, and the database profile trigger
+                // requires a username. Without one the trigger insert fails
+                // and Supabase rejects the whole sign-in with
+                // "Database error saving new user" — the same failure this
+                // app previously surfaced as "Google could not create your
+                // account". Signup already sends one; login must too.
+                username: `google_${safeRandomId().replace(/-/g, '').slice(0, 23)}`,
+            },
         },
     });
     if (error) {
