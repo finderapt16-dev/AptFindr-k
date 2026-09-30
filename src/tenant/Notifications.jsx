@@ -72,7 +72,6 @@ export function Notifications({ state }) {
     return <div className="tenant-notifications-container">
     <section className="tenant-notifications-section">
       <div className="tenant-notifications-panel"><h1 className="tenant-notifications-notifications">Notifications</h1><p className="tenant-notifications-text">Stay updated on your reports and apartment activity.</p></div>
-      <Bell className="tenant-notifications-bell-icon" aria-hidden="true"/>
     </section>
 
     <section className="tenant-notifications-section-2">

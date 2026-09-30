@@ -734,9 +734,6 @@ export function Settings({
                 <div className="tenant-profile-danger-content">
 
                     <div className="tenant-profile-danger-info">
-
-                        <h2>Danger Zone</h2>
-
                         <h3>Delete Account</h3>
 
                         <p>

@@ -115,6 +115,13 @@
   height: 1rem;
 }
 
+/* Edge adds its own password reveal button; the custom toggle above is the
+   single, consistent control used by this form. */
+.login-form-shell input[type="password"]::-ms-reveal,
+.login-form-shell input[type="password"]::-ms-clear {
+  display: none;
+}
+
 /* =========================================================
    FORGOT PASSWORD
 ========================================================= */

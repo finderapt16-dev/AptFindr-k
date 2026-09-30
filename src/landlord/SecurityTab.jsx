@@ -758,8 +758,6 @@ export const SecurityTab = ({
             <section className="security-tab-card-8">
                 <div className="security-tab-danger-content">
                     <div>
-                        <h2>Danger Zone</h2>
-
                         <h3>Delete Account</h3>
 
                         <p className="security-tab-text-10">

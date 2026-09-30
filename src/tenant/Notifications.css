@@ -47,24 +47,6 @@
   color: #666666;
 }
 
-.tenant-notifications-bell-icon {
-  pointer-events: none;
-  right: calc(var(--spacing, .25rem) * 8);
-  bottom: calc(var(--spacing, .25rem) * -7);
-  height: calc(var(--spacing, .25rem) * 40);
-  width: calc(var(--spacing, .25rem) * 40);
-  stroke-width: 1px;
-  color: #8a8a8a;
-  opacity: .7;
-  position: absolute;
-}
-
-@media (min-width: 48rem) {
-  .tenant-notifications-bell-icon {
-    right: calc(var(--spacing, .25rem) * 20);
-  }
-}
-
 .tenant-notifications-section-2 {
   border-radius: var(--radius-xl, .75rem);
   background-color: var(--color-white, #fff);
