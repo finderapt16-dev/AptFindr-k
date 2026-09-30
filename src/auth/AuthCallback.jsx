@@ -13,12 +13,17 @@ export function AuthCallback() {
             const callbackError = params.get("error_description") || params.get("error");
             if (callbackError) {
                 clearPendingGoogleOAuthFlow();
-                console.error("Authentication callback was rejected:", callbackError);
+                // Surface the REAL reason Supabase rejected the Google sign-in
+                // (e.g. "Database error saving new user", "Signups not allowed
+                // for this instance") so the sign-in page shows what actually
+                // needs fixing instead of a generic guess.
+                const realReason = decodeURIComponent(callbackError.replace(/\+/g, " "));
+                console.error("Authentication callback was rejected:", realReason);
                 if (active)
                     navigate("/login", {
                         replace: true,
                         state: {
-                            error: "Google could not create your account. The Supabase database profile setup needs to be fixed before you can continue.",
+                            error: `Google sign-in was rejected by Supabase: ${realReason}`,
                         },
                     });
                 return;

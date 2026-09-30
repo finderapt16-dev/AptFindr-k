@@ -591,6 +591,22 @@ export async function loginWithGoogle() {
         provider: 'google',
         options: {
             redirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+                // A first-time Google sign-in through the LOGIN form still
+                // creates the auth user, and the database trigger
+                // (public.handle_new_auth_user) raises
+                // "Public signup role must be tenant or landlord" when no
+                // role arrives in the metadata and also demands a valid
+                // username. That exception rolls back the whole auth user
+                // creation, so Supabase replies with
+                // "Database error saving new user" — the failure this app
+                // surfaced as "Google could not create your account".
+                // The signup button already sends these; the login button
+                // must send the same tenant default so brand-new Google
+                // accounts survive the trigger.
+                role: 'tenant',
+                username: `google_${safeRandomId().replace(/-/g, '').slice(0, 23)}`,
+            },
         },
     });
     if (error) {
