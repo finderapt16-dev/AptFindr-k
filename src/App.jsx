@@ -11,6 +11,12 @@ import { isTenantRole } from "./services/authService";
 // Public
 const Landing = lazy(() => import("./landing/Landing").then((module) => ({ default: module.Landing })));
 const NotFound = lazy(() => import("./landing/NotFound").then((module) => ({ default: module.NotFound })));
+// Public legal documents. These are the linkable URLs that get submitted to
+// Supabase (Authentication -> URL Configuration -> "Application privacy policy
+// link" / "Application terms of service link"), so they are separate routes
+// rather than only the in-page popup.
+const PrivacyPolicyPage = lazy(() => import("./legal/PolicyPage").then((module) => ({ default: module.PrivacyPolicyPage })));
+const TermsOfServicePage = lazy(() => import("./legal/PolicyPage").then((module) => ({ default: module.TermsOfServicePage })));
 // Authentication and shared account pages
 const Signup = lazy(() => import("./auth/Signup").then((module) => ({ default: module.Signup })));
 const ForgotPassword = lazy(() => import("./auth/ForgotPassword").then((module) => ({ default: module.ForgotPassword })));
@@ -55,6 +61,10 @@ export const router = createBrowserRouter([
     { path: "/login", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
     { path: "/auth/callback", element: <PageLoader><AuthCallback /></PageLoader>, errorElement: <RouteErrorBoundary /> },
     { path: "/reset-password", element: <PageLoader><ResetPassword /></PageLoader>, errorElement: <RouteErrorBoundary /> },
+    // Public legal documents. Kept outside the Root layout so they stay
+    // readable and shareable without the app shell, and work with no session.
+    { path: "/privacy-policy", element: <PageLoader><PrivacyPolicyPage /></PageLoader>, errorElement: <RouteErrorBoundary /> },
+    { path: "/terms-of-service", element: <PageLoader><TermsOfServicePage /></PageLoader>, errorElement: <RouteErrorBoundary /> },
     // Main app wrapped in Root layout
     {
         path: "/",

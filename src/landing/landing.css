@@ -2108,25 +2108,22 @@
     .ui-dialog-content.landing-signup-modal { animation: none; }
 }
 
-/* Legal links in the footer behave like the other footer links but open the
-   Terms of Service / Privacy Policy popup in place. */
-.landing-footer-link-button {
-  display: inline;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
+/* The legal links in the footer navigate to the public documents
+   (/privacy-policy and /terms-of-service) - the same shareable URLs that are
+   submitted to Supabase - so they are real anchors, not buttons. They keep the
+   hover and focus treatment of the other footer links. */
+.landing-footer-policy-link {
+  text-decoration: none;
+  transition: color 120ms ease;
 }
 
-.landing-footer-link-button:hover {
+.landing-footer-policy-link:hover {
   color: #00a6f7;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.landing-footer-link-button:focus-visible {
+.landing-footer-policy-link:focus-visible {
   outline: 3px solid rgb(0 166 247 / 28%);
   outline-offset: 2px;
   border-radius: 3px;

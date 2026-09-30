@@ -130,3 +130,7 @@
 /* Legal / Terms of Service and Privacy Policy popups (shared by every role). */
 
 @import '../legal/legal.css';
+
+/* The public, linkable policy pages (/privacy-policy, /terms-of-service). */
+
+@import '../legal/policy_page.css';
