@@ -1,4 +1,4 @@
-import { AlertTriangle, ChevronLeft, ChevronRight, Eye, FileText, Upload, X, } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, FileText, Upload, X, } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -36,7 +36,7 @@ const getFileTypeCategory = (mimeType) => {
     }
     return "document";
 };
-export function EvidenceUploader({ evidenceFiles, onEvidenceChange, maxFiles = 5, maxFileSize = 10, required = true, }) {
+export function EvidenceUploader({ evidenceFiles, onEvidenceChange, maxFiles = 5, maxFileSize = 10, }) {
     const fileInputRef = useRef(null);
     const [dragActive, setDragActive] = useState(false);
     const [previewImageId, setPreviewImageId] = useState(null);
@@ -171,16 +171,6 @@ export function EvidenceUploader({ evidenceFiles, onEvidenceChange, maxFiles = 5
         return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
     };
     return (<div className="evidence-uploader-style-1">
-      {required && <div className="evidence-uploader-style-2">
-        <AlertTriangle className="evidence-uploader-style-3"/>
-        <div>
-          <p className="evidence-uploader-style-4">Evidence required</p>
-          <p className="evidence-uploader-style-5">
-            Upload at least one image, screenshot, or document to support this report.
-          </p>
-        </div>
-      </div>}
-
       {remainingSlots > 0 && (<div onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop} className={`evidence-dropzone ${dragActive ? "evidence-dropzone-active" : "evidence-dropzone-idle"}`}>
           <input ref={fileInputRef} type="file" multiple accept={ALLOWED_EXTENSIONS.join(",")} onChange={handleFileInputChange} className="evidence-uploader-style-6"/>
 
@@ -251,10 +241,6 @@ export function EvidenceUploader({ evidenceFiles, onEvidenceChange, maxFiles = 5
                 </div>
               </Card>))}
           </div>
-        </div>)}
-
-      {required && evidenceFiles.length === 0 && (<div className="evidence-uploader-style-37">
-          ⚠ At least one file is required to submit this report
         </div>)}
     </div>);
 }

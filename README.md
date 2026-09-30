@@ -50,9 +50,9 @@ The local `supabase-master-migration.sql` is intentionally ignored and must not 
 
 - Four documents are published: `tenant-terms`, `tenant-privacy`, `landlord-terms`, and `landlord-privacy`. They live in `src/legal/policyContent.js` as plain data (title, summary, highlights, sections) and are rendered by one shared popup, `src/legal/PolicyDialog.jsx`. Update the text there and, when the wording changes, the `POLICY_UPDATED` constant beside it.
 - Clicking **Terms of Service** or **Privacy Policy** opens the document in a floating popup on top of the current screen. Nothing navigates, so the page, scroll position, and any form data stay exactly as they were. Close it with the X, the **Close** button, Escape, or a click on the backdrop.
-- The popup is role-aware: tenants read the tenant documents, landlords read the landlord documents, and the signup screen follows the role selected in the form.
-- Links that open the popups: the signup consent checkbox, the landing footer, tenant **Settings** and **Help & Support**, and landlord **Settings** and **Help & Support**.
-- New surfaces can use the hook (`usePolicyDialog` in `src/legal/usePolicyDialog.js`) or drop in the ready-made card (`<PolicyLinks audience="tenant" />` from `src/legal/PolicyLinks.jsx`).
+- The signup screen follows the role selected in the form (tenant or landlord documents); the landing footer opens the tenant documents.
+- Links that open the popups: the signup consent checkbox and the landing footer.
+- New surfaces can use the hook (`usePolicyDialog` in `src/legal/usePolicyDialog.jsx`).
 
 ### Faster loading
 

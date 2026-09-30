@@ -297,9 +297,3 @@
     width: 100%;
   }
 }
-
-/* Legal & Policies panel: the shared PolicyLinks component brings its own
-   heading, buttons, and popup. */
-.landlord-settings-legal {
-  padding: 1.1rem 1.2rem;
-}

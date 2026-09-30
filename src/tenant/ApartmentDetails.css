@@ -2430,50 +2430,6 @@
   }
 }
 
-.apartment-detail-card-6 {
-  margin-top: calc(var(--spacing, .25rem) * 4);
-  border-radius: var(--radius-lg, .5rem);
-  border-style: solid;
-  border-width: 1px;
-  border-color: var(--color-violet-100, #e8eef3);
-  background-color: var(--color-violet-50, #f2f6fa);
-  padding: calc(var(--spacing, .25rem) * 4);
-}
-
-@supports (color: lab(0% 0 0)) {
-  .apartment-detail-card-6 {
-    border-color: var(--color-violet-100, lab(93.0838% 4.35197 -9.88284));
-    background-color: var(--color-violet-50, lab(96.2416% 2.28846 -5.51655));
-  }
-}
-
-.apartment-detail-text-19 {
-  font-size: var(--text-sm, .875rem);
-  line-height: var(--text-sm--line-height, calc(1.25 / .875));
-  font-weight: var(--font-weight-black, 900);
-  color: var(--color-violet-900, #0e93ca);
-}
-
-@supports (color: lab(0% 0 0)) {
-  .apartment-detail-text-19 {
-    color: var(--color-violet-900, lab(24.3783% 45.7525 -61.4902));
-  }
-}
-
-.apartment-detail-text-20 {
-  margin-top: var(--spacing, .25rem);
-  font-size: var(--text-xs, .75rem);
-  line-height: var(--text-xs--line-height, calc(1 / .75));
-  font-weight: var(--font-weight-medium, 500);
-  color: var(--color-violet-700, #16a5e1);
-}
-
-@supports (color: lab(0% 0 0)) {
-  .apartment-detail-text-20 {
-    color: var(--color-violet-700, lab(35.2783% 67.9912 -88.793));
-  }
-}
-
 .apartment-detail-4-contact-information {
   font-size: var(--text-xs, .75rem);
   line-height: var(--text-xs--line-height, calc(1 / .75));

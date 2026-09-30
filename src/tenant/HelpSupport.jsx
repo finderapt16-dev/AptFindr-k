@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle, ChevronDown, Send } from "lucide-react";
-import { PolicyLinks } from "@/legal/PolicyLinks";
 
 const helpCategories = [
   ["Searching for Apartments", [["How do I search for an apartment?", "Use Apartments in the tenant navigation to browse available listings and rooms."], ["How do I use filters?", "Use the search and filter controls to narrow listings by your preferred criteria."], ["How do I search by location?", "Enter or select your preferred area when searching for apartments."]]],
@@ -30,12 +29,6 @@ export const HelpSupport = ({ supportSubmitted, setSupportSubmitted, supportForm
         </div>
       </div>)}
     </div>
-    <PolicyLinks
-      audience="tenant"
-      className="tenant-help-legal"
-      title="Legal & Policies"
-      description="Open the tenant Terms of Service or Privacy Policy without leaving this page."
-    />
     <div className="tenant-help-contact-cta"><div><h2>Still need help?</h2><p>Send us your concern and we'll assist you as soon as possible.</p></div><Button type="button" onClick={() => setSupportOpen(true)} className="tenant-help-contact-button">Contact Support</Button></div>
     <Dialog open={supportOpen} onOpenChange={setSupportOpen}><DialogContent className="tenant-help-dialog"><DialogHeader><DialogTitle>Send a Message</DialogTitle><DialogDescription>Fill out the form below and our support team will get back to you.</DialogDescription></DialogHeader>
       {supportSubmitted ? <div className="tenant-help-success"><CheckCircle className="tenant-help-success-icon"/><p className="tenant-help-success-title">Support request received</p><p className="tenant-help-success-text">Our team will review your concern and contact you using the details provided.</p><Button type="button" onClick={() => setSupportSubmitted(false)}>Send Another Request</Button></div> :

@@ -1,7 +1,7 @@
 /* ==========================================================================
    LEGAL / POLICY POPUPS
-   Shared by the signup consent links, the landing footer, tenant pages, and
-   landlord pages. The popup floats above every other overlay in the app.
+   Shared by the signup consent links and the landing footer. The popup
+   floats above every other overlay in the app.
    ========================================================================== */
 
 .ui-dialog-overlay.apf-policy-overlay {
@@ -187,106 +187,6 @@
         padding: 12px 16px 16px;
     }
 
-}
-
-/* ------------------------- shared legal card ----------------------------- */
-
-.apf-legal-section {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.apf-legal-heading h2 {
-    margin: 0;
-    color: #1e293b;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1.4;
-}
-
-.apf-legal-heading p {
-    margin: 4px 0 0;
-    color: #7c8390;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.apf-legal-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 10px;
-}
-
-.apf-legal-action {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 12px 14px;
-    border: 1px solid #dfe6ef;
-    border-radius: 10px;
-    background: #ffffff;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-    transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
-}
-
-.apf-legal-action:hover {
-    border-color: #00a6f7;
-    background: #f7fcff;
-}
-
-.apf-legal-action:focus-visible {
-    outline: none;
-    border-color: #00a6f7;
-    box-shadow: 0 0 0 3px rgb(0 166 247 / 22%);
-}
-
-.apf-legal-action-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 34px;
-    height: 34px;
-    border-radius: 9px;
-    background: #e8f6ff;
-    color: #0b7cb8;
-}
-
-.apf-legal-action-icon svg {
-    width: 17px;
-    height: 17px;
-}
-
-.apf-legal-action-copy {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.apf-legal-action-label {
-    color: #1e293b;
-    font-size: 13.5px;
-    font-weight: 700;
-    line-height: 1.4;
-}
-
-.apf-legal-action-hint {
-    color: #7c8390;
-    font-size: 12px;
-    line-height: 1.4;
-}
-
-.apf-legal-action-chevron {
-    flex-shrink: 0;
-    width: 16px;
-    height: 16px;
-    margin-left: auto;
-    color: #94a3b8;
 }
 
 @keyframes apf-policy-fade {

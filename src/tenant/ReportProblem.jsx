@@ -1,7 +1,7 @@
 import { EvidenceUploader } from "@/components/EvidenceUploader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, LockKeyhole, Mail, RotateCcw, Send, Shield } from "lucide-react";
+import { CheckCircle, LockKeyhole, Mail, RotateCcw, Send } from "lucide-react";
 export const ReportProblem = ({ reportSubmitted, resetReport, reportForm, setReportForm, publishedApartments, reportEvidenceFiles, setReportEvidenceFiles, user, handleReportSubmit, isSubmittingReport, }) => (<div className="report-page">
     <header className="report-hero">
       <div className="report-section-panel">
@@ -40,14 +40,7 @@ export const ReportProblem = ({ reportSubmitted, resetReport, reportForm, setRep
           </ReportStep>
 
           <ReportStep step="3" title="Upload Image / Evidence" description="Attach at least one image or document for admin review." note="Required">
-            <EvidenceUploader evidenceFiles={reportEvidenceFiles} onEvidenceChange={setReportEvidenceFiles} maxFiles={5} maxFileSize={10} required/>
-            <div className="report-section-card">
-              <Shield className="report-section-shield-icon"/>
-              <div>
-                <p className="report-section-text-3">Evidence helps us review your report faster.</p>
-                <p className="report-section-text-4">Clear screenshots, photos, or documents are very helpful.</p>
-              </div>
-            </div>
+            <EvidenceUploader evidenceFiles={reportEvidenceFiles} onEvidenceChange={setReportEvidenceFiles} maxFiles={5} maxFileSize={10}/>
           </ReportStep>
 
           <ReportStep step="4" title="Contact Information" description="We may contact you for more details if needed.">

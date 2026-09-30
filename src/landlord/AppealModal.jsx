@@ -34,7 +34,7 @@ export const AppealModal = ({ closeAppealModal, appealModal, isSubmittingAppeal,
 
         <div className="appeal-modal-panel-3"><label className="appeal-modal-contact-information">Contact information</label><input type="email" value={appealContact} onChange={(event) => setAppealContact(event.target.value)} placeholder="Email address" className="appeal-modal-input"/></div>
 
-        <div><p className="appeal-modal-supporting-evidence">Supporting evidence</p><EvidenceUploader evidenceFiles={appealEvidence} onEvidenceChange={setAppealEvidence} required={false} maxFiles={5} maxFileSize={10}/></div>
+        <div><p className="appeal-modal-supporting-evidence">Supporting evidence</p><EvidenceUploader evidenceFiles={appealEvidence} onEvidenceChange={setAppealEvidence} maxFiles={5} maxFileSize={10}/></div>
 
         <div className={"appeal-modal-card-2"}>
           <AlertTriangle className="appeal-modal-alert-triangle-icon"/>
