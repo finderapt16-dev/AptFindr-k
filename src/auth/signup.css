@@ -6,7 +6,7 @@
   --signup-accent-hover: #008fd7;
   --signup-text: #293548;
   --signup-muted: #7c8390;
-  --signup-border: #9ca3af;
+  --signup-border: #a3a3a3;
   --auth-text: #293548;
   --auth-border: #9ca3af;
   --auth-accent: #00a6f7;
@@ -105,7 +105,7 @@
 .signup-review-dialog .auth-field-label { color: #334155; font-size: 12px; font-weight: 500; line-height: 1.4; }
 .signup-page .auth-field-required { display: none; }
 .signup-page .auth-field-control,
-.signup-review-dialog .auth-field-control { height: 44px; border: 1px solid var(--signup-border); border-radius: 5px; background: #fff; }
+.signup-review-dialog .auth-field-control { height: 44px; border: 1.5px solid #8f959e; border-radius: 5px; background: #fff; }
 .signup-page .auth-field-control:focus-within,
 .signup-review-dialog .auth-field-control:focus-within { border-color: var(--signup-accent); box-shadow: 0 0 0 3px rgb(0 166 247 / 12%); }
 .signup-page .auth-field-input,

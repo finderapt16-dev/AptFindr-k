@@ -37,28 +37,6 @@ See [the tenant source guide](docs/TENANT_STRUCTURE.md) for tenant page location
 
 The local `supabase-master-migration.sql` is intentionally ignored and must not be committed. Run the current migration manually in the Supabase SQL Editor when required. Configure production Site URL, allowed `/auth/callback` and `/reset-password` redirects, and custom SMTP in Supabase.
 
-### Signup fails, or the confirmation email never arrives
-
-Three symptoms, one cause (plus one separate email setting):
-
-| What you see | What it means |
-| --- | --- |
-| "Account registration could not be completed because profile setup failed. No retry is needed until the database configuration is corrected." | The app's wording for `Database error saving new user` returned by `supabase.auth.signUp` |
-| `Database error saving new user` (Google or email signup) | The `auth.users` profile trigger raised *inside the signup transaction* |
-| **No confirmation email is sent** | Supabase queues the mail only after the `auth.users` row commits — a raising trigger rolls the transaction back, so nothing is sent |
-
-**1. Fix the trigger.** Run `scripts/database/hardenAuthUserTrigger.sql` in the Supabase SQL Editor. It is idempotent and:
-
-- replaces `public.handle_new_auth_user` with a version that casts every enum value explicitly (the previous version inserted a `text` variable into `app_users.role`, which raises `42804 column "role" is of type app_user_role but expression is of type text` and cancels the whole signup),
-- sanitises and de-duplicates usernames, and always produces a non-null name,
-- only accepts `tenant`/`landlord` from public signup metadata, so nobody can self-register as an admin,
-- **never lets a profile problem cancel the auth user**, so the confirmation email is always queued; failures are recorded in `public.signup_trigger_failures` with the real SQLSTATE/message,
-- repairs existing auth users that have no profile row, and prints a self-check (`select * from public.fn_signup_trigger_selfcheck();` — expect `PASS`).
-
-**2. Fix email delivery.** Without custom SMTP, Supabase's shared sender only delivers to addresses that belong to your Supabase organization; every other address fails with *"Email address not authorized"* and the user never receives anything. Configure **Authentication → Emails → SMTP Settings** (Gmail app password, Resend, Brevo, …) and a verified `From` address, keep *Confirm email* on if you rely on verification, and raise the rate limit after the sender warms up. Also set the production **Site URL** and allow the `https://<domain>/auth/callback` and `/reset-password` redirects.
-
-Diagnostics: `select * from public.signup_trigger_failures order by created_at desc;`, the trigger list from the script's final query, and **Dashboard → Logs → Auth / Postgres** for the server-side error.
-
 ## Registration and mobile/PWA checks
 
 - Tenant registration is a single card with username, email, password confirmation, consent, and Google signup.

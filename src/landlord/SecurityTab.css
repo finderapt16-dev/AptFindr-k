@@ -29,6 +29,11 @@
    MAIN CONTAINER
    ========================================================================== */
 
+.security-tab-panel > .security-tab-card:not(.security-tab-password-card),
+.security-tab-panel > .security-tab-save-row {
+    display: none;
+}
+
 .security-tab-panel {
     width: 100%;
     max-width: 1400px;

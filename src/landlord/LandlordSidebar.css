@@ -502,6 +502,18 @@
   transform: none !important;
 }
 
+.landlord-sidebar-reminder {
+  margin-left: auto;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: #8a4b08;
+  background: #fff4db;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 
 /* =========================================================
    NAVIGATION HOVER

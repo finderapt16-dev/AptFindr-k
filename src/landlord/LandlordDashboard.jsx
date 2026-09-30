@@ -9,7 +9,6 @@ import { LandlordNotifications } from "@/landlord/LandlordNotifications";
 import { LandlordOverview } from "@/landlord/LandlordOverview";
 import { LandlordSettings } from "@/landlord/LandlordSettings";
 import { LandlordSidebar } from "@/landlord/LandlordSidebar";
-import { AlertsTab } from "@/landlord/AlertsTab";
 import { ProfileTab } from "@/landlord/ProfileTab";
 import { SecurityTab } from "@/landlord/SecurityTab";
 
@@ -1775,6 +1774,8 @@ export function LandlordDashboard() {
       email: user?.email || "",
       mobile:
         user?.mobileNumber || "",
+      middleInitial: user?.middleInitial || "",
+      facebookLink: "",
       bio: "",
       avatar: "",
     }));
@@ -1802,6 +1803,10 @@ export function LandlordDashboard() {
       businessType:
         "sole_proprietor",
       yearsActive: "",
+      permitNumber: "",
+      permitExpiry: "",
+      issuedAt: "",
+      documentUrl: "",
     }));
 
 
@@ -1907,6 +1912,10 @@ export function LandlordDashboard() {
             userRow?.mobileNumber ||
             user.mobileNumber ||
             "",
+          middleInitial: String(userRow?.middle_initial ?? user?.middleInitial ?? ""),
+          facebookLink: typeof preferenceSections.landlordProfile?.facebookLink === "string"
+            ? preferenceSections.landlordProfile.facebookLink
+            : "",
           bio: userRow?.bio || "",
           avatar:
             userRow?.avatar_url ||
@@ -1935,6 +1944,10 @@ export function LandlordDashboard() {
               : String(
                   landlordRow.years_active
                 ),
+          permitNumber: String(landlordRow?.business_permit_number ?? landlordRow?.permit_number ?? userRow?.permit_number ?? ""),
+          permitExpiry: String(landlordRow?.permit_expiry ?? ""),
+          issuedAt: String(landlordRow?.issued_at ?? landlordRow?.created_at ?? ""),
+          documentUrl: String(landlordRow?.verification_document_url ?? ""),
         };
 
 
@@ -2079,6 +2092,11 @@ export function LandlordDashboard() {
         return;
       }
 
+      if (!profile.facebookLink.trim()) {
+        toast.error("Facebook link is required");
+        return;
+      }
+
 
       if (!profile.firstName.trim()) {
         toast.error(
@@ -2147,7 +2165,7 @@ export function LandlordDashboard() {
         try {
           const updatedUser = {
             ...user,
-            name: `${profile.firstName.trim()} ${profile.lastName.trim()}`,
+            name: `${profile.firstName.trim()}${profile.middleInitial.trim() ? ` ${profile.middleInitial.trim().replace(/\.$/, "")}.` : ""} ${profile.lastName.trim()}`,
             email:
               profile.email.trim(),
             mobileNumber:
@@ -2180,6 +2198,7 @@ export function LandlordDashboard() {
               avatar_url:
                 profile.avatar,
               bio: profile.bio,
+              middle_initial: profile.middleInitial.trim(),
             });
 
 
@@ -2188,6 +2207,12 @@ export function LandlordDashboard() {
               "Unable to sync profile information."
             );
           }
+
+          await saveUserPreferenceSection(
+            user.id,
+            "landlordProfile",
+            { facebookLink: profile.facebookLink.trim() }
+          );
 
 
           setSavedProfile(
@@ -3344,6 +3369,13 @@ export function LandlordDashboard() {
         setSettingsTab={
           setSettingsTab
         }
+        profile={profile}
+        updateProfile={updateProfile}
+        savedProfile={savedProfile}
+        setProfile={setProfile}
+        handleUpdateProfile={handleUpdateProfile}
+        isUpdatingProfile={isUpdatingProfile}
+        business={business}
 
 
         profileTab={
@@ -3380,15 +3412,6 @@ export function LandlordDashboard() {
         }
 
 
-        alertsTab={
-          <AlertsTab
-            alerts={alerts}
-            setA={setA}
-            handleSaveAlerts={
-              handleSaveAlerts
-            }
-          />
-        }
         securityTab={
           <SecurityTab
             security={security}
@@ -3475,6 +3498,7 @@ export function LandlordDashboard() {
         <aside className="app-shell-sidebar">
           <LandlordSidebar
             user={user}
+            needsFacebookLink={!profile.facebookLink.trim()}
             verified={landlordVerified}
             activeSection={
               activeSection ===
@@ -3530,6 +3554,7 @@ export function LandlordDashboard() {
 
           <LandlordSidebar
             user={user}
+            needsFacebookLink={!profile.facebookLink.trim()}
             verified={
               landlordVerified
             }

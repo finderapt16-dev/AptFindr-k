@@ -156,6 +156,9 @@
   border-radius: 12px !important;
   background: linear-gradient(105deg, #f2f6fa, #ffffff) !important;
 }
+.tenant-browse main .tenant-profile-settings > section.tenant-profile-summary {
+  background: #fff !important;
+}
 .tenant-browse main section:nth-of-type(1) > div:first-child { max-width: 58%; }
 .tenant-browse main section:nth-of-type(1) > div:first-child > div:first-child {
   border-color: var(--tenant-border) !important;

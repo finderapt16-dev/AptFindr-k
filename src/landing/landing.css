@@ -2091,6 +2091,14 @@
 
 .landing-signup-modal > .ui-dialog-close:hover { background: #f1f5f9; }
 
+/* Password recovery uses the same compact floating box as Sign In, while the
+   registration wizard retains its wider layout. */
+.ui-dialog-content.landing-signup-modal.landing-password-recovery-modal {
+    width: min(430px, calc(100% - 48px));
+    padding: 32px;
+    border-radius: 18px;
+}
+
 @keyframes signupModalIn {
     from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(0.98); }
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -2101,6 +2109,12 @@
         width: min(430px, calc(100% - 24px));
         max-height: calc(var(--signup-viewport-height, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         padding: 28px 24px 24px;
+    }
+
+    .ui-dialog-content.landing-signup-modal.landing-password-recovery-modal {
+        width: min(400px, calc(100% - 40px));
+        padding: 28px 22px 24px;
+        border-radius: 18px;
     }
 }
 

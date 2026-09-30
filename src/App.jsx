@@ -19,8 +19,6 @@ const PrivacyPolicyPage = lazy(() => import("./legal/PolicyPage").then((module) 
 const TermsOfServicePage = lazy(() => import("./legal/PolicyPage").then((module) => ({ default: module.TermsOfServicePage })));
 // Authentication and shared account pages
 const Signup = lazy(() => import("./auth/Signup").then((module) => ({ default: module.Signup })));
-const ForgotPassword = lazy(() => import("./auth/ForgotPassword").then((module) => ({ default: module.ForgotPassword })));
-const ResetPassword = lazy(() => import("./auth/ResetPassword").then((module) => ({ default: module.ResetPassword })));
 const AuthCallback = lazy(() => import("./auth/AuthCallback").then((module) => ({ default: module.AuthCallback })));
 const Dashboard = lazy(() => import("./auth/Dashboard").then((module) => ({ default: module.Dashboard })));
 const Settings = lazy(() => import("./components/Settings").then((module) => ({ default: module.Settings })));
@@ -59,8 +57,9 @@ export const router = createBrowserRouter([
     // Keep direct login links on the landing page so they use the same modal
     // experience as the Sign In button on the home screen.
     { path: "/login", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
+    { path: "/forgot-password", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
+    { path: "/reset-password", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
     { path: "/auth/callback", element: <PageLoader><AuthCallback /></PageLoader>, errorElement: <RouteErrorBoundary /> },
-    { path: "/reset-password", element: <PageLoader><ResetPassword /></PageLoader>, errorElement: <RouteErrorBoundary /> },
     // Public legal documents. Kept outside the Root layout so they stay
     // readable and shareable without the app shell, and work with no session.
     { path: "/privacy-policy", element: <PageLoader><PrivacyPolicyPage /></PageLoader>, errorElement: <RouteErrorBoundary /> },
@@ -94,7 +93,6 @@ export const router = createBrowserRouter([
             { path: "admin", element: <ProtectedRoute allowedRoles={["admin"]}><PageLoader>{roleDashboard}</PageLoader></ProtectedRoute> },
             // Authentication.
             { path: "signup", element: <PageLoader><Signup /></PageLoader> },
-            { path: "forgot-password", element: <PageLoader><ForgotPassword /></PageLoader> },
             { path: "*", element: <PageLoader><NotFound /></PageLoader> },
         ],
     },

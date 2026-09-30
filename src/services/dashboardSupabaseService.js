@@ -1222,6 +1222,16 @@ export async function fetchPublicLandlordById(userId) {
         return null;
     return toUserRow(data);
 }
+export async function fetchPublicLandlordFacebookLink(userId) {
+    if (!userId)
+        return "";
+    const { data, error } = await supabase.rpc("fn_get_public_landlord_facebook_link", { p_user_id: userId });
+    if (error) {
+        console.error("Unable to fetch public landlord Facebook link:", error);
+        return "";
+    }
+    return typeof data === "string" ? data.trim() : "";
+}
 export async function fetchTenantPreferences(userId) {
     if (!userId)
         return null;
@@ -1319,10 +1329,10 @@ export async function updateUserProfile(payload) {
     return normalized;
 }
 export async function uploadUserAvatar(userId, file) {
-    if (!file.type.startsWith("image/"))
-        throw new Error("Please select a valid image file.");
-    if (file.size > 5 * 1024 * 1024)
-        throw new Error("Profile photo must be 5MB or smaller.");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
+        throw new Error("Choose a JPG, PNG, or WebP image.");
+    if (file.size > 2 * 1024 * 1024)
+        throw new Error("Profile photo must be 2MB or smaller.");
     const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const path = `${userId}/${Date.now()}.${extension}`;
     const { error } = await supabase.storage.from("user-avatars").upload(path, file, {

@@ -6,7 +6,7 @@
     --settings-bg: #f8fafc;
     --settings-card: #ffffff;
 
-    --settings-border: rgba(0, 0, 0, 0.2);
+    --settings-border: #d9d9d9;
     --settings-border-soft: #dbe5ec;
 
     --settings-text: #1f1f1f;
@@ -22,7 +22,7 @@
     --settings-danger-border: #ea7b7f;
     --settings-danger-bg: #fcf3f4;
 
-    --settings-radius: 10px;
+    --settings-radius: 6px;
 }
 
 
@@ -159,20 +159,20 @@
    PROFILE
    ========================================================================== */
 
-.tenant-profile-summary {
+.tenant-profile-settings > .tenant-profile-summary {
     min-height: 182px;
-
     padding: 24px;
 
+    background: #ffffff !important;
+    border: 1px solid #d9d9d9 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
     gap: 40px;
 }
-
 .tenant-profile-identity {
     min-width: 0;
 
@@ -184,6 +184,8 @@
 }
 
 .tenant-profile-avatar {
+    box-sizing: border-box;
+
     width: 80px;
 
     height: 80px;

@@ -19,7 +19,7 @@ const accountItems = [
   { label: "Help & Support", section: "help", icon: HelpCircle },
 ];
 
-export function LandlordSidebar({ user, activeSection, unreadNotifications = 0, onSectionChange, onClose, onLogout }) {
+export function LandlordSidebar({ user, activeSection, unreadNotifications = 0, needsFacebookLink = false, onSectionChange, onClose, onLogout }) {
   const selectSection = (section) => {
     onSectionChange(section);
     onClose?.();
@@ -30,6 +30,7 @@ export function LandlordSidebar({ user, activeSection, unreadNotifications = 0, 
     const content = <>
       <Icon className="landlord-sidebar-nav-icon" />
       <span>{label}</span>
+      {section === "settings" && needsFacebookLink && <span className="landlord-sidebar-reminder">Add Facebook link</span>}
       {section === "notifications" && unreadNotifications > 0 && <span className="app-sidebar-badge">{unreadNotifications}</span>}
     </>;
 

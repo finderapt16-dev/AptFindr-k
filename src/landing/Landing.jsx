@@ -199,6 +199,12 @@ const loadLoginChunk = () =>
 const loadSignupChunk = () =>
     import("@/auth/Signup");
 
+const loadForgotPasswordChunk = () =>
+    import("@/auth/ForgotPassword");
+
+const loadResetPasswordChunk = () =>
+    import("@/auth/ResetPassword");
+
 const Login = lazy(() =>
     loadLoginChunk().then((module) => ({
         default: module.Login,
@@ -208,6 +214,18 @@ const Login = lazy(() =>
 const Signup = lazy(() =>
     loadSignupChunk().then((module) => ({
         default: module.Signup,
+    }))
+);
+
+const ForgotPassword = lazy(() =>
+    loadForgotPasswordChunk().then((module) => ({
+        default: module.ForgotPassword,
+    }))
+);
+
+const ResetPassword = lazy(() =>
+    loadResetPasswordChunk().then((module) => ({
+        default: module.ResetPassword,
     }))
 );
 
@@ -256,6 +274,8 @@ export function Landing() {
             () => {
                 void loadLoginChunk();
                 void loadSignupChunk();
+                void loadForgotPasswordChunk();
+                void loadResetPasswordChunk();
             };
 
 
@@ -339,6 +359,16 @@ export function Landing() {
         setSignupOpen,
     ] = useState(false);
 
+    const [
+        forgotPasswordOpen,
+        setForgotPasswordOpen,
+    ] = useState(false);
+
+    const [
+        resetPasswordOpen,
+        setResetPasswordOpen,
+    ] = useState(false);
+
     const signupTriggerRef = useRef(null);
 
     const [
@@ -362,13 +392,26 @@ export function Landing() {
     ] = useState(null);
 
 
-    // /login is a public deep link. Open the existing landing login modal so
-    // direct navigation has the same presentation as clicking Sign In.
+    // Public auth URLs share the landing-page modal presentation.
     useEffect(() => {
         if (location.pathname === "/login") {
             setSignupOpen(false);
             setSignupRedirect(null);
+            setForgotPasswordOpen(false);
+            setResetPasswordOpen(false);
             setLoginOpen(true);
+        } else if (location.pathname === "/forgot-password") {
+            setSignupOpen(false);
+            setSignupRedirect(null);
+            setLoginOpen(false);
+            setResetPasswordOpen(false);
+            setForgotPasswordOpen(true);
+        } else if (location.pathname === "/reset-password") {
+            setSignupOpen(false);
+            setSignupRedirect(null);
+            setLoginOpen(false);
+            setForgotPasswordOpen(false);
+            setResetPasswordOpen(true);
         }
     }, [location.pathname, location.key]);
 
@@ -661,6 +704,22 @@ export function Landing() {
         setSignupRedirect(null);
     };
 
+    const closeForgotPassword = () => {
+        setForgotPasswordOpen(false);
+        if (location.pathname === "/forgot-password") navigate("/", { replace: true });
+    };
+
+    const closeResetPassword = () => {
+        setResetPasswordOpen(false);
+        if (location.pathname === "/reset-password") navigate("/", { replace: true });
+    };
+
+    const returnToLogin = () => {
+        setForgotPasswordOpen(false);
+        setResetPasswordOpen(false);
+        navigate("/login", { replace: true });
+    };
+
 
     /* =====================================================
        LOGIN SUCCESS
@@ -785,9 +844,8 @@ export function Landing() {
             );
 
 
-            navigate(
-                "/forgot-password"
-            );
+            setForgotPasswordOpen(true);
+            navigate("/forgot-password");
         };
 
 
@@ -1842,6 +1900,26 @@ export function Landing() {
                                 signupRedirect
                             }
                         />
+                    </Suspense>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={forgotPasswordOpen} onOpenChange={(open) => { if (!open) closeForgotPassword(); }}>
+                <DialogContent className="landing-login-modal landing-signup-modal landing-password-recovery-modal" overlayClassName="landing-signup-overlay">
+                    <DialogTitle className="ui-sr-only">Reset your AptFindr password</DialogTitle>
+                    <DialogDescription className="ui-sr-only">Request a password reset link for your AptFindr account.</DialogDescription>
+                    <Suspense fallback={authScreensFallback}>
+                        <ForgotPassword embedded onBackToLogin={returnToLogin} />
+                    </Suspense>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={resetPasswordOpen} onOpenChange={(open) => { if (!open) closeResetPassword(); }}>
+                <DialogContent className="landing-login-modal landing-signup-modal landing-password-recovery-modal" overlayClassName="landing-signup-overlay">
+                    <DialogTitle className="ui-sr-only">Create a new AptFindr password</DialogTitle>
+                    <DialogDescription className="ui-sr-only">Set a new password for your AptFindr account.</DialogDescription>
+                    <Suspense fallback={authScreensFallback}>
+                        <ResetPassword embedded onBackToLogin={returnToLogin} />
                     </Suspense>
                 </DialogContent>
             </Dialog>

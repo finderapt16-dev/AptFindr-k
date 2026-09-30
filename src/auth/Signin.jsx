@@ -19,8 +19,6 @@ import {
 import {
     AlertCircle,
     CheckCircle2,
-    Eye,
-    EyeOff,
 } from "lucide-react";
 
 import {
@@ -65,11 +63,6 @@ export function Login({
         password,
         setPassword,
     ] = useState("");
-
-    const [
-        showPass,
-        setShowPass,
-    ] = useState(false);
 
     const [
         error,
@@ -563,11 +556,7 @@ export function Login({
                         <AuthField
                             id="login-password"
                             label="Password"
-                            type={
-                                showPass
-                                    ? "text"
-                                    : "password"
-                            }
+                            type="password"
                             value={
                                 password
                             }
@@ -575,37 +564,6 @@ export function Login({
                                 setPassword
                             }
                             required
-                            suffix={
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setShowPass(
-                                            (current) =>
-                                                !current
-                                        )
-                                    }
-                                    className="auth-password-toggle login-password-toggle"
-                                    aria-label={
-                                        showPass
-                                            ? "Hide password"
-                                            : "Show password"
-                                    }
-                                >
-
-                                    {showPass ? (
-
-                                        <EyeOff className="login-icon-small" />
-
-                                    ) : (
-
-                                        <Eye className="login-icon-small" />
-
-                                    )}
-
-                                </button>
-
-                            }
                         />
 
 

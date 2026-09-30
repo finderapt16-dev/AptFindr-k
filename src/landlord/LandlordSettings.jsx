@@ -1,274 +1,123 @@
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  updateUserProfile,
-  uploadUserAvatar,
-} from "@/services/dashboardSupabaseService";
+import { FileText, LockKeyhole, Pencil } from "lucide-react";
 
 import "./LandlordSettings.css";
 
-export const LandlordSettings = () => {
-  const { user, updateUser } = useAuth();
-  const fileInputRef = useRef(null);
+const formatPermitDate = (value) => {
+  if (!value) return "Not provided";
 
-  const fullName = (user?.name || "").trim();
-  const [profile, setProfile] = useState({
-    avatar: user?.avatar || "",
-    name: fullName || "Landlord",
-    email: user?.email || "",
-  });
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
 
-  const firstLetter =
-    (profile.name || user?.name || "L")
-      .trim()
-      .charAt(0)
-      .toUpperCase() || "L";
-
-  const handleUploadPhoto = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file || !user?.id) return;
-
-    try {
-      setIsUploadingPhoto(true);
-      const avatarUrl = await uploadUserAvatar(user.id, file);
-      const updated = await updateUserProfile({
-        id: user.id,
-        email: user.email,
-        name: user.name || profile.name,
-        role: user.role,
-        avatar_url: avatarUrl,
-      });
-
-      if (updated) {
-        setProfile((previous) => ({
-          ...previous,
-          avatar: avatarUrl,
-        }));
-
-        if (updateUser) {
-          await updateUser(user.id, { avatar_url: avatarUrl });
-        }
-      }
-
-      toast.success("Profile photo updated.");
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Unable to upload profile photo."
-      );
-    } finally {
-      setIsUploadingPhoto(false);
-      event.target.value = "";
-    }
-  };
-
-  const handleRemovePhoto = async () => {
-    if (!user?.id || !profile.avatar) return;
-
-    try {
-      await updateUserProfile({
-        id: user.id,
-        email: user.email,
-        name: user.name || profile.name,
-        role: user.role,
-        avatar_url: "",
-      });
-
-      setProfile((previous) => ({
-        ...previous,
-        avatar: "",
-      }));
-
-      if (updateUser) {
-        await updateUser(user.id, { avatar_url: "" });
-      }
-
-      toast.success("Profile photo removed.");
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Unable to remove profile photo."
-      );
-    }
-  };
-
-  return (
-    <div className="landlord-settings">
-      <div className="settings-section-card">
-        <div className="settings-section-row">
-          <div>
-            <h1 className="settings-section-settings">Settings</h1>
-            <p className="settings-section-text">
-              Manage your account, preferences, business information, and security.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="settings-section-scroll">
-        <div className="settings-section-stack">
-          <section className="settings-panel settings-profile-panel">
-            <div className="settings-profile-header">
-              <div className="settings-avatar">
-                {profile.avatar ? (
-                  <img src={profile.avatar} alt="Profile" className="settings-avatar-image" />
-                ) : (
-                  firstLetter
-                )}
-              </div>
-
-              <div className="settings-profile-meta">
-                <div className="settings-profile-name">{profile.name}</div>
-                <div className="settings-profile-email">{profile.email}</div>
-              </div>
-
-              <div className="settings-profile-actions">
-                <button
-                  type="button"
-                  className="settings-primary-button settings-upload-button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploadingPhoto}
-                >
-                  {isUploadingPhoto ? "Uploading..." : "Upload Photo"}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="settings-photo-input"
-                  onChange={handleUploadPhoto}
-                />
-                <button
-                  type="button"
-                  className="settings-secondary-button settings-remove-button"
-                  onClick={handleRemovePhoto}
-                  disabled={!profile.avatar || isUploadingPhoto}
-                >
-                  Remove Photo
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <section className="settings-panel">
-            <div className="settings-panel-header">
-              <h2>Personal Information</h2>
-            </div>
-
-            <div className="settings-form-grid">
-              <label className="settings-field">
-                <span>First Name</span>
-                <input type="text" value="Kurt" readOnly />
-              </label>
-
-              <label className="settings-field">
-                <span>Last Name</span>
-                <input type="text" value="De Asis" readOnly />
-              </label>
-
-              <label className="settings-field full-width">
-                <span>Email Address</span>
-                <input type="email" value="kurtdeasis@gmail.com" readOnly />
-              </label>
-
-              <label className="settings-field full-width">
-                <span>Mobile Number</span>
-                <input type="tel" value="09000000000" readOnly />
-              </label>
-            </div>
-
-            <div className="settings-actions-row">
-              <button type="button" className="settings-secondary-button">
-                Cancel
-              </button>
-              <button type="button" className="settings-primary-button">
-                Save Changes
-              </button>
-            </div>
-          </section>
-
-          <section className="settings-panel">
-            <div className="settings-panel-header">
-              <h2>Business Information</h2>
-            </div>
-
-            <div className="settings-form-grid compact-grid">
-              <label className="settings-field">
-                <span>Business / Trade Name</span>
-                <input type="text" value="Kurt De Asis" readOnly />
-              </label>
-
-              <label className="settings-field">
-                <span>Business Type</span>
-                <input type="text" value="Sole Proprietor" readOnly />
-              </label>
-
-              <label className="settings-field">
-                <span>Years in Operation</span>
-                <input type="text" value="2" readOnly />
-              </label>
-
-              <label className="settings-field">
-                <span>BIR TIN</span>
-                <input type="text" value="123-456-789-000" readOnly />
-              </label>
-            </div>
-          </section>
-
-          <section className="settings-panel">
-            <div className="settings-panel-header">
-              <h2>Change Password</h2>
-              <p>Update your password to keep your landlord account secure.</p>
-            </div>
-
-            <div className="settings-password-grid">
-              <label className="settings-field full-width">
-                <span>Current Password</span>
-                <input type="password" value="••••••••" readOnly />
-              </label>
-
-              <label className="settings-field full-width">
-                <span>New Password</span>
-                <input type="password" value="••••••••" readOnly />
-              </label>
-
-              <label className="settings-field full-width">
-                <span>Confirm New Password</span>
-                <input type="password" value="••••••••" readOnly />
-              </label>
-            </div>
-
-            <div className="settings-actions-row">
-              <button type="button" className="settings-secondary-button">
-                Cancel
-              </button>
-              <button type="button" className="settings-primary-button">
-                Update Password
-              </button>
-            </div>
-          </section>
-
-          <section className="settings-panel settings-danger-zone">
-            <div className="settings-panel-header danger-header">
-              <h2>Danger Zone</h2>
-            </div>
-
-            <p>
-              Delete Account. This action is permanent and cannot be undone.
-            </p>
-
-            <div className="settings-danger-actions">
-              <button type="button" className="settings-danger-button">
-                Delete Account
-              </button>
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
-  );
+  return new Intl.DateTimeFormat("en-PH", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 };
+
+const permitFileName = (url) => {
+  if (!url) return "No business permit uploaded";
+
+  try {
+    return decodeURIComponent(new URL(url).pathname.split("/").pop()) || "Business permit document";
+  } catch {
+    return "Business permit document";
+  }
+};
+
+const ProfileField = ({ label, required = false, hint, children }) => (
+  <label className="landlord-settings-field">
+    <span className="landlord-settings-field-label">
+      {label}{required && <b aria-hidden="true"> *</b>}
+    </span>
+    <span className="landlord-settings-input-wrap">
+      {children}
+      <Pencil aria-hidden="true" className="landlord-settings-edit-icon" />
+    </span>
+    {hint && <small>{hint}</small>}
+  </label>
+);
+
+export const LandlordSettings = ({
+  profile,
+  updateProfile,
+  savedProfile,
+  setProfile,
+  handleUpdateProfile,
+  isUpdatingProfile,
+  business,
+  profileTab,
+  securityTab,
+}) => (
+  <div className="landlord-settings">
+    <header className="landlord-settings-page-header">
+      <h1>Settings</h1>
+      <p>Manage your account, preferences, business information, and security.</p>
+    </header>
+
+    <section className="landlord-settings-photo-card" aria-label="Profile photo">
+      {profileTab}
+    </section>
+
+    <section className="landlord-settings-card">
+      <header className="landlord-settings-card-header">
+        <h2>Personal Information</h2>
+        <p>Update your personal details.</p>
+      </header>
+
+      <div className="landlord-settings-profile-grid">
+        <ProfileField label="First Name" required>
+          <input value={profile.firstName} onChange={(event) => updateProfile((current) => ({ ...current, firstName: event.target.value }))} />
+        </ProfileField>
+        <ProfileField label="Facebook Link" required>
+          <input type="url" required value={profile.facebookLink} onChange={(event) => updateProfile((current) => ({ ...current, facebookLink: event.target.value }))} placeholder="https://facebook.com" />
+        </ProfileField>
+        <ProfileField label="Middle Initial (Optional)">
+          <input value={profile.middleInitial} maxLength={3} onChange={(event) => updateProfile((current) => ({ ...current, middleInitial: event.target.value }))} />
+        </ProfileField>
+        <ProfileField label="Mobile Number" required>
+          <input type="tel" value={profile.mobile} onChange={(event) => updateProfile((current) => ({ ...current, mobile: event.target.value }))} placeholder="09XX-XXX-XXXX" />
+        </ProfileField>
+        <ProfileField label="Last Name" required>
+          <input value={profile.lastName} onChange={(event) => updateProfile((current) => ({ ...current, lastName: event.target.value }))} />
+        </ProfileField>
+        <ProfileField label="Email Address" required hint="Managed securely through your authenticated account.">
+          <input type="email" value={profile.email} readOnly aria-readonly="true" />
+        </ProfileField>
+      </div>
+
+      <footer className="landlord-settings-actions">
+        <button type="button" className="landlord-settings-cancel" onClick={() => setProfile(savedProfile)} disabled={isUpdatingProfile}>Cancel</button>
+        <button type="button" className="landlord-settings-save" onClick={() => void handleUpdateProfile()} disabled={isUpdatingProfile}>
+          {isUpdatingProfile ? "Saving..." : "Save Changes"}
+        </button>
+      </footer>
+    </section>
+
+    <section className="landlord-settings-card landlord-settings-business-card">
+      <header className="landlord-settings-card-header landlord-settings-business-header">
+        <div>
+          <h2>Business Information</h2>
+          <p>Manage your business verification and permit details.</p>
+        </div>
+        <span className="landlord-settings-read-only"><LockKeyhole aria-hidden="true" strokeWidth={1.6} /> READ-ONLY</span>
+      </header>
+
+      <div className="landlord-settings-permit-file">
+        <span className="landlord-settings-file-icon"><FileText aria-hidden="true" /></span>
+        <div>
+          {business.documentUrl ? <a href={business.documentUrl} target="_blank" rel="noreferrer">{permitFileName(business.documentUrl)}</a> : <strong>{permitFileName(business.documentUrl)}</strong>}
+          <small>{business.documentUrl ? "Open submitted business permit" : "Upload a permit when creating or updating a property."}</small>
+        </div>
+      </div>
+
+      <dl className="landlord-settings-permit-details">
+        <div className="landlord-settings-permit-number"><dt>Permit Number</dt><dd>{business.permitNumber || "Not provided"}</dd></div>
+        <div><dt>Issue Date</dt><dd>{formatPermitDate(business.issuedAt)}</dd></div>
+        <div><dt>Expiry Date</dt><dd>{formatPermitDate(business.permitExpiry)}</dd></div>
+      </dl>
+    </section>
+
+    {securityTab}
+  </div>
+);

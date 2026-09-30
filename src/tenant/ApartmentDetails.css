@@ -1464,14 +1464,22 @@
   font-weight: var(--font-weight-black, 900);
 }
 
+.apartment-detail-landlord-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-width: 0;
+  margin-top: 14px;
+}
+
 .apartment-detail-row-10 {
-  margin-top: calc(var(--spacing, .25rem) * 4);
+  margin-top: 0;
   align-items: center;
   gap: calc(var(--spacing, .25rem) * 3);
-  border-radius: var(--radius-lg, .5rem);
-  background-color: var(--color-slate-50, #f2f6fa);
+  background-color: transparent;
   min-width: 0;
-  padding: calc(var(--spacing, .25rem) * 4);
+  padding: 0;
   display: flex;
 }
 
@@ -1482,8 +1490,8 @@
 }
 
 .apartment-detail-grid-8 {
-  height: calc(var(--spacing, .25rem) * 12);
-  width: calc(var(--spacing, .25rem) * 12);
+  height: 68px;
+  width: 68px;
   font-weight: var(--font-weight-black, 900);
   border-radius: 3.40282e38px;
   flex-shrink: 0;
@@ -1511,7 +1519,11 @@
 }
 
 .apartment-detail-panel-20 {
-  margin-top: calc(var(--spacing, .25rem) * 4);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
 }
 
 :where(.apartment-detail-panel-20 > :not(:last-child)) {
@@ -1529,6 +1541,25 @@
   gap: calc(var(--spacing, .25rem) * 2);
   min-width: 0;
   display: flex;
+}
+
+.apartment-detail-facebook-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: #2878ef;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.apartment-detail-facebook-link svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
 }
 
 .apartment-detail-mail-icon, .apartment-detail-phone-icon {
@@ -3179,6 +3210,7 @@
 }
 
 @media (max-width: 899px) {
+  .apartment-detail-landlord-card { align-items: flex-start; }
   .apartment-detail-page { display: flex; flex-direction: column; gap: 12px; }
   .apartment-detail-page .apartment-detail-topbar { order: 0; margin: 0; }
   .apartment-detail-page .apartment-detail-page-header { order: 1; margin: 0; }
@@ -3195,4 +3227,9 @@
   .apartment-detail-page .apartment-detail-grid-4 { grid-template-columns: 92px minmax(0, 1fr); }
   .apartment-detail-page .apartment-detail-image-2,
   .apartment-detail-page .apartment-detail-grid-5 { width: 92px; min-height: 96px; }
+}
+
+@media (max-width: 560px) {
+  .apartment-detail-landlord-card { flex-direction: column; align-items: stretch; gap: 12px; }
+  .apartment-detail-panel-20 { padding-left: 60px; }
 }

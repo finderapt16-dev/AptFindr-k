@@ -10,11 +10,12 @@ export const ProfileTab = ({ profile, isUploadingProfilePhoto, profilePhotoInput
       <div className="profile-tab-panel">
         <p className="profile-tab-text">{`${profile.firstName} ${profile.lastName}`.trim() || "Not provided"}</p>
         <p className="profile-tab-text-2">{profile.email || "Email not provided"}</p>
-        <div className="profile-tab-row-2">
-          <button type="button" disabled={isUploadingProfilePhoto} onClick={() => profilePhotoInputRef.current?.click()} className="profile-tab-button"><Camera className="profile-tab-camera-icon"/>{isUploadingProfilePhoto ? "Uploading..." : "Upload Photo"}</button>
-          <button type="button" disabled={!profile.avatar || isUploadingProfilePhoto} onClick={() => void handleRemoveProfilePhoto()} className="profile-tab-remove-photo">Remove Photo</button>
-          <input ref={profilePhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="profile-tab-input" onChange={(event) => void handleProfilePhoto(event.target.files?.[0])}/>
-        </div>
+      </div>
+      <div className="profile-tab-row-2">
+        <button type="button" disabled={isUploadingProfilePhoto} onClick={() => profilePhotoInputRef.current?.click()} className="profile-tab-button"><Camera className="profile-tab-camera-icon"/>{isUploadingProfilePhoto ? "Uploading..." : "Upload Photo"}</button>
+        <button type="button" disabled={!profile.avatar || isUploadingProfilePhoto} onClick={() => void handleRemoveProfilePhoto()} className="profile-tab-remove-photo">Remove Photo</button>
+        <small className="profile-tab-upload-hint">JPG, PNG, or WebP up to 2MB</small>
+        <input ref={profilePhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="profile-tab-input" onChange={(event) => void handleProfilePhoto(event.target.files?.[0])}/>
       </div>
     </div>
 

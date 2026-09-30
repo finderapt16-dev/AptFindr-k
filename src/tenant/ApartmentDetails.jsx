@@ -1,4 +1,4 @@
-import { Pencil, Bath, Building2, CalendarDays, ChevronLeft, ChevronRight, Heart, MapPin, Square, Star, AlertTriangle, ArrowLeft, BedDouble, Check, CheckCircle2, DoorOpen, Mail, Menu, Phone, Users, X } from "lucide-react";
+import { Pencil, Bath, Building2, CalendarDays, ChevronLeft, ChevronRight, Heart, MapPin, Square, Star, AlertTriangle, ArrowLeft, BedDouble, Check, CheckCircle2, DoorOpen, Link as LinkIcon, Menu, Phone, Users, X } from "lucide-react";
 import { MultiImageUploader } from "@/components/MultiImageUploader";
 import { PropertyLocationPicker } from "@/landlord/PropertyLocationPicker";
 import { apartmentToFormValues } from "@/utils/apartmentMappers";
@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isTenantRole } from "@/services/authService";
 import { fetchApartmentRatings, subscribeToApartmentRatings, removeApartmentRating, saveApartmentRating } from "@/services/apartmentRatingsService";
 import { useFavorites } from "@/tenant/useFavorites";
-import { createReport, fetchPublicLandlordById } from "@/services/dashboardSupabaseService";
+import { createReport, fetchPublicLandlordById, fetchPublicLandlordFacebookLink } from "@/services/dashboardSupabaseService";
 import { formatApartmentLocation } from "@/utils/apartmentLocation";
 import { getImageUrl } from "@/utils/images";
 import { isTenantVisibleApartment } from "@/utils/listingVisibility";
@@ -37,6 +37,14 @@ const dateLabel = (value) => {
         return "Not provided";
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "Not provided" : date.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+};
+const safeExternalUrl = (value) => {
+    try {
+        const url = new URL(value);
+        return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+    } catch {
+        return "";
+    }
 };
 const listFromUnknown = (value) => Array.isArray(value)
     ? value.filter((item) => typeof item === "string" && item.trim().length > 0)
@@ -173,10 +181,10 @@ export function ApartmentDetails() {
                 setAccessState("accessible");
                 let landlordVerified = false;
                 if (listing?.landlordId) {
-                    const [owner, isVerified] = await Promise.all([fetchPublicLandlordById(listing.landlordId), getLandlordVerification(listing.landlordId)]);
+                    const [owner, isVerified, facebookLink] = await Promise.all([fetchPublicLandlordById(listing.landlordId), getLandlordVerification(listing.landlordId), fetchPublicLandlordFacebookLink(listing.landlordId)]);
                     landlordVerified = isVerified;
                     if (active) {
-                        setLandlord(owner);
+                        setLandlord(owner ? { ...owner, facebookLink } : null);
                         setVerified(isVerified);
                     }
                 }
@@ -436,7 +444,36 @@ export function ApartmentDetails() {
             {mapPinAvailable ? <div className="apartment-detail-panel-17"><MapView lat={apartment.lat} lng={apartment.lng} zoom={15} showSingleMarker/></div> : <div className={`apartment-detail-card-2 ${landlordPortal ? "apartment-detail-panel-18" : "apartment-detail-panel-19"}`}><MapPin className={`apartment-detail-map-pin-icon-4 ${landlordPortal ? "apartment-detail-map-pin-icon-2" : "apartment-detail-map-pin-icon-2"}`}/><p className="apartment-detail-exact-map-pin-needed">Exact map pin needed</p><p className="apartment-detail-text-10">{mapPinMessage}</p></div>}
           </section></InlinePropertyInfo>
         </div><aside className="apartment-detail-aside">
-          <section className="apartment-detail-section-3"><h2 className="apartment-detail-landlord-information">Landlord Information</h2><div className="apartment-detail-row-10"><span className={`apartment-detail-grid-8 ${landlordPortal ? "apartment-detail-span-9" : "apartment-detail-span-10"}`}>{landlordName === "Not provided" ? "L" : landlordName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2)}</span><div className="apartment-detail-panel-2"><strong className="apartment-detail-strong-2">{landlordName}</strong>{verified && <VerifiedBadge label={landlordPortal ? "Verified Landlord" : "Verified Listing"} className="apartment-detail-verified-badge"/>}{renter && <div className="landlord-tenant-rating">{ratings.length ? <><div className="landlord-tenant-stars" aria-label={`${averageRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map((value) => <Star key={value} size={15} fill={value <= Math.round(averageRating) ? "currentColor" : "none"}/>)}</div><span>{averageRating.toFixed(1)}</span></> : <span>No tenant ratings yet</span>}{currentRating > 0 && <button type="button" disabled={ratingSaving} onClick={() => void clearTenantRating()} className="apartment-detail-remove-my-rating">Remove my rating</button>}</div>}</div></div><div className="apartment-detail-panel-20"><p className="apartment-detail-text-11"><Mail className="apartment-detail-mail-icon"/><span className="apartment-detail-span-2">{landlord?.email || "Email not provided"}</span></p><p className="apartment-detail-text-11"><Phone className="apartment-detail-phone-icon"/><span className="apartment-detail-span-2">{landlord?.mobile || landlord?.mobileNumber || "Phone not provided"}</span></p></div></section>
+                    <section className="apartment-detail-section-3">
+                        <h2 className="apartment-detail-landlord-information">Landlord Information</h2>
+                        <div className="apartment-detail-landlord-card">
+                            <div className="apartment-detail-row-10">
+                                <span className={`apartment-detail-grid-8 ${landlordPortal ? "apartment-detail-span-9" : "apartment-detail-span-10"}`}>
+                                    {landlordName === "Not provided" ? "L" : landlordName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2)}
+                                </span>
+                                <div className="apartment-detail-panel-2">
+                                    <strong className="apartment-detail-strong-2">{landlordName}</strong>
+                                    {verified && <VerifiedBadge label={landlordPortal ? "Verified Landlord" : "Verified Listing"} className="apartment-detail-verified-badge"/>}
+                                    {renter && <div className="landlord-tenant-rating">
+                                        {ratings.length ? <>
+                                            <div className="landlord-tenant-stars" aria-label={`${averageRating.toFixed(1)} out of 5 stars`}>
+                                                {[1, 2, 3, 4, 5].map((value) => <Star key={value} size={15} fill={value <= Math.round(averageRating) ? "currentColor" : "none"}/>) }
+                                            </div>
+                                            <span>{averageRating.toFixed(1)}</span>
+                                        </> : <span>No tenant ratings yet</span>}
+                                        {currentRating > 0 && <button type="button" disabled={ratingSaving} onClick={() => void clearTenantRating()} className="apartment-detail-remove-my-rating">Remove my rating</button>}
+                                    </div>}
+                                </div>
+                            </div>
+                            <div className="apartment-detail-panel-20">
+                                {safeExternalUrl(landlord?.facebookLink) && <a className="apartment-detail-facebook-link" href={safeExternalUrl(landlord.facebookLink)} target="_blank" rel="noreferrer">
+                                    <LinkIcon aria-hidden="true" />
+                                    <span>{landlord.facebookLink}</span>
+                                </a>}
+                                <p className="apartment-detail-text-11"><Phone className="apartment-detail-phone-icon"/><span className="apartment-detail-span-2">{landlord?.mobile || landlord?.mobileNumber || "Phone not provided"}</span></p>
+                            </div>
+                        </div>
+                    </section>
           <InlinePropertyInfo label="Property details" fields={[{"key":"propertyType","label":"Property type"},{"key":"sqft","label":"Floor area (sq ft)","type":"number"},{"key":"availableDate","label":"Available date","type":"date"},{"key":"utilitiesText","label":"Utilities included (comma-separated)"}]} apartment={editableApartment} enabled={editableInfo} onSave={savePropertyInfo} ><section className="apartment-detail-section-3"><h2 className="apartment-detail-property-details">Property Details</h2><dl className="apartment-detail-dl">{[{ label: "Property Type", value: apartment.propertyType || "Not provided" }, { label: "Available Date", value: dateLabel(apartment.availableDate) }, { label: "Utilities", value: Array.isArray(apartment.utilities) && apartment.utilities.length ? apartment.utilities.join(", ") : "Not included" }, { label: "Status", value: STATUS_LABEL[status] }, { label: "ZIP Code", value: apartment.zip || "Not provided" }].map(({ label, value }) => <div key={label} className="apartment-detail-grid-9"><dt className="apartment-detail-dt-2">{label}</dt><dd className="apartment-detail-dd-2">{value}</dd></div>)}</dl></section></InlinePropertyInfo>
           <InlinePropertyInfo label="Location" fields={[{"key":"address","label":"Complete address","type":"text","required":true},{"key":"city","label":"City","type":"text","required":true},{"key":"state","label":"Province","type":"text","required":true},{"key":"zip","label":"ZIP code","type":"text","required":true}]} apartment={editableApartment} enabled={editableInfo} onSave={savePropertyInfo} location><section className="apartment-detail-section-4 apartment-detail-aside-location"><h2 className="apartment-detail-location">Location</h2><div className={`apartment-detail-card ${landlordPortal ? "apartment-detail-panel-14" : "apartment-detail-panel-15"}`}><div className="apartment-detail-row-9"><MapPin className={`apartment-detail-map-pin-icon-3 ${landlordPortal ? "apartment-detail-map-pin-icon-2" : "apartment-detail-map-pin-icon-2"}`}/><div className="apartment-detail-panel-2"><h3 className="apartment-detail-location-details">Location Details</h3><p className="apartment-detail-text-9">{locationText}</p></div></div></div>{mapPinAvailable ? <div className="apartment-detail-panel-17"><MapView lat={apartment.lat} lng={apartment.lng} zoom={15} showSingleMarker/></div> : <div className={`apartment-detail-card-2 ${landlordPortal ? "apartment-detail-panel-18" : "apartment-detail-panel-19"}`}><MapPin className={`apartment-detail-map-pin-icon-4 ${landlordPortal ? "apartment-detail-map-pin-icon-2" : "apartment-detail-map-pin-icon-2"}`}/><p className="apartment-detail-exact-map-pin-needed">Exact map pin needed</p><p className="apartment-detail-text-10">{mapPinMessage}</p></div>}</section></InlinePropertyInfo>
           <InlinePropertyInfo label="Safety & rules" fields={[{"key":"rulesText","label":"Rules (one per line)","type":"textarea"}]} apartment={editableApartment} enabled={editableInfo} onSave={savePropertyInfo} ><section className="apartment-detail-section-3"><h2 className="apartment-detail-safety-rules">Safety & Rules</h2>{rules.length ? <ul className="apartment-detail-ul">{rules.map((rule) => <li key={rule} className="apartment-detail-li"><CheckCircle2 className="apartment-detail-check-circle2-icon"/><span className="apartment-detail-span-2">{rule}</span></li>)}</ul> : <p className="apartment-detail-no-safety-rules-provided">No safety rules provided.</p>}</section></InlinePropertyInfo>
