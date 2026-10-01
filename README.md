@@ -49,6 +49,8 @@ END IF;
 
 The authenticated client then creates the tenant's `app_users` profile. Confirm the existing RLS policy permits an authenticated user to insert only their own profile (`auth_id = auth.uid()`). If Google signup redirects back with `Database error saving new user`, open Supabase **Authentication → Logs** and the Postgres logs; the `auth.users` trigger is rejecting the new user before the app callback can run. The trigger body is project-specific, so apply the guard to the existing function rather than replacing it with a guessed schema.
 
+`/auth/callback` decides what to do with the returned Google session from the signup intent marker (`aptfindr.google-oauth-flow`), which is written to `localStorage` with a 10-minute TTL because mobile browsers and installed PWAs often return from Google in a new tab where `sessionStorage` is not shared. A signed-up Google user is therefore never mistaken for a bare login and bounced back to the account screens. A Google account with no AptFindr profile returns to the sign-in screen with a "You need to create an account" notice: the Google session is kept live so ticking consent and pressing **Create Account with Google** finishes the tenant profile without a second trip to the provider, and **Use a different Google account** clears the session and reopens Google's chooser.
+
 ## Registration and mobile/PWA checks
 
 - Tenant registration is a single card with username, email, password confirmation, consent, and Google signup.

@@ -254,6 +254,11 @@
 .signup-error-alert p { margin: 0; }
 .signup-error-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
 .signup-error-actions a { color: #008fd7; font-size: 12px; font-weight: 600; }
+/* Google is authorized but has no AptFindr account yet (/signup?google=setup). */
+.signup-google-setup-notice { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 16px; padding: 12px; border: 1px solid #bae6fd; border-radius: 5px; color: #075985; background: #f0f9ff; font-size: 13px; line-height: 1.5; }
+.signup-google-setup-notice svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px; color: #0284c7; }
+.signup-google-setup-notice p { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.signup-google-setup-notice strong { color: #0c4a6e; }
 .signup-spinner { width: 16px; height: 16px; border: 2px solid rgb(255 255 255 / 40%); border-top-color: #fff; border-radius: 50%; animation: signup-spin 700ms linear infinite; }
 @keyframes signup-spin { to { transform: rotate(360deg); } }
 
