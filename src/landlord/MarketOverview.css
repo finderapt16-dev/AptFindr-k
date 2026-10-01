@@ -763,23 +763,79 @@
   max-width: 420px
 ) {
 
+  .landlord-market-trends .market-trends-page {
+    padding: 72px 12px 28px;
+  }
+
+  .landlord-market-trends .market-trends-header {
+    margin-bottom: 16px;
+    padding: 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f0f9ff, #ffffff);
+  }
+
+  .landlord-market-trends .market-trends-header h1 {
+    font-size: 23px;
+  }
+
+  .landlord-market-trends .market-details {
+    padding: 14px;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+  }
+
   .market-property-card {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    overflow: hidden;
+    padding: 12px;
+    border-color: #cfe6f3;
+    border-radius: 12px;
   }
 
 
   .market-property-image {
+    grid-column: 1 / -1;
     width: 100%;
-    height: 170px;
+    height: 160px;
+    margin-bottom: 13px;
+    border-radius: 9px;
   }
+
+  .market-property-info {
+    grid-column: 1 / -1;
+    margin-bottom: 12px;
+  }
+
+  .market-property-title-row h3 { font-size: 16px; }
+  .market-property-location { font-size: 11px; }
+  .market-property-price { font-size: 12px; }
 
 
   .market-metric-views,
   .market-metric-favorites,
-  .market-metric-rating,
+  .market-metric-rating {
+    grid-row: auto;
+    min-height: 74px;
+    padding: 12px 4px;
+    border-top: 1px solid #e8eef3;
+    border-right: 1px solid #e8eef3;
+  }
+
+  .market-metric-views { grid-column: 1; }
+  .market-metric-favorites { grid-column: 2; }
+  .market-metric-rating { grid-column: 3; border-right: 0; }
+  .market-property-metric strong { font-size: 17px; }
+  .market-property-metric span { font-size: 10px; }
+
   .market-view-details {
-    grid-column: 1;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 42px;
+    margin-top: 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
   }
 
 

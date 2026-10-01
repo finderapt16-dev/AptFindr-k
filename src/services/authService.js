@@ -542,8 +542,6 @@ export async function signupUser(input) {
         throw new SignupFlowError('Enter a valid email address.', 'validation', 'invalid_email');
     const passwordError = validateSignupPassword(input.password);
     if (passwordError) throw new SignupFlowError(passwordError, 'validation', 'weak_password');
-    if (typeof input.businessName === 'string' && input.businessName.trim().length > 150)
-        throw new SignupFlowError('Business name must be 150 characters or fewer.', 'validation', 'invalid_business_name');
     signupLog('[AUTH] Signup started', { email, role });
     const { data: authData, error: authError } = await supabaseClient.auth.signUp({
         email,
@@ -558,7 +556,6 @@ export async function signupUser(input) {
                 middleInitial: input.middleInitial,
                 address: input.address,
                 permitNumber: role === 'landlord' ? input.permitNumber : undefined,
-                businessName: role === 'landlord' ? nonEmptyString(input.businessName) ?? undefined : undefined,
                 termsAccepted: true,
                 landlordVerificationAccepted: role === 'landlord' ? true : undefined,
                 requires_email_verification: true,

@@ -1,4 +1,4 @@
-import { Pencil, Bath, Building2, CalendarDays, ChevronLeft, ChevronRight, Heart, MapPin, Square, Star, AlertTriangle, ArrowLeft, BedDouble, Check, CheckCircle2, DoorOpen, Link as LinkIcon, Menu, Phone, Users, X } from "lucide-react";
+import { Pencil, Bath, Building2, CalendarDays, ChevronLeft, ChevronRight, Heart, MapPin, Square, Star, AlertTriangle, ArrowLeft, BedDouble, Check, CheckCircle2, DoorOpen, Link as LinkIcon, Maximize, Phone, Users, X } from "lucide-react";
 import { MultiImageUploader } from "@/components/MultiImageUploader";
 import { PropertyLocationPicker } from "@/landlord/PropertyLocationPicker";
 import { apartmentToFormValues } from "@/utils/apartmentMappers";
@@ -21,7 +21,6 @@ import { getImageUrl } from "@/utils/images";
 import { isTenantVisibleApartment } from "@/utils/listingVisibility";
 import { DEFAULT_LA_PAZ_MAP_CENTER, hasValidApartmentCoordinates, isDefaultMapCenter } from "@/utils/mapCoordinates";
 import { toast } from "sonner";
-import { MobileNavigation } from "@/tenant/MobileNavigation";
 import { Sidebar } from "@/tenant/Sidebar";
 import { useTenantNotifications } from "@/tenant/useTenantNotifications";
 import { EvidenceUploader } from "@/components/EvidenceUploader";
@@ -76,7 +75,6 @@ function LandlordPropertyView({ apartment, images, imageIndex, setImageIndex, lo
             </div>}
 
             <div className="app-shell-page-main">
-              <button type="button" className="app-sidebar-trigger" aria-label="Open navigation" onClick={() => setSidebarOpen(true)}><Menu className="apartment-detail-menu-icon"/></button>
               <div className="app-shell-content app-shell-content-mobile-nav">
                 <main className="landlord-view-property landlord-view-property-page">
             <header className="landlord-view-property-header">
@@ -161,6 +159,7 @@ export function ApartmentDetails() {
     const [loading, setLoading] = useState(true);
     const [accessState, setAccessState] = useState(null);
     const [imageIndex, setImageIndex] = useState(0);
+    const [mapExpanded, setMapExpanded] = useState(false);
     const [mobileNav, setMobileNav] = useState(false);
     const [reportOpen, setReportOpen] = useState(false);
     const [reportDetails, setReportDetails] = useState("");
@@ -402,14 +401,13 @@ export function ApartmentDetails() {
         return <Sidebar active="apartments" unreadCount={unreadCount}/>;
     };
     return (<div className={`app-shell ${landlordPortal ? "landlord-shell landlord-property-detail" : "tenant-detail-colors"}`}>
-      {renter && <MobileNavigation active="apartments" unreadCount={unreadCount}/>}
       <div className="app-shell-frame">
       {landlordPortal
             ? <aside className="app-shell-sidebar">{renderSidebar()}</aside>
             : <div className="apartment-detail-panel"><Sidebar active="apartments" unreadCount={unreadCount}/></div>}
       {mobileNav && !renter && <div className="app-sidebar-overlay"><button aria-label="Close navigation" className="apartment-detail-close-navigation" onClick={() => setMobileNav(false)}/><div className="app-sidebar-drawer is-open">{renderSidebar()}<button aria-label="Close navigation" onClick={() => setMobileNav(false)} className="app-sidebar-close"><X className="apartment-detail-x-icon"/></button></div></div>}
       <div className="app-shell-main"><main className="app-shell-content app-shell-content-mobile-nav"><div className="apartment-detail-container">
-        <div className="apartment-detail-content"><div className="apartment-detail-row">{!renter && <button aria-label="Open navigation" onClick={() => setMobileNav(true)} className="app-sidebar-trigger"><Menu className="apartment-detail-menu-icon"/></button>}<Button variant="ghost" onClick={handleBack} className={`apartment-detail-button ${landlordPortal ? "apartment-detail-button-2" : ""}`}><ArrowLeft className="apartment-detail-arrow-left-icon"/><span className="apartment-detail-span">{landlordMarketDetail ? "Back to Market Overview" : backLabel ?? (ownListing ? "Back to My Properties" : "Back to Browse")}</span></Button></div><div className="apartment-detail-row-2">{tenantAccount && <><Button variant="outline" onClick={() => { setPendingRating(currentRating); setRatingSubmitted(false); setRatingOpen(true); }} className="tenant-apartment-rate-button"><Star/>Rate</Button><Button variant="outline" onClick={() => void toggleFavorite(apartment.id)} title={favorite ? "Remove favorite" : "Add favorite"} className="tenant-apartment-favorite-button"><Heart className={`apartment-detail-heart-icon ${favorite ? "apartment-detail-heart-icon-2" : ""}`}/>{favorite ? "Favorited" : "Favorite"}</Button></>}</div></div>
+        <div className="apartment-detail-content"><div className="apartment-detail-row"><Button variant="ghost" onClick={handleBack} className={`apartment-detail-button ${landlordPortal ? "apartment-detail-button-2" : ""}`}><ArrowLeft className="apartment-detail-arrow-left-icon"/><span className="apartment-detail-span">{landlordMarketDetail ? "Back to Market Overview" : backLabel ?? (ownListing ? "Back to My Properties" : "Back to Browse")}</span></Button></div><div className="apartment-detail-row-2">{tenantAccount && <><Button variant="outline" onClick={() => { setPendingRating(currentRating); setRatingSubmitted(false); setRatingOpen(true); }} className="tenant-apartment-rate-button"><Star/>Rate</Button><Button variant="outline" onClick={() => void toggleFavorite(apartment.id)} title={favorite ? "Remove favorite" : "Add favorite"} className="tenant-apartment-favorite-button"><Heart className={`apartment-detail-heart-icon ${favorite ? "apartment-detail-heart-icon-2" : ""}`}/>{favorite ? "Favorited" : "Favorite"}</Button></>}</div></div>
 
         <header className="apartment-detail-header"><div className="apartment-detail-panel-2">
             <InlinePropertyInfo label="Property name" fields={[{ key: "title", label: "Property name", required: true }]} apartment={apartment} enabled={editableInfo} onSave={savePropertyInfo}>
@@ -462,7 +460,7 @@ export function ApartmentDetails() {
                     </div>))}
                 </dl>)}
             </div>
-            {mapPinAvailable ? <div className="apartment-detail-panel-17"><MapView lat={apartment.lat} lng={apartment.lng} zoom={15} showSingleMarker/></div> : <div className={`apartment-detail-card-2 ${landlordPortal ? "apartment-detail-panel-18" : "apartment-detail-panel-19"}`}><MapPin className={`apartment-detail-map-pin-icon-4 ${landlordPortal ? "apartment-detail-map-pin-icon-2" : "apartment-detail-map-pin-icon-2"}`}/><p className="apartment-detail-exact-map-pin-needed">Exact map pin needed</p><p className="apartment-detail-text-10">{mapPinMessage}</p></div>}
+            {mapPinAvailable ? <div className="apartment-detail-panel-17 apartment-detail-map-wrap"><MapView lat={apartment.lat} lng={apartment.lng} zoom={15} showSingleMarker/><button type="button" className="apartment-detail-map-expand" onClick={() => setMapExpanded(true)} aria-label="Expand map" title="Expand map"><Maximize/></button></div> : <div className={`apartment-detail-card-2 ${landlordPortal ? "apartment-detail-panel-18" : "apartment-detail-panel-19"}`}><MapPin className={`apartment-detail-map-pin-icon-4 ${landlordPortal ? "apartment-detail-map-pin-icon-2" : "apartment-detail-map-pin-icon-2"}`}/><p className="apartment-detail-exact-map-pin-needed">Exact map pin needed</p><p className="apartment-detail-text-10">{mapPinMessage}</p></div>}
           </section></InlinePropertyInfo>
         </div><aside className="apartment-detail-aside">
                     <section className="apartment-detail-section-3">
@@ -496,7 +494,7 @@ export function ApartmentDetails() {
                         </div>
                     </section>
           <InlinePropertyInfo label="Property details" fields={[{"key":"propertyType","label":"Property type"},{"key":"sqft","label":"Floor area (sq ft)","type":"number"},{"key":"availableDate","label":"Available date","type":"date"},{"key":"utilitiesText","label":"Utilities included (comma-separated)"}]} apartment={editableApartment} enabled={editableInfo} onSave={savePropertyInfo} ><section className="apartment-detail-section-3"><h2 className="apartment-detail-property-details">Property Details</h2><dl className="apartment-detail-dl">{[{ label: "Property Type", value: apartment.propertyType || "Not provided" }, { label: "Available Date", value: dateLabel(apartment.availableDate) }, { label: "Utilities", value: Array.isArray(apartment.utilities) && apartment.utilities.length ? apartment.utilities.join(", ") : "Not included" }, { label: "Status", value: STATUS_LABEL[status] }, { label: "ZIP Code", value: apartment.zip || "Not provided" }].map(({ label, value }) => <div key={label} className="apartment-detail-grid-9"><dt className="apartment-detail-dt-2">{label}</dt><dd className="apartment-detail-dd-2">{value}</dd></div>)}</dl></section></InlinePropertyInfo>
-          <InlinePropertyInfo label="Location" fields={[{"key":"address","label":"Complete address","type":"text","required":true},{"key":"city","label":"City","type":"text","required":true},{"key":"state","label":"Province","type":"text","required":true},{"key":"zip","label":"ZIP code","type":"text","required":true}]} apartment={editableApartment} enabled={editableInfo} onSave={savePropertyInfo} location><section className="apartment-detail-section-4 apartment-detail-aside-location"><h2 className="apartment-detail-location">Location</h2><div className={`apartment-detail-card ${landlordPortal ? "apartment-detail-panel-14" : "apartment-detail-panel-15"}`}><div className="apartment-detail-row-9"><MapPin className={`apartment-detail-map-pin-icon-3 ${landlordPortal ? "apartment-detail-map-pin-icon-2" : "apartment-detail-map-pin-icon-2"}`}/><div className="apartment-detail-panel-2"><h3 className="apartment-detail-location-details">Location Details</h3><p className="apartment-detail-text-9">{locationText}</p></div></div></div>{mapPinAvailable ? <div className="apartment-detail-panel-17"><MapView lat={apartment.lat} lng={apartment.lng} zoom={15} showSingleMarker/></div> : <div className={`apartment-detail-card-2 ${landlordPortal ? "apartment-detail-panel-18" : "apartment-detail-panel-19"}`}><MapPin className={`apartment-detail-map-pin-icon-4 ${landlordPortal ? "apartment-detail-map-pin-icon-2" : "apartment-detail-map-pin-icon-2"}`}/><p className="apartment-detail-exact-map-pin-needed">Exact map pin needed</p><p className="apartment-detail-text-10">{mapPinMessage}</p></div>}</section></InlinePropertyInfo>
+          <InlinePropertyInfo label="Location" fields={[{"key":"address","label":"Complete address","type":"text","required":true},{"key":"city","label":"City","type":"text","required":true},{"key":"state","label":"Province","type":"text","required":true},{"key":"zip","label":"ZIP code","type":"text","required":true}]} apartment={editableApartment} enabled={editableInfo} onSave={savePropertyInfo} location><section className="apartment-detail-section-4 apartment-detail-aside-location"><h2 className="apartment-detail-location">Location</h2><div className={`apartment-detail-card ${landlordPortal ? "apartment-detail-panel-14" : "apartment-detail-panel-15"}`}><div className="apartment-detail-row-9"><MapPin className={`apartment-detail-map-pin-icon-3 ${landlordPortal ? "apartment-detail-map-pin-icon-2" : "apartment-detail-map-pin-icon-2"}`}/><div className="apartment-detail-panel-2"><h3 className="apartment-detail-location-details">Location Details</h3><p className="apartment-detail-text-9">{locationText}</p></div></div></div>{mapPinAvailable ? <div className="apartment-detail-panel-17 apartment-detail-map-wrap"><MapView lat={apartment.lat} lng={apartment.lng} zoom={15} showSingleMarker/><button type="button" className="apartment-detail-map-expand" onClick={() => setMapExpanded(true)} aria-label="Expand map" title="Expand map"><Maximize/></button></div> : <div className={`apartment-detail-card-2 ${landlordPortal ? "apartment-detail-panel-18" : "apartment-detail-panel-19"}`}><MapPin className={`apartment-detail-map-pin-icon-4 ${landlordPortal ? "apartment-detail-map-pin-icon-2" : "apartment-detail-map-pin-icon-2"}`}/><p className="apartment-detail-exact-map-pin-needed">Exact map pin needed</p><p className="apartment-detail-text-10">{mapPinMessage}</p></div>}</section></InlinePropertyInfo>
           <InlinePropertyInfo label="Safety & rules" fields={[{"key":"rulesText","label":"Rules (one per line)","type":"textarea"}]} apartment={editableApartment} enabled={editableInfo} onSave={savePropertyInfo} ><section className="apartment-detail-section-3"><h2 className="apartment-detail-safety-rules">Safety & Rules</h2>{rules.length ? <ul className="apartment-detail-ul">{rules.map((rule) => <li key={rule} className="apartment-detail-li"><CheckCircle2 className="apartment-detail-check-circle2-icon"/><span className="apartment-detail-span-2">{rule}</span></li>)}</ul> : <p className="apartment-detail-no-safety-rules-provided">No safety rules provided.</p>}</section></InlinePropertyInfo>
           {renter && <section className="apartment-detail-section-5 tenant-apartment-rating-summary"><h2 className="apartment-detail-tenant-rating">Tenant Rating</h2><p className="apartment-detail-text-12">{ratings.length ? `★ ${averageRating.toFixed(1)} based on ${ratings.length} rating${ratings.length === 1 ? "" : "s"}` : "No ratings yet"}</p>{currentRating > 0 && <button type="button" disabled={ratingSaving} onClick={() => void clearTenantRating()} className="apartment-detail-remove-my-rating">Remove my rating</button>}</section>}
           {renter && <section className="apartment-detail-section-6"><div className="apartment-detail-row-9"><AlertTriangle className="apartment-detail-alert-triangle-icon-2"/><div className="apartment-detail-panel-2"><h2 className="apartment-detail-report-a-problem">Report a Problem</h2><p className="apartment-detail-text-13">Let us know about any issues you encountered with an apartment listing.</p></div></div><Button variant="outline" onClick={() => setReportOpen(true)} className="apartment-detail-report-a-problem-2">Report a Problem</Button></section>}
@@ -505,6 +503,13 @@ export function ApartmentDetails() {
 
       </div>
       </div>
+
+      {mapExpanded && mapPinAvailable && <div className="apartment-detail-map-overlay" role="presentation" onClick={() => setMapExpanded(false)}>
+        <section className="apartment-detail-map-dialog" role="dialog" aria-modal="true" aria-label="Expanded property location" onClick={(event) => event.stopPropagation()}>
+          <div className="apartment-detail-map-dialog-header"><div><h2>Property Location</h2><p>{locationText}</p></div><button type="button" onClick={() => setMapExpanded(false)} aria-label="Close expanded map"><X/></button></div>
+          <div className="apartment-detail-map-dialog-canvas"><MapView lat={apartment.lat} lng={apartment.lng} zoom={16} showSingleMarker/></div>
+        </section>
+      </div>}
 
       {selectedRoom && tenantAccount && <RoomDetails room={selectedRoom} apartment={apartment} onClose={() => setSelectedRoom(null)} />}
       {selectedRoom && !tenantAccount && <div className="apartment-detail-overlay-2" onClick={() => setSelectedRoom(null)}>

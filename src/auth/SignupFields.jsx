@@ -53,7 +53,6 @@ export function SignupPersonalFields({ values, onChange, errors = {}, disabled =
       <AuthField {...fieldProps("lastName")} label="Last Name" required placeholder="Enter your last name" autoComplete="family-name" />
       <AuthField {...fieldProps("middleInitial")} label="Middle Initial (Optional)" placeholder="e.g. M" maxLength={2} autoCapitalize="characters" />
       <AuthField {...fieldProps("mobileNumber")} label="Mobile Number" type="tel" required placeholder="Enter your mobile number" autoComplete="tel" inputMode="tel" />
-      <AuthField {...fieldProps("businessName")} label="Business Name (Optional)" placeholder="e.g. James Apartment" autoComplete="organization" maxLength={150} />
     </>
   );
 }

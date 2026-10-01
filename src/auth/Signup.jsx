@@ -13,7 +13,7 @@ import { useSignupViewport } from "./useSignupViewport";
 
 const INITIAL_VALUES = {
   role: "", username: "", email: "", password: "", confirmPassword: "",
-  firstName: "", lastName: "", middleInitial: "", mobileNumber: "", businessName: "",
+  firstName: "", lastName: "", middleInitial: "", mobileNumber: "",
 };
 const LANDLORD_STEPS = ["Account Details", "Personal Information", "Review"];
 
@@ -176,7 +176,6 @@ export function Signup({ embedded = false, redirect = null }) {
         middleInitial: isLandlord ? normalized.middleInitial : "",
         address: "",
         mobileNumber: isLandlord ? normalized.mobileNumber : "",
-        businessName: isLandlord ? normalized.businessName : undefined,
         termsAccepted,
         landlordVerificationAccepted: isLandlord ? termsAccepted : undefined,
       });
@@ -351,7 +350,7 @@ export function Signup({ embedded = false, redirect = null }) {
                     {landlordStep === 3 && (
                       <>
                         <ReviewCard title="Account Details" rows={[["Username", values.username], ["Recovery Email", values.email]]} onEdit={(event) => openReviewEditor("account", event.currentTarget)} disabled={loading} />
-                        <ReviewCard title="Personal Information" rows={[["Name", getSignupFullName(values)], ["Mobile Number", values.mobileNumber], ["Business Name", values.businessName]]} onEdit={(event) => openReviewEditor("personal", event.currentTarget)} disabled={loading} />
+                        <ReviewCard title="Personal Information" rows={[["Name", getSignupFullName(values)], ["Mobile Number", values.mobileNumber]]} onEdit={(event) => openReviewEditor("personal", event.currentTarget)} disabled={loading} />
                         {agreement}
                         {createButton}
                       </>

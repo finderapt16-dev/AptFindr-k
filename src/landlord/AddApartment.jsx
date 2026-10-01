@@ -26,22 +26,6 @@ function isPropertyDraft(value) {
     const draft = value;
     return draft.version === 2 && typeof draft.savedAt === "string" && Number.isFinite(draft.currentStep);
 }
-const VALID_ID_TYPES = [
-    "Passport",
-    "Driver's License",
-    "SSS ID",
-    "GSIS ID",
-    "PhilHealth ID",
-    "Postal ID",
-    "Voter's ID",
-    "PRC ID",
-    "National ID (PhilSys)",
-    "TIN ID",
-    "Barangay ID",
-    "Senior Citizen ID",
-    "PWD ID",
-    "OFW ID",
-];
 const SUGGESTED_FEATURES = [
     "Pet Friendly",
     "Furnished",
@@ -104,9 +88,6 @@ const INITIAL_FORM_DATA = {
 const INITIAL_VERIFICATION_DATA = {
     businessPermit: "",
     permitExpiry: "",
-    tinNumber: "",
-    idType: "",
-    idNumber: "",
 };
 export function AddApartment() {
     const navigate = useNavigate();
@@ -599,9 +580,6 @@ export function AddApartment() {
                     propertyAddress: [persistedStreetAddress, formData.city, formData.state, formData.zip].filter(Boolean).join(", "),
                     businessPermit: verificationData.businessPermit,
                     permitExpiry: verificationData.permitExpiry,
-                    tinNumber: verificationData.tinNumber,
-                    idType: verificationData.idType,
-                    idNumber: verificationData.idNumber,
                 },
             };
             const landlordIdentity = {
@@ -775,6 +753,20 @@ export function AddApartment() {
 
         <Card className="add-apartment-card-5">
           <CardHeader className="add-apartment-card-header">
+            <button
+              type="button"
+              className="add-apartment-close-wizard"
+              aria-label="Close Add Property"
+              title="Close Add Property"
+              disabled={isSubmitting}
+              onClick={() => {
+                if (hasDraftContent && !window.confirm("Leave Add Property? Your entered details will remain saved as a draft."))
+                  return;
+                navigate("/dashboard");
+              }}
+            >
+              <X aria-hidden="true" />
+            </button>
             <CardTitle className="add-apartment-card-title">{stepConfig[currentStep - 1].title}</CardTitle>
             <CardDescription>{stepConfig[currentStep - 1].description}</CardDescription>
           </CardHeader>
@@ -1010,43 +1002,6 @@ export function AddApartment() {
                       <Label className="add-apartment-permit-expiry-date-optional">Permit Expiry Date <span aria-hidden="true">*</span></Label>
                       <Input type="date" value={verificationData.permitExpiry} onChange={(e) => setVerificationData({ ...verificationData, permitExpiry: e.target.value })}/>
                     </div>
-
-                    <div className="add-apartment-panel-9">
-                      <Label className="add-apartment-tin-optional">TIN (optional)</Label>
-                      <Input value={verificationData.tinNumber} onChange={(e) => {
-                setVerificationData({ ...verificationData, tinNumber: e.target.value });
-                if (e.target.value.trim())
-                    clearValidationError("tinNumber");
-            }} aria-invalid={Boolean(validationErrors.tinNumber)} placeholder="XXX-XXX-XXX-XXX" className={fieldClass("tinNumber")}/>
-                      <FieldError field="tinNumber"/>
-                    </div>
-                  </div>
-
-                  <div className="add-apartment-grid-4">
-                    <div className="add-apartment-panel-9">
-                      <Label className="add-apartment-valid-id-type-optional">Valid ID Type (optional)</Label>
-                      <select value={verificationData.idType} onChange={(e) => {
-                setVerificationData({ ...verificationData, idType: e.target.value });
-                if (e.target.value)
-                    clearValidationError("idType");
-            }} aria-invalid={Boolean(validationErrors.idType)} className={`add-apartment-select ${validationErrors.idType ? "add-apartment-select-2" : "add-apartment-select-3"}`}>
-                        <option value="">Select ID Type</option>
-                        {VALID_ID_TYPES.map((id) => (<option key={id} value={id}>
-                            {id}
-                          </option>))}
-                      </select>
-                      <FieldError field="idType"/>
-                    </div>
-
-                    <div className="add-apartment-panel-9">
-                      <Label className="add-apartment-id-number-optional">ID Number (optional)</Label>
-                      <Input value={verificationData.idNumber} onChange={(e) => {
-                setVerificationData({ ...verificationData, idNumber: e.target.value });
-                if (e.target.value.trim())
-                    clearValidationError("idNumber");
-            }} aria-invalid={Boolean(validationErrors.idNumber)} placeholder="Enter ID number" className={fieldClass("idNumber")}/>
-                      <FieldError field="idNumber"/>
-                    </div>
                   </div>
 
                   <div className="add-apartment-panel-11">
@@ -1147,7 +1102,7 @@ function AddedChoiceTags({ values, label, onRemove }) {
     return (<div className="add-apartment-added-choice-tags" aria-label={`Added ${label}s`}>
       {values.map((value) => (<span key={value.toLowerCase()} className="add-apartment-added-choice-tag">
           {value}
-          <button type="button" onClick={() => onRemove(value)} aria-label={`Remove ${value}`}>
+          <button type="button" onClick={() => onRemove(value)} aria-label={`Remove ${value}`} title={`Remove ${value}`}>
             <X aria-hidden="true"/>
           </button>
         </span>))}

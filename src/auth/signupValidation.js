@@ -1,5 +1,5 @@
 export const ACCOUNT_REVIEW_FIELDS = ["username", "email"];
-export const PERSONAL_REVIEW_FIELDS = ["firstName", "lastName", "middleInitial", "mobileNumber", "businessName"];
+export const PERSONAL_REVIEW_FIELDS = ["firstName", "lastName", "middleInitial", "mobileNumber"];
 
 export const PASSWORD_REQUIREMENTS = "At least 8 characters, an uppercase and lowercase letter, a number, and a special character (e.g. !@#$%).";
 
@@ -45,9 +45,6 @@ export function validatePersonalInformation(values) {
     errors.mobileNumber = "Mobile number is required.";
   } else if (!/^\+?[\d\s().-]+$/.test(mobile) || digits.length < 10 || digits.length > 15) {
     errors.mobileNumber = "Enter a valid mobile number, e.g. 0917 123 4567 or +63 917 123 4567.";
-  }
-  if (String(values.businessName ?? "").trim().length > 150) {
-    errors.businessName = "Business name must be 150 characters or fewer.";
   }
   return errors;
 }

@@ -668,6 +668,28 @@ export function ManageRooms({ propertyId }) {
             <p>Add the first room to make availability visible across your property listing.</p>
             <Button onClick={() => navigate(`/landlord/properties/${id}/rooms/new/edit`)} className="manage-rooms-table-add-room"><Plus /> Add First Room</Button>
           </div>) : (<>
+            <div className="manage-rooms-mobile-list">
+              {visibleRooms.map((room) => (
+                <article className="manage-rooms-mobile-room" key={room.id}>
+                  <div className="manage-rooms-mobile-room-heading">
+                    <div>
+                      <p>Room</p>
+                      <h3>{room.name || "Unnamed room"}</h3>
+                    </div>
+                    <span className={`manage-rooms-table-status manage-rooms-table-status--${statusForRoom(room)}`}>{statusLabel(room)}</span>
+                  </div>
+                  <dl className="manage-rooms-mobile-room-details">
+                    <div><dt>Type</dt><dd>{room.type || "Room"}</dd></div>
+                    <div><dt>Monthly rent</dt><dd>{formatRent(room.price)}</dd></div>
+                    <div><dt>Capacity</dt><dd>{Number(room.maxOccupants || 1)} {Number(room.maxOccupants || 1) === 1 ? "person" : "people"}</dd></div>
+                  </dl>
+                  <div className="manage-rooms-mobile-room-actions">
+                    <button type="button" onClick={() => navigate(`/landlord/properties/${id}/rooms/${room.id}/edit`)} disabled={processingRoomId !== null}><Pencil /> Edit room</button>
+                    <button type="button" onClick={() => void removeRoom(room)} disabled={processingRoomId !== null} className="manage-rooms-table-delete">Delete</button>
+                  </div>
+                </article>
+              ))}
+            </div>
             <div className="manage-rooms-table-scroll">
               <table className="manage-rooms-table">
                 <thead><tr><th>Apartment Unit</th><th>Room Type</th><th>Monthly Rent</th><th>Capacity</th><th>Status</th><th>Actions</th></tr></thead>
@@ -701,7 +723,7 @@ export function ManageRooms({ propertyId }) {
 
       {sidebarOpen ? (<div className="app-sidebar-overlay" role="presentation">
           <button type="button" className="manage-rooms-close-navigation" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>
-          <aside className="app-sidebar-drawer">
+          <aside className="app-sidebar-drawer is-open">
             <button type="button" className="app-sidebar-close" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}><X className="manage-rooms-x-icon"/></button>
             <LandlordSidebar
               user={user}

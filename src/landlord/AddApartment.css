@@ -2498,11 +2498,12 @@
 .landlord-add-property .add-apartment-add-choice input { min-height: 25px; font-size: 8px; }
 .landlord-add-property .add-apartment-add-choice button { min-height: 25px; padding: 0; border-radius: 3px; background: #14ace8; color: #fff; font-size: 8px; font-weight: 700; }
 .landlord-add-property .add-apartment-add-choice button:hover { background: #079bd5; }
-.landlord-add-property .add-apartment-added-choice-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-.landlord-add-property .add-apartment-added-choice-tag { display: inline-flex; align-items: center; gap: 4px; min-height: 18px; padding: 2px 5px; border: 1px solid #a9ddf4; border-radius: 3px; background: #eefaff; color: #0786bc; font-size: 8px; font-weight: 650; line-height: 1; }
-.landlord-add-property .add-apartment-added-choice-tag button { display: inline-grid; width: 11px; height: 11px; padding: 0; place-items: center; border: 0; border-radius: 2px; background: transparent; color: #0786bc; }
-.landlord-add-property .add-apartment-added-choice-tag button:hover { background: #ccefff; }
-.landlord-add-property .add-apartment-added-choice-tag svg { width: 9px; height: 9px; }
+.landlord-add-property .add-apartment-added-choice-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.landlord-add-property .add-apartment-added-choice-tag { display: inline-flex; align-items: center; gap: 6px; min-height: 27px; padding: 3px 5px 3px 9px; border: 1px solid #a9ddf4; border-radius: 6px; background: #eefaff; color: #0786bc; font-size: 11px; font-weight: 700; line-height: 1; }
+.landlord-add-property .add-apartment-added-choice-tag button { display: inline-grid; width: 19px; height: 19px; padding: 0; place-items: center; border: 0; border-radius: 50%; background: #d7f1fc; color: #0577aa; cursor: pointer; transition: background .15s ease, color .15s ease, transform .15s ease; }
+.landlord-add-property .add-apartment-added-choice-tag button:hover { background: #e5484d; color: #ffffff; transform: scale(1.08); }
+.landlord-add-property .add-apartment-added-choice-tag button:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
+.landlord-add-property .add-apartment-added-choice-tag svg { width: 12px; height: 12px; stroke-width: 2.75; }
 .landlord-add-property .add-apartment-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
 .landlord-add-property .add-apartment-panel-11 { margin-top: 12px; padding: 0; border: 0; background: transparent; }
 .landlord-add-property .add-apartment-panel-11 > div:first-child { margin-bottom: 7px; }
@@ -2627,6 +2628,12 @@
 .landlord-add-property .add-apartment-button-6 { font-size: 12px; }
 .landlord-add-property .add-apartment-button-6 small { font-size: 11px; }
 .landlord-add-property .add-apartment-card-header { padding: 20px 24px 14px; }
+.landlord-add-property .add-apartment-card-header { position: relative; padding-right: 64px; }
+.landlord-add-property .add-apartment-close-wizard { position: absolute; top: 15px; right: 18px; display: inline-grid; width: 32px; height: 32px; place-items: center; padding: 0; border: 1px solid #d8e2ec; border-radius: 50%; background: #ffffff; color: #667085; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease; }
+.landlord-add-property .add-apartment-close-wizard svg { width: 17px; height: 17px; stroke-width: 2.5; }
+.landlord-add-property .add-apartment-close-wizard:hover:not(:disabled) { border-color: #fecaca; background: #fff1f2; color: #e5484d; transform: scale(1.06); }
+.landlord-add-property .add-apartment-close-wizard:focus-visible { outline: 3px solid rgba(14, 165, 233, .3); outline-offset: 2px; }
+.landlord-add-property .add-apartment-close-wizard:disabled { cursor: not-allowed; opacity: .55; }
 .landlord-add-property .add-apartment-card-title { font-size: 18px; }
 .landlord-add-property .add-apartment-card-header [class*="description"] { font-size: 13px; }
 .landlord-add-property .add-apartment-card-content { padding: 22px 24px 24px; }
@@ -2675,6 +2682,8 @@
   .landlord-add-property .add-apartment-button-6 small { font-size: 9px; }
   .landlord-add-property .add-apartment-card-header,
   .landlord-add-property .add-apartment-card-content { padding-left: 14px; padding-right: 14px; }
+  .landlord-add-property .add-apartment-card-header { padding-right: 54px; }
+  .landlord-add-property .add-apartment-close-wizard { top: 11px; right: 12px; width: 30px; height: 30px; }
   .landlord-add-property .add-apartment-card-title { font-size: 16px; }
   .landlord-add-property .add-apartment-card-header [class*="description"] { font-size: 12px; }
   .landlord-add-property .add-apartment-grid-2,

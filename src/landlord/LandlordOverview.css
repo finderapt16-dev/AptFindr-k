@@ -815,6 +815,92 @@
     padding: 14px !important;
   }
 
+  /* The empty-properties action needs its own phone layout. The desktop rule
+     above is deliberately scoped to wide screens, which previously left this
+     link looking like unstyled text on mobile. */
+  .ld-empty-properties {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 8px 4px 22px;
+    text-align: center;
+  }
+
+  .ld-empty-properties > svg {
+    width: min(100%, 280px);
+    height: auto;
+    margin: 0 auto 14px;
+  }
+
+  .ld-empty-properties h3 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 800;
+  }
+
+  .ld-empty-properties p {
+    max-width: 285px;
+    margin: 7px auto 0;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .ld-empty-properties-add-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: min(100%, 280px);
+    min-height: 46px;
+    margin-top: 18px;
+    padding: 0 18px;
+    border: 1px solid #0ea5e9;
+    border-radius: 10px;
+    background: #0ea5e9;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(14, 165, 233, .25);
+  }
+
+  .ld-empty-properties-add-button svg {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    color: currentColor;
+    flex: 0 0 auto;
+  }
+
+  .ld-empty-properties-add-button:active { transform: translateY(1px); }
+  .ld-empty-properties-add-button:focus-visible { outline: 3px solid rgba(14, 165, 233, .35); outline-offset: 3px; }
+
+  .ld-empty-properties-review {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 7px;
+    max-width: 285px;
+    margin-top: 15px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.45;
+    text-align: left;
+  }
+
+  .ld-empty-properties-review svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
   .ld-property-row {
     display: grid;
 
@@ -963,6 +1049,33 @@
 @media (max-width: 680px) {
   main.app-shell-content.app-shell-content-mobile-nav {
     padding-top: max(6rem, calc(5rem + env(safe-area-inset-top))) !important;
+  }
+
+  /* Keep the phone header deliberately simple and easy to scan. */
+  .ld-simple-heading {
+    margin: 0 0 16px;
+    padding: 18px 20px;
+    border: 0;
+    border-radius: 0;
+    background: #ffffff;
+    box-shadow: none;
+  }
+
+  .ld-simple-heading h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 20px;
+    line-height: 1.18;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .ld-simple-heading p {
+    max-width: 285px;
+    margin: 7px 0 0;
+    color: #52657a;
+    font-size: 14px;
+    line-height: 1.45;
   }
 
   .ld-property-row {
@@ -1304,6 +1417,16 @@
 /* Phone-only engagement layout. This is intentionally separate from the
    property card above, so the approved portrait card layout remains intact. */
 @media (max-width: 680px) {
+  /* Keep the comparison note at the bottom of an activity card. This leaves
+     the zero-state chart and its “No favorites/views yet” message together. */
+  .ld-engagement-metric .ld-engagement-change {
+    order: 5;
+    width: 100%;
+    margin-top: 12px;
+    padding-top: 9px;
+    border-top: 1px solid #edf2f7;
+  }
+
   .ld-property-list {
     display: flex;
     flex-direction: column;

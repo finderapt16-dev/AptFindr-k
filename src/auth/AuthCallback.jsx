@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { clearPendingGoogleOAuthFlow, describeGoogleAuthUser, exchangeAuthCode, finalizeGoogleSignup, getAuthUser, getExistingProfileForAuthUser, getPendingGoogleOAuthFlow, isGoogleAuthUser, isTenantRole, signOutAuthSession } from "@/services/authService";
 
+<<<<<<< HEAD
 const dashboardPathForRole = (role) => isTenantRole(role) ? "/dashboard?section=overview" : role === "admin" ? "/admin" : "/dashboard";
 
 // Shown on the sign-in screen once the emailed confirmation link has been opened.
@@ -23,6 +24,9 @@ function getOAuthErrorMessage(params) {
     }
     return "Google sign-in could not be completed. Check the Supabase Google provider and callback URL settings, then try again.";
 }
+=======
+const dashboardPathForRole = (role) => isTenantRole(role) ? "/browse" : role === "admin" ? "/admin" : "/dashboard";
+>>>>>>> bfae89c (Redeploy updates)
 export function AuthCallback() {
     const navigate = useNavigate();
     const { hydrateSession } = useAuth();
