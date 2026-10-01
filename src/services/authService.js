@@ -541,6 +541,49 @@ export async function signupUser(input) {
         profileSetupError,
     };
 }
+export async function finalizeGoogleSignup(authUser, { termsAccepted } = {}) {
+    if (termsAccepted !== true) {
+        throw new SignupFlowError('You must agree to the Terms of Use and Privacy Policy to continue.', 'validation', 'terms_required');
+    }
+    const isGoogleSession = authUser?.app_metadata?.provider === 'google' || authUser?.identities?.some((identity) => identity.provider === 'google');
+    if (!authUser?.id || !isGoogleSession) {
+        throw new SignupFlowError('The Google account session is no longer available. Please try again.', 'auth', 'google_session_missing');
+    }
+
+    const existingProfile = await getExistingProfileForAuthUser(authUser);
+    if (existingProfile) {
+        // Also links legacy profiles found by email to this Supabase Auth user.
+        return ensureProfileForAuthUser(authUser);
+    }
+
+    const existingMetadata = isRecord(authUser.user_metadata) ? authUser.user_metadata : {};
+    const email = typeof authUser.email === 'string' ? authUser.email : '';
+    const name = nonEmptyString(existingMetadata.name)
+        ?? nonEmptyString(existingMetadata.full_name)
+        ?? nonEmptyString(email.split('@')[0])
+        ?? 'User';
+    const { data, error } = await supabaseClient.auth.updateUser({
+        data: {
+            ...existingMetadata,
+            name,
+            role: 'tenant',
+            username: `google_${safeRandomId().replace(/-/g, '').slice(0, 23)}`,
+            termsAccepted: true,
+        },
+    });
+    if (error || !data.user) {
+        throw new SignupFlowError('We could not finish setting up your Google account. Please try again.', 'profile', 'google_profile', {
+            cause: error ?? new Error('Supabase returned no Google user after updating account metadata.'),
+        });
+    }
+
+    try {
+        return await ensureProfileForAuthUser(data.user);
+    }
+    catch (profileError) {
+        throw new SignupFlowError('Google signed in, but AptFindr could not create your tenant profile. Please contact the administrator.', 'profile', 'google_profile_database', { cause: profileError });
+    }
+}
 export async function signupWithGoogle({ termsAccepted }) {
     if (termsAccepted !== true) {
         throw new SignupFlowError('You must agree to the Terms of Use and Privacy Policy to continue.', 'validation', 'terms_required');
@@ -549,33 +592,17 @@ export async function signupWithGoogle({ termsAccepted }) {
     const currentAuthUser = sessionData.session?.user;
     const isGoogleSession = currentAuthUser?.app_metadata?.provider === 'google' || currentAuthUser?.identities?.some((identity) => identity.provider === 'google');
     if (isGoogleSession) {
-        const existingProfile = await getExistingProfileForAuthUser(currentAuthUser);
-        if (existingProfile)
-            return { profile: existingProfile };
-        const { error: updateError } = await supabaseClient.auth.updateUser({
-            data: {
-                role: 'tenant',
-                username: `google_${safeRandomId().replace(/-/g, '').slice(0, 23)}`,
-                termsAccepted: true,
-            },
-        });
-        if (updateError)
-            throw new SignupFlowError('We could not finish setting up your Google account. Please try again.', 'profile', 'google_profile', { cause: updateError });
-        return { profile: await getCurrentAuthenticatedUser() };
+        return { profile: await finalizeGoogleSignup(currentAuthUser, { termsAccepted }) };
     }
+    // Supabase's signInWithOAuth options do not accept custom user metadata.
+    // Persist it after the provider returns, once the user has explicitly agreed
+    // to AptFindr's terms. The database auth.users trigger must therefore allow
+    // a new Google Auth user through without creating an app profile first.
     setPendingGoogleOAuthFlow('signup');
     const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
             redirectTo: `${window.location.origin}/auth/callback`,
-            data: {
-                role: 'tenant',
-                // The profile trigger also serves password users, where a
-                // username is mandatory. Google does not provide one, so send
-                // a valid, collision-resistant account username up front.
-                username: `google_${safeRandomId().replace(/-/g, '').slice(0, 23)}`,
-                termsAccepted: true,
-            },
         },
     });
     if (error) {
