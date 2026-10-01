@@ -37,6 +37,18 @@ See [the tenant source guide](docs/TENANT_STRUCTURE.md) for tenant page location
 
 The local `supabase-master-migration.sql` is intentionally ignored and must not be committed. Run the current migration manually in the Supabase SQL Editor when required. Configure production Site URL, allowed `/auth/callback` and `/reset-password` redirects, and custom SMTP in Supabase.
 
+### Google OAuth profile setup
+
+Supabase's `signInWithOAuth()` does not accept custom user metadata in its `options`. AptFindr therefore assigns the tenant role and generated username **after** Google returns, once the user has accepted the signup terms. The `auth.users` trigger `handle_new_auth_user` must let Google Auth users through without trying to create an `app_users` row first; keep its existing email/password profile setup intact. Add this guard at the start of that trigger function:
+
+```sql
+IF COALESCE(NEW.raw_app_meta_data ->> 'provider', '') = 'google' THEN
+  RETURN NEW;
+END IF;
+```
+
+The authenticated client then creates the tenant's `app_users` profile. Confirm the existing RLS policy permits an authenticated user to insert only their own profile (`auth_id = auth.uid()`). If Google signup redirects back with `Database error saving new user`, open Supabase **Authentication → Logs** and the Postgres logs; the `auth.users` trigger is rejecting the new user before the app callback can run. The trigger body is project-specific, so apply the guard to the existing function rather than replacing it with a guessed schema.
+
 ## Registration and mobile/PWA checks
 
 - Tenant registration is a single card with username, email, password confirmation, consent, and Google signup.
