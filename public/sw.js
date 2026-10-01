@@ -1,4 +1,4 @@
-const VERSION = "v9";
+const VERSION = "v13";
 const SHELL_CACHE = `aptfindr-shell-${VERSION}`;
 const RUNTIME_CACHE = `aptfindr-runtime-${VERSION}`;
 const APP_SHELL = [
@@ -6,8 +6,7 @@ const APP_SHELL = [
   "/index.html",
   "/offline.html",
   "/manifest.webmanifest",
-  "/icon.svg",
-  "/aptFindr-logo-exact.svg",
+  "/aptfindr-logo.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/icon-maskable-192.png",

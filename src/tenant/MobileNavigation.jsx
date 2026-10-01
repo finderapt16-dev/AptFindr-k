@@ -1,4 +1,4 @@
-import { ChevronRight, Bell, Heart, HelpCircle, LogOut, Menu, Search, Settings, TriangleAlert, X } from "lucide-react";
+import { Bell, Heart, HelpCircle, LogOut, Menu, Search, Settings, TriangleAlert, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogoutConfirmation } from "@/components/LogoutConfirmation";
@@ -44,7 +44,6 @@ export function MobileNavigation({ active = "apartments", unreadCount = 0 }) {
       {badge !== undefined && badge > 0 && (<span className="app-sidebar-badge">
           {badge}
         </span>)}
-      {section === "apartments" && <ChevronRight className="tenant-mobile-navigation-chevron-right-icon"/>}
     </Link>);
     return (<>
       <button aria-label="Open navigation" onClick={() => setOpen(true)} className="app-sidebar-trigger">
@@ -62,7 +61,7 @@ export function MobileNavigation({ active = "apartments", unreadCount = 0 }) {
               <div className="app-sidebar-brand">
                 <Link to="/browse" onClick={() => setOpen(false)} className="tenant-mobile-navigation-row">
                   <div className="tenant-mobile-navigation-card">
-                    <img src="/icon.svg" alt="" className="tenant-mobile-navigation-image" aria-hidden="true"/>
+                    <img src="/aptfindr-logo.png?v=7" alt="" className="tenant-mobile-navigation-image" aria-hidden="true"/>
                   </div>
                   <div>
                     <span className="tenant-mobile-navigation-apt-findr">AptFindr</span>

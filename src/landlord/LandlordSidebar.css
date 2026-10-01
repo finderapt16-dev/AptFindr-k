@@ -72,7 +72,7 @@
 
   place-items: center;
 
-  border: 1px solid #d9dfe5;
+  border: 0;
 
   border-radius: 14px;
 
@@ -81,7 +81,10 @@
 
 .landlord-sidebar-app-logo {
   width: 36px;
-  height: 36px;
+  height: auto;
+  max-height: 36px;
+  object-fit: contain;
+  object-position: center;
 }
 
 .landlord-sidebar-apt-findr {
@@ -400,10 +403,10 @@
   .landlord-sidebar-section-title::after {
   content: "";
 
-  width: 19px;
+  width: 18px;
   height: 2px;
 
-  margin-left: 10px;
+  margin-left: 6px;
 
   border-radius: 999px;
 
@@ -944,7 +947,10 @@
 
   .landlord-sidebar-app-logo {
     width: 33px;
-    height: 33px;
+    height: auto;
+    max-height: 33px;
+    object-fit: contain;
+    object-position: center;
   }
 
   .landlord-sidebar-apt-findr {

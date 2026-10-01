@@ -65,17 +65,19 @@
   width: calc(var(--spacing, .25rem) * 11);
   border-radius: var(--radius-xl, .75rem);
   color: #16a5e1;
-  background-color: #f2f6fa;
-  border: 1px solid #d9d9d9;
+  background-color: #ffffff;
+  border: 0;
   justify-content: center;
   align-items: center;
   display: flex;
 }
 
 .tenant-mobile-navigation-image {
-  height: calc(var(--spacing, .25rem) * 9);
   width: calc(var(--spacing, .25rem) * 9);
+  height: auto;
+  max-height: calc(var(--spacing, .25rem) * 9);
   object-fit: contain;
+  object-position: center;
 }
 
 .tenant-mobile-navigation-apt-findr {

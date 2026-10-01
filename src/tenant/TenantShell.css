@@ -294,8 +294,9 @@
 /* Keep the drawer edge clean on phones. The navigation can still scroll, but
    its browser scrollbar no longer creates a second vertical strip. */
 .tenant-mobile-navigation-drawer {
+  box-sizing: border-box;
   overflow: hidden !important;
-  border-right: 0 !important;
+  border-right: 1px solid #d9d9d9 !important;
 }
 
 .tenant-mobile-navigation-drawer > .app-sidebar {

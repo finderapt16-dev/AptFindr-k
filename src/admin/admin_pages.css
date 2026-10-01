@@ -21,7 +21,7 @@
   background-color: var(--color-white, #fff);
   min-width: 0;
   padding: calc(var(--spacing, .25rem) * 4);
-  border: 1px solid #e8ded1;
+  border: 0;
 }
 
 .admin-analytics-overview-heading {
@@ -699,16 +699,17 @@
   height: calc(var(--spacing, .25rem) * 11);
   width: calc(var(--spacing, .25rem) * 11);
   border-radius: var(--radius-xl, .75rem);
-  background-color: #faf8f5;
-  border: 1px solid #e8ded1;
+  background-color: #ffffff;
+  border: 0;
   justify-content: center;
   align-items: center;
   display: flex;
 }
 
 .admin-apartment-detail-image {
-  height: calc(var(--spacing, .25rem) * 9);
   width: calc(var(--spacing, .25rem) * 9);
+  height: auto;
+  max-height: calc(var(--spacing, .25rem) * 9);
   object-fit: contain;
 }
 
@@ -19312,8 +19313,8 @@
   width: calc(var(--spacing, .25rem) * 11);
   border-radius: var(--radius-xl, .75rem);
   color: #8b735b;
-  background-color: #faf8f5;
-  border: 1px solid #e8ded1;
+  background-color: #ffffff;
+  border: 0;
   flex-shrink: 0;
   justify-content: center;
   align-items: center;
@@ -19321,8 +19322,9 @@
 }
 
 .admin-sidebar-image {
-  height: calc(var(--spacing, .25rem) * 9);
   width: calc(var(--spacing, .25rem) * 9);
+  height: auto;
+  max-height: calc(var(--spacing, .25rem) * 9);
   object-fit: contain;
 }
 

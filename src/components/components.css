@@ -1,4 +1,4 @@
-.app-logo { width:2.5rem; height:2.5rem; border-radius:.75rem; object-fit:contain; }
+.app-logo { width:2.5rem; height:auto; max-height:2.5rem; border-radius:.75rem; object-fit:contain; }
 .page-loader-fallback { min-height:100vh; display:flex; align-items:center; justify-content:center; background:#f8fafc; color:#475569; }
 .apartment-rating-loading { display:inline-block; width:7rem; height:1rem; border-radius:.25rem; background:#e2e8f0; animation:pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
 .apartment-rating-empty { font-size:.75rem; line-height:1rem; font-weight:600; color:#94a3b8; }

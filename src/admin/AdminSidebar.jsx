@@ -73,7 +73,7 @@ export function AdminSidebar({
   return (
     <div className="app-sidebar admin-figma-sidebar">
       <div className="admin-figma-sidebar-brand">
-        <img alt="" aria-hidden="true" src="/icon.svg" />
+        <img alt="" aria-hidden="true" src="/aptfindr-logo.png?v=7" />
         <span>
           <strong>aptfindr</strong>
           <small>La Paz, Iloilo City</small>

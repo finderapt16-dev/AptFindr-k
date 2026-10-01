@@ -84,20 +84,35 @@
 
 .landing-brand {
   align-items: center;
+  gap: .625rem;
+  min-height: 2.5rem;
   display: flex;
 }
 
 :where(.landing-brand > :not(:last-child)) {
-  margin-inline: 0 .625rem;
+  margin-inline: 0;
 }
 
 .landing-brand-logo {
   border-radius: 1rem;
   width: 2.5rem;
-  height: 2.5rem;
+  height: auto;
+  max-height: 2.5rem;
+  object-fit: contain;
+  object-position: center;
+  flex: 0 0 auto;
+  display: block;
   transition-property: all;
   transition-duration: .15s;
   transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+}
+
+.landing-brand-copy {
+  align-self: stretch;
+  min-height: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 @media (hover: hover) {
@@ -115,12 +130,12 @@
   color: #111111;
   font-size: 1.25rem;
   font-weight: 900;
-  line-height: 1.4;
+  line-height: 1;
 }
 
 .landing-brand-location {
   color: #8a8a8a;
-  margin-top: -.125rem;
+  margin-top: 0;
   font-size: 10px;
   font-weight: 600;
   line-height: 1;

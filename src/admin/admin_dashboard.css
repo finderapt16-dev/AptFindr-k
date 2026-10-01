@@ -75,8 +75,11 @@
 
 .admin-figma-sidebar-brand img {
   width: 20px;
-  height: 20px;
+  height: auto;
+  max-height: 20px;
   flex: 0 0 auto;
+  object-fit: contain;
+  object-position: center;
 }
 
 .admin-figma-sidebar-brand span {

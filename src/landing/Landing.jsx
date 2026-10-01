@@ -1188,7 +1188,7 @@ export function Landing() {
                             />
 
 
-                            <div>
+                            <div className="landing-brand-copy">
 
                                 <span className="landing-brand-name">
                                     AptFindr

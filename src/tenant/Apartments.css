@@ -1565,6 +1565,16 @@
   display: flex;
 }
 
+@media (max-width: 39.9375rem) {
+  .apartment-browse-content-3 {
+    align-items: flex-end;
+  }
+
+  .apartment-browse-row-14 {
+    justify-content: flex-end;
+  }
+}
+
 @media (min-width: 40rem) {
   .apartment-browse-content-3 {
     flex-direction: row;
