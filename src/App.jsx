@@ -1,4 +1,4 @@
-import { lazy } from "react";
+import { lazy, useEffect, useState } from "react";
 import { createBrowserRouter, Navigate, RouterProvider, useLocation } from "react-router-dom";
 import { AppRuntime } from "./components/AppRuntime";
 import { PageLoader } from "./components/PageLoader";
@@ -40,7 +40,14 @@ const APARTMENT_LOGIN_MESSAGE = "Please sign in or create an account to view apa
 function PublicLandingRoute() {
     const { user, isLoading } = useAuth();
     const location = useLocation();
-    if (location.pathname === "/login" && isLoading) {
+    // Only the first session check may replace the page with the loader. Later
+    // loading phases (signing in, refreshing the profile) must keep it mounted:
+    // swapping it out would reset the sign-in form and lose its error message.
+    const [initialCheckDone, setInitialCheckDone] = useState(!isLoading);
+    useEffect(() => {
+        if (!isLoading) setInitialCheckDone(true);
+    }, [isLoading]);
+    if (location.pathname === "/login" && isLoading && !initialCheckDone) {
         return <div className="auth-status-page auth-session-loading">Checking your session...</div>;
     }
     if (location.pathname === "/login" && user?.role) {

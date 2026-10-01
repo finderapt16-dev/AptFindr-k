@@ -51,6 +51,18 @@ The authenticated client then creates the tenant's `app_users` profile. Confirm 
 
 `/auth/callback` decides what to do with the returned Google session from the signup intent marker (`aptfindr.google-oauth-flow`), which is written to `localStorage` with a 10-minute TTL because mobile browsers and installed PWAs often return from Google in a new tab where `sessionStorage` is not shared. A signed-up Google user is therefore never mistaken for a bare login and bounced back to the account screens. A Google account with no AptFindr profile returns to the sign-in screen with a "You need to create an account" notice: the Google session is kept live so ticking consent and pressing **Create Account with Google** finishes the tenant profile without a second trip to the provider, and **Use a different Google account** clears the session and reopens Google's chooser.
 
+### Email confirmation (password accounts)
+
+With **Confirm email** turned on in Supabase, a username/password account is registered like this:
+
+1. **Create Account** sends the confirmation email and opens the sign-in screen with a notice and a **Resend Verification Email** link.
+2. The link in the email opens `/auth/callback`. It confirms the address but does **not** sign the person in. Supabase starts a session while confirming, so the callback ends it again (`signOut({ scope: 'local' })`, this browser only) and opens the sign-in screen with an "Email confirmed" notice.
+3. The person signs in with the username and password they chose when registering.
+
+An expired or already-used link returns to the sign-in screen with an explanation. Google accounts are unaffected and still sign in straight away.
+
+The wording of the email itself lives in Supabase (**Authentication → Emails → Confirm signup**), not in this repo. Keep the `{{ .ConfirmationURL }}` link and, for example, tell people to sign in with the username and password they created once they have confirmed.
+
 ## Registration and mobile/PWA checks
 
 - Tenant registration is a single card with username, email, password confirmation, consent, and Google signup.
