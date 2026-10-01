@@ -479,3 +479,157 @@
   color: #666666;
   border: 1px solid #d9d9d9;
 }
+
+/* Compact inbox layout, shared visually with landlord notifications. */
+.tenant-notifications-container {
+  max-width: 1200px;
+}
+
+.tenant-notifications-section {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: auto;
+  min-height: 160px !important;
+  margin-bottom: 16px;
+  padding: 24px;
+  border-color: #e1e7ec;
+  border-radius: 12px;
+  background-image: linear-gradient(to right, #f2f6fa 0%, #ffffff 100%);
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.025);
+}
+
+.tenant-notifications-notifications {
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.tenant-notifications-text {
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #9aa3ad;
+}
+
+.tenant-notifications-section-2 {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tenant-notifications-row {
+  min-height: 40px;
+  padding: 0 0 10px;
+  border-bottom: 0;
+}
+
+.tenant-notifications-button {
+  min-height: 28px;
+  min-width: 49px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.tenant-notifications-mark-all-as-read {
+  min-height: 28px;
+  padding: 5px 9px;
+  border-radius: 4px;
+  color: #75808c;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.tenant-notifications-check-icon { display: none; }
+
+.tenant-notifications-panel-4 {
+  overflow: hidden;
+  border: 1px solid #e1e7ec;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.tenant-notifications-article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22px;
+  min-height: 58px;
+  padding: 8px 12px;
+  gap: 10px;
+  border-bottom: 1px solid #edf1f4;
+}
+
+.tenant-notifications-article-2 { background: #eaf7fe; }
+
+.tenant-notifications-row-3 { display: none; }
+
+.tenant-notifications-button-4 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 78px;
+  column-gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.tenant-notifications-row-4 { grid-column: 1; grid-row: 1; }
+
+.tenant-notifications-strong {
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #334155;
+}
+
+.tenant-notifications-span-4 {
+  grid-column: 1;
+  grid-row: 2;
+  margin-top: 3px;
+  overflow: hidden;
+  font-size: 9px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #8d97a1;
+}
+
+.tenant-notifications-time {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  margin: 0;
+  font-size: 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tenant-notifications-panel-5 {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.tenant-notifications-notification-options {
+  padding: 2px;
+  color: #a5adb5;
+}
+
+@media (max-width: 640px) {
+  .tenant-notifications-section {
+    min-height: 160px !important;
+    padding: 24px;
+  }
+  .tenant-notifications-row { flex-wrap: nowrap; gap: 8px; }
+  .tenant-notifications-mark-all-as-read { white-space: nowrap; }
+  .tenant-notifications-button-4 { grid-template-columns: minmax(0, 1fr) 70px; }
+}
+
+@media (min-width: 768px) {
+  .tenant-notifications-section { padding-inline: 28px; }
+  .tenant-notifications-notifications { font-size: 34px; }
+}

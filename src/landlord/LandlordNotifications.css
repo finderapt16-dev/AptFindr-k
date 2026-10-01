@@ -201,3 +201,108 @@
   .landlord-notification__actions { grid-column: 2; grid-row: 1; }
   .landlord-notification__menu { right: -3px; }
 }
+
+/* Shared compact notification treatment. */
+.landlord-notifications__header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  height: auto;
+  min-height: 160px;
+  margin: 0 0 16px;
+  padding: 24px;
+  border: 1px solid #e1e7ec;
+  border-radius: 12px;
+  background-image: linear-gradient(to right, #f2f6fa 0%, #ffffff 100%);
+  background: #ffffff;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.025);
+}
+
+.landlord-notifications__header h1 {
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.landlord-notifications__header p {
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.landlord-notifications__panel {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.landlord-notifications__toolbar {
+  min-height: 40px;
+  padding: 0 0 10px;
+  border-bottom: 0;
+}
+
+.landlord-notifications__tabs button {
+  min-height: 28px;
+  border: 1px solid #e0e6ea;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #52606d;
+}
+
+.landlord-notifications__tabs button:hover,
+.landlord-notifications__tabs button.is-active {
+  border-color: #0ea5e9;
+  background: #0ea5e9;
+  color: #ffffff;
+}
+
+.landlord-notifications__list {
+  overflow: hidden;
+  border: 1px solid #e1e7ec;
+  border-radius: 6px;
+}
+
+.landlord-notification {
+  min-height: 58px;
+  padding: 8px 12px;
+}
+
+.landlord-notification__open {
+  grid-template-columns: minmax(0, 1fr) 78px;
+  column-gap: 12px;
+}
+
+.landlord-notification__avatar {
+  display: none;
+}
+
+.landlord-notification__body > span:first-child {
+  font-size: 11px;
+  color: #334155;
+}
+
+.landlord-notification.is-unread .landlord-notification__body > span:first-child {
+  color: #334155;
+}
+
+.landlord-notification__body > span:last-child {
+  font-size: 9px;
+}
+
+@media (max-width: 640px) {
+  .landlord-notifications__header {
+    min-height: 160px;
+    padding: 24px;
+  }
+  .landlord-notifications__toolbar { flex-direction: row; align-items: center; gap: 8px; }
+  .landlord-notifications__mark-read { align-self: auto; }
+  .landlord-notification__open { grid-template-columns: minmax(0, 1fr) 70px; }
+}
+
+@media (min-width: 768px) {
+  .landlord-notifications__header { padding-inline: 28px; }
+  .landlord-notifications__header h1 { font-size: 34px; }
+}

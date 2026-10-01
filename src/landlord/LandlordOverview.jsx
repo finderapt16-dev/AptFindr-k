@@ -826,11 +826,12 @@ export const LandlordOverview = ({
 
                     <p>
                       <MapPin size={12} />
-
-                      {formatApartmentLocation(
-                        apartment,
-                        "Address unavailable"
-                      )}
+                      <span>
+                        {formatApartmentLocation(
+                          apartment,
+                          "Address unavailable"
+                        )}
+                      </span>
                     </p>
 
                     <div className="ld-property-price">

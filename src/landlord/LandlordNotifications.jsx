@@ -72,7 +72,6 @@ export const LandlordNotifications = ({
                     aria-label={`Open notification: ${notification.title || notification.type || "Notification"}`}
                     onClick={() => void handleNotificationClick(notification)}
                   >
-                    <span className="landlord-notification__avatar" aria-hidden="true"><span>{(notification.title || notification.type || "N").trim().charAt(0).toUpperCase()}</span></span>
                     <span className="landlord-notification__body"><span>{notification.title || notification.type || "Notification"}</span><span>{notification.message || "You have a new account update."}</span></span>
                     <time dateTime={notification.created_at ?? notification.createdAt}>{relativeTime(notification.created_at ?? notification.createdAt)}</time>
                   </button>

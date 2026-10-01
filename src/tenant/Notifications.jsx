@@ -1,9 +1,9 @@
-import { Bell, Building2, Check, FileText, MoreVertical, ShieldCheck, Trash2 } from "lucide-react";
+import { Bell, Check, MoreVertical, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { notificationKind, relativeTime, reportIdOf, resolveActionLabel, resolveActionUrl } from "@/tenant/notificationPresentation";
+import { notificationKind, relativeTime, reportIdOf, resolveActionUrl } from "@/tenant/notificationPresentation";
 export function Notifications({ state }) {
     const navigate = useNavigate();
     const location = useLocation();
@@ -83,13 +83,8 @@ export function Notifications({ state }) {
       </div>
 
       {loading ? <div className="tenant-notifications-panel-2">{[1, 2, 3].map((item) => <div key={item} className="tenant-notifications-panel-3"/>)}</div> : visible.length === 0 ? <div className="tenant-notifications-content"><span className="tenant-notifications-row-2"><Bell className="tenant-notifications-bell-icon-2"/></span><h2 className="tenant-notifications-you-re-all-caught-up">You're all caught up!</h2><p className="tenant-notifications-text-2">Updates about your reports and apartment activity will appear here.</p></div> : <div className="tenant-notifications-panel-4" ref={listRef}>{visible.map((item) => {
-                const kind = notificationKind(item);
-                const Icon = kind === "report" ? FileText : kind === "apartment" ? Building2 : ShieldCheck;
-                const action = resolveActionLabel(item);
                 return <article key={item.id} className={`tenant-notifications-article ${item.read !== true ? "tenant-notifications-article-2" : "tenant-notifications-article-3"}`}>
-          <span className={`tenant-notifications-row-3 ${kind === "report" ? "tenant-notifications-span" : kind === "apartment" ? "tenant-notifications-span-2" : "tenant-notifications-span-3"}`}><Icon className="tenant-notifications-icon-icon"/></span>
           <button onClick={() => void openNotification(item)} className="tenant-notifications-button-4"><span className="tenant-notifications-row-4"><strong className="tenant-notifications-strong">{item.title || "AptFindr update"}</strong>{item.read !== true && <span className="tenant-notifications-unread" aria-label="Unread"/>}</span><span className="tenant-notifications-span-4">{item.message || "You have a new update."}</span><time className="tenant-notifications-time" dateTime={item.created_at ?? undefined}>{relativeTime(item.created_at ?? item.createdAt)}</time></button>
-          {action && <Button variant="outline" onClick={() => void openNotification(item)} className="tenant-notifications-button-5">{action}</Button>}
           <div className="tenant-notifications-panel-5"><button aria-label="Notification options" aria-expanded={menuId === item.id} onClick={(event) => { event.stopPropagation(); setMenuId(menuId === item.id ? null : item.id ?? null); }} className="tenant-notifications-notification-options"><MoreVertical className="tenant-notifications-more-vertical-icon"/></button>{menuId === item.id && <div className="tenant-notifications-card"><button onClick={async (event) => { event.stopPropagation(); if (item.id)
                     await (item.read === true ? markUnread(item.id) : markRead(item.id)); setMenuId(null); }} className="tenant-notifications-mark-as"><Check className="tenant-notifications-check-icon-2"/>Mark as {item.read === true ? "unread" : "read"}</button><button onClick={async (event) => { event.stopPropagation(); if (item.id && await remove(item.id))
                     toast.success("Notification removed.");
