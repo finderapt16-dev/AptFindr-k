@@ -195,7 +195,7 @@ export function Signup({ embedded = false, redirect = null }) {
           return;
         }
 
-        const message = result.signup?.profileSetupError || `Account created. A verification link was requested for ${normalized.email}. Check your inbox and spam folder before signing in.`;
+        const message = result.signup?.profileSetupError || `Account created! We sent a confirmation link to ${normalized.email}. Open it to confirm your email (check your spam folder too), then sign in with the username and password you just created.`;
         navigate(loginPath, { state: {
           message,
           verificationEmail: normalized.email,

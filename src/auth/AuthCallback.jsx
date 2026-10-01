@@ -5,8 +5,16 @@ import { clearPendingGoogleOAuthFlow, describeGoogleAuthUser, exchangeAuthCode, 
 
 const dashboardPathForRole = (role) => isTenantRole(role) ? "/dashboard?section=overview" : role === "admin" ? "/admin" : "/dashboard";
 
+// Shown on the sign-in screen once the emailed confirmation link has been opened.
+const EMAIL_CONFIRMED_MESSAGE = "Email confirmed! Sign in with the username and password you created.";
+
 function getOAuthErrorMessage(params) {
     const error = `${params.get("error_code") || params.get("error") || ""} ${params.get("error_description") || ""}`.trim();
+    // A confirmation link that has expired or was already used (mail scanners
+    // often open links before the person does) is not a Google problem.
+    if (/otp_expired|email link is invalid/i.test(error)) {
+        return "This confirmation link has expired or was already used. If you already confirmed your email, sign in with your username and password.";
+    }
     if (/access_denied|cancel(?:led|ed)?/i.test(error)) {
         return "Google sign-in was cancelled. You can try again whenever you are ready.";
     }
@@ -89,11 +97,18 @@ export function AuthCallback() {
                             navigate(dashboardPathForRole(profile.role), { replace: true });
                     return;
                 }
-                const profile = await hydrateSession();
-                if (!profile)
-                    throw new Error("The verified account profile is not available.");
+                // An email + password account is confirmed by this link, not signed
+                // in by it. Supabase opens a session as part of confirming the
+                // email, so end that session (this browser only) and send the
+                // person to sign in with the username and password they chose
+                // when they registered.
+                await signOutAuthSession({ scope: "local" });
+                // Clear the shared auth context too. This also retires any
+                // hydration still running from the page load, so it cannot put
+                // the profile back after the sign-out.
+                await hydrateSession();
                 if (active)
-                    navigate(dashboardPathForRole(profile.role), { replace: true });
+                    navigate("/login", { replace: true, state: { message: EMAIL_CONFIRMED_MESSAGE } });
             }
             catch (profileError) {
                 console.error("Authentication succeeded but profile recovery failed:", profileError);
@@ -108,7 +123,7 @@ export function AuthCallback() {
                         // and it has to say what to do next.
                         state: isGoogleAuth
                             ? { error: "Google signed you in, but AptFindr could not finish creating your account. Press Continue with Google to try again, and contact the administrator if this keeps happening." }
-                            : { message: "Email verified. Sign in to finish loading your profile." },
+                            : { message: EMAIL_CONFIRMED_MESSAGE },
                     });
             }
         })();
@@ -122,7 +137,7 @@ export function AuthCallback() {
             <Link to="/login" className="auth-status-login-link">Return to Sign In</Link>
           </>) : (<>
             <h1 className="auth-status-title">Verifying your email</h1>
-            <p className="auth-status-description">Please wait while RentIloilo confirms your email address.</p>
+            <p className="auth-status-description">Please wait while AptFindr confirms your email address.</p>
           </>)}
       </section>
     </main>);

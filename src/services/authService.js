@@ -817,8 +817,10 @@ export function getAuthUser() {
 export function updateAuthPassword(password) {
     return supabaseClient.auth.updateUser({ password });
 }
-export function signOutAuthSession() {
-    return supabaseClient.auth.signOut();
+// Supabase signs out of every device by default. Pass { scope: 'local' } to end
+// only this browser's session.
+export function signOutAuthSession(options) {
+    return supabaseClient.auth.signOut(options);
 }
 export async function updateUser(userId, updates) {
     if (typeof updates.password === 'string' && updates.password.length > 0) {
