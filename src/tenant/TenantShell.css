@@ -291,6 +291,21 @@
   color: inherit !important;
 }
 
+/* Keep the drawer edge clean on phones. The navigation can still scroll, but
+   its browser scrollbar no longer creates a second vertical strip. */
+.tenant-mobile-navigation-drawer {
+  overflow: hidden !important;
+  border-right: 0 !important;
+}
+
+.tenant-mobile-navigation-drawer > .app-sidebar {
+  scrollbar-width: none;
+}
+
+.tenant-mobile-navigation-drawer > .app-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Inactive tenant navigation icons stay neutral. The active destination is
    the only item that receives the AptFindr blue treatment. */
 .tenant-sidebar-nav .app-sidebar-nav-item:not([aria-current="page"]) > .tenant-sidebar-icon-icon,

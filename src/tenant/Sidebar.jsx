@@ -125,7 +125,7 @@ export function Sidebar({ active = "apartments", unreadCount = 0, tenantNotifica
             <p className="tenant-sidebar-text">
               {resolvedDisplayName}
             </p>
-            <p className="tenant-sidebar-text-2">
+            <p className="tenant-sidebar-text-2" title={user?.email ?? "Tenant Portal"}>
               {user?.email ?? "Tenant Portal"}
             </p>
           </div>
