@@ -603,6 +603,11 @@ export async function signupWithGoogle({ termsAccepted }) {
         provider: 'google',
         options: {
             redirectTo: `${window.location.origin}/auth/callback`,
+            // Force Google to show the account chooser instead of silently
+            // reusing whichever Google account is already signed in.
+            queryParams: {
+                prompt: 'select_account',
+            },
         },
     });
     if (error) {
@@ -615,6 +620,11 @@ export async function loginWithGoogle() {
         provider: 'google',
         options: {
             redirectTo: `${window.location.origin}/auth/callback`,
+            // Force Google to show the account chooser instead of silently
+            // reusing whichever Google account is already signed in.
+            queryParams: {
+                prompt: 'select_account',
+            },
         },
     });
     if (error) {
