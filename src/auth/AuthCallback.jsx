@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { clearPendingGoogleOAuthFlow, exchangeAuthCode, finalizeGoogleSignup, getAuthUser, getExistingProfileForAuthUser, getPendingGoogleOAuthFlow, isTenantRole, signOutAuthSession } from "@/services/authService";
+import { clearPendingGoogleOAuthFlow, describeGoogleAuthUser, exchangeAuthCode, finalizeGoogleSignup, getAuthUser, getExistingProfileForAuthUser, getPendingGoogleOAuthFlow, isGoogleAuthUser, isTenantRole, signOutAuthSession } from "@/services/authService";
 
 const dashboardPathForRole = (role) => isTenantRole(role) ? "/dashboard?section=overview" : role === "admin" ? "/admin" : "/dashboard";
 
@@ -53,26 +53,35 @@ export function AuthCallback() {
                 return;
             }
             try {
-                const isGoogleAuth = data.user.app_metadata?.provider === "google";
-                if (isGoogleAuth) {
+                if (isGoogleAuthUser(data.user)) {
                     const oauthFlow = getPendingGoogleOAuthFlow();
                     const existingProfile = await getExistingProfileForAuthUser(data.user);
                     // A bare Google login must never invent a tenant or landlord
-                    // profile. Keep the authenticated Google session and send the
-                    // person through the existing role/account setup screen.
+                    // profile. Send the person back to sign in with an explicit
+                    // "create an account" notice instead of a silent redirect to a
+                    // blank role picker, and keep the Google session so the notice
+                    // can finish the account without a second trip to Google.
                     if (!existingProfile && oauthFlow !== "signup") {
                         clearPendingGoogleOAuthFlow();
                         if (active)
-                            navigate("/signup?google=setup", { replace: true });
+                            navigate("/login", {
+                                replace: true,
+                                state: { googleSetup: describeGoogleAuthUser(data.user) },
+                            });
                         return;
                     }
                     // OAuth cannot carry arbitrary Supabase user metadata in the
                     // signInWithOAuth request. For the explicit signup path, set
                     // the agreed tenant metadata now and create the app profile.
+                    let createdProfile = null;
                     if (!existingProfile) {
-                        await finalizeGoogleSignup(data.user, { termsAccepted: true });
+                        createdProfile = await finalizeGoogleSignup(data.user, { termsAccepted: true });
                     }
-                    const profile = await hydrateSession();
+                    // A newer auth request can win the hydration race and hand back
+                    // null even though the profile exists. Fall back to the profile
+                    // this callback just created rather than bouncing a finished
+                    // signup back to the sign-in screen.
+                    const profile = (await hydrateSession()) ?? createdProfile ?? existingProfile;
                     if (!profile)
                         throw new Error("The Google account profile is not available.");
                     clearPendingGoogleOAuthFlow();
@@ -90,15 +99,16 @@ export function AuthCallback() {
                 console.error("Authentication succeeded but profile recovery failed:", profileError);
                 clearPendingGoogleOAuthFlow();
                 await signOutAuthSession();
-                const isGoogleAuth = data.user.app_metadata?.provider === "google";
+                const isGoogleAuth = isGoogleAuthUser(data.user);
                 if (active)
                     navigate("/login", {
                         replace: true,
-                        state: {
-                            message: isGoogleAuth
-                                ? "Google sign-in succeeded, but AptFindr could not finish creating your profile. Please contact the administrator."
-                                : "Email verified. Sign in to finish loading your profile.",
-                        },
+                        // A Google account that could not be finished has to read
+                        // as a problem, not as the green "account created" banner,
+                        // and it has to say what to do next.
+                        state: isGoogleAuth
+                            ? { error: "Google signed you in, but AptFindr could not finish creating your account. Press Continue with Google to try again, and contact the administrator if this keeps happening." }
+                            : { message: "Email verified. Sign in to finish loading your profile." },
                     });
             }
         })();

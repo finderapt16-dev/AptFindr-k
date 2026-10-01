@@ -39,8 +39,14 @@ export function AuthProvider({ children }) {
         setIsLoading(true);
         try {
             const authenticatedUser = await getCurrentAuthenticatedUser();
-            if (requestId !== authRequestIdRef.current)
-                return null;
+            if (requestId !== authRequestIdRef.current) {
+                // A newer request owns the context state from here on. The profile
+                // itself is still valid, so hand it back: callers finishing a
+                // signup (the auth callback, Google account creation) must not
+                // read a lost race as "profile not available" and bounce a
+                // finished account back to the sign-in screen.
+                return authenticatedUser;
+            }
             setCurrentUser(authenticatedUser);
             return authenticatedUser;
         }

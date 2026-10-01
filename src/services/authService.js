@@ -64,20 +64,95 @@ function normalizeRoleValue(value) {
 export function isTenantRole(role) {
     return normalizeRoleValue(role) === 'tenant';
 }
-export function setPendingGoogleOAuthFlow(flow) {
-    if (typeof window === 'undefined' || !['login', 'signup'].includes(flow))
-        return;
-    window.sessionStorage.setItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY, flow);
-}
-export function getPendingGoogleOAuthFlow() {
+// The marker has to survive the whole provider round trip. Mobile browsers and
+// installed PWAs frequently hand Google's redirect back in a *new* tab, where
+// sessionStorage is not shared, and the callback then mistakes a finished
+// signup for a bare login and throws the visitor back at the account screens.
+// localStorage is shared by every tab of the origin, and the short TTL keeps an
+// abandoned redirect from being replayed as signup intent much later.
+const GOOGLE_OAUTH_FLOW_TTL_MS = 10 * 60 * 1000;
+const GOOGLE_OAUTH_FLOW_STATES = ['login', 'signup'];
+function readGoogleOAuthFlowMarker() {
     if (typeof window === 'undefined')
         return null;
-    const flow = window.sessionStorage.getItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY);
-    return ['login', 'signup'].includes(flow) ? flow : null;
+    try {
+        const stored = window.localStorage.getItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY)
+            ?? window.sessionStorage.getItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY);
+        if (!stored)
+            return null;
+        // Builds before the marker moved to localStorage stored the bare name.
+        let flow = stored;
+        let startedAt = null;
+        try {
+            const parsed = JSON.parse(stored);
+            if (isRecord(parsed)) {
+                flow = parsed.flow;
+                startedAt = typeof parsed.at === 'number' ? parsed.at : null;
+            }
+        }
+        catch {
+            flow = stored;
+        }
+        const valid = GOOGLE_OAUTH_FLOW_STATES.includes(flow);
+        const expired = startedAt !== null && Date.now() - startedAt > GOOGLE_OAUTH_FLOW_TTL_MS;
+        if (!valid || expired) {
+            clearPendingGoogleOAuthFlow();
+            return null;
+        }
+        return flow;
+    }
+    catch {
+        return null;
+    }
+}
+export function setPendingGoogleOAuthFlow(flow) {
+    if (typeof window === 'undefined' || !GOOGLE_OAUTH_FLOW_STATES.includes(flow))
+        return;
+    try {
+        window.localStorage.setItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY, JSON.stringify({ flow, at: Date.now() }));
+        // Keep the legacy key in step so an in-flight tab from an older build
+        // never reads a stale value out of sessionStorage.
+        window.sessionStorage.setItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY, flow);
+    }
+    catch {
+        // Storage can be unavailable in private mode; the flow still works, it
+        // just falls back to the "finish creating your account" prompt.
+    }
+}
+export function getPendingGoogleOAuthFlow() {
+    return readGoogleOAuthFlowMarker();
 }
 export function clearPendingGoogleOAuthFlow() {
-    if (typeof window !== 'undefined')
+    if (typeof window === 'undefined')
+        return;
+    try {
+        window.localStorage.removeItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY);
         window.sessionStorage.removeItem(GOOGLE_OAUTH_FLOW_STORAGE_KEY);
+    }
+    catch {
+        // Nothing to clear when storage is blocked.
+    }
+}
+/** True when the Supabase Auth user came from the Google provider. */
+export function isGoogleAuthUser(authUser) {
+    if (!authUser)
+        return false;
+    return authUser.app_metadata?.provider === 'google'
+        || (Array.isArray(authUser.identities) && authUser.identities.some((identity) => identity?.provider === 'google'));
+}
+/**
+ * The public identity Google handed back, used to tell the visitor which
+ * account still needs an AptFindr profile.
+ */
+export function describeGoogleAuthUser(authUser) {
+    const metadata = isRecord(authUser?.user_metadata) ? authUser.user_metadata : {};
+    const email = typeof authUser?.email === 'string' ? authUser.email : '';
+    return {
+        email,
+        // Only Google's own display name: falling back to the email prefix would
+        // repeat the address the notice already shows next to it.
+        name: nonEmptyString(metadata.full_name) ?? nonEmptyString(metadata.name) ?? '',
+    };
 }
 function assertValidRole(role) {
     if (!VALID_ROLES.has(role)) {
@@ -590,8 +665,11 @@ export async function signupWithGoogle({ termsAccepted }) {
     }
     const { data: sessionData } = await supabaseClient.auth.getSession();
     const currentAuthUser = sessionData.session?.user;
-    const isGoogleSession = currentAuthUser?.app_metadata?.provider === 'google' || currentAuthUser?.identities?.some((identity) => identity.provider === 'google');
-    if (isGoogleSession) {
+    // The visitor may already hold a Google session from an earlier attempt at
+    // this very screen (for example a "Continue with Google" sign-in that found
+    // no account). Finish that profile here instead of sending them through the
+    // provider a second time.
+    if (isGoogleAuthUser(currentAuthUser)) {
         return { profile: await finalizeGoogleSignup(currentAuthUser, { termsAccepted }) };
     }
     // Supabase's signInWithOAuth options do not accept custom user metadata.
@@ -615,6 +693,25 @@ export async function signupWithGoogle({ termsAccepted }) {
     }
 }
 export async function loginWithGoogle() {
+    // A Google session can already be live without an AptFindr account: that is
+    // the state the sign-in notice exists for. Sending it back to the provider
+    // would loop the visitor between Google and the same screen, so hand the
+    // caller the identity and let it offer to finish the account instead.
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const currentAuthUser = sessionData.session?.user;
+    if (isGoogleAuthUser(currentAuthUser)) {
+        try {
+            const existingProfile = await getExistingProfileForAuthUser(currentAuthUser);
+            if (!existingProfile) {
+                return { needsAccount: true, google: describeGoogleAuthUser(currentAuthUser) };
+            }
+        }
+        catch (profileError) {
+            // A profile lookup can only fail transiently. Fall through to the
+            // normal provider round trip rather than blocking sign-in.
+            console.warn('[AUTH] Google session profile lookup failed before sign-in', profileError);
+        }
+    }
     setPendingGoogleOAuthFlow('login');
     const { error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',

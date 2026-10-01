@@ -1,7 +1,7 @@
 import "./signup.css";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowLeft, ArrowRight, Building2, ChevronRight, Home, Pencil, Users } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Building2, ChevronRight, Home, Info, Pencil, Users } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { clearPendingGoogleOAuthFlow, isTenantRole, signupWithGoogle } from "@/services/authService";
@@ -51,9 +51,14 @@ export function Signup({ embedded = false, redirect = null }) {
   const { signup, hydrateSession } = useAuth();
   useSignupViewport();
 
-  const requestedRedirect = (typeof redirect === "string" ? redirect : null) ?? new URLSearchParams(location.search).get("redirect");
+  const query = new URLSearchParams(location.search);
+  const requestedRedirect = (typeof redirect === "string" ? redirect : null) ?? query.get("redirect");
   const redirectTo = requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//") ? requestedRedirect : null;
   const loginPath = redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : "/login";
+  // Reachable from /signup?google=setup: Google already signed the visitor in,
+  // but no AptFindr account exists for that Google user yet. Land them on the
+  // tenant card, which is the only card Google can create, and say why.
+  const googleSetup = !embedded && query.get("google") === "setup";
 
   const [values, setValues] = useState(INITIAL_VALUES);
   const [landlordStep, setLandlordStep] = useState(1);
@@ -77,6 +82,13 @@ export function Signup({ embedded = false, redirect = null }) {
     stepHeadingRef.current?.focus({ preventScroll: true });
     stepHeadingRef.current?.scrollIntoView({ block: "nearest" });
   }, [landlordStep, values.role]);
+
+  useEffect(() => {
+    // Google accounts can only become tenants, and the Google button lives on
+    // that card, so do not leave the visitor on a role chooser they cannot use.
+    if (!googleSetup) return;
+    setValues((current) => (current.role ? current : { ...current, role: "tenant" }));
+  }, [googleSetup]);
 
   const changeField = (field, value) => {
     setValues((current) => ({ ...current, [field]: value }));
@@ -224,8 +236,10 @@ export function Signup({ embedded = false, redirect = null }) {
     try {
       const googleSignup = await signupWithGoogle({ termsAccepted: tenantTermsAccepted });
       if (googleSignup?.profile) {
-        const profile = await hydrateSession();
-        if (!profile) throw new Error("Your Google account was created, but its profile is not available yet.");
+        // The account and its profile already exist at this point. Hydrating the
+        // shared context can lose a race with another auth request, and that must
+        // never throw a finished Google signup back to the sign-in screen.
+        const profile = (await hydrateSession()) ?? googleSignup.profile;
         clearPendingGoogleOAuthFlow();
         navigate(isTenantRole(profile.role) ? redirectTo || dashboardPathForRole(profile.role) : profile.role === "admin" ? "/admin" : "/dashboard", { replace: true });
       }
@@ -258,6 +272,15 @@ export function Signup({ embedded = false, redirect = null }) {
               <h1 id="signup-title" className="signup-title">Create Your Account</h1>
               {!values.role && <p className="signup-description">Choose your role to continue.</p>}
             </div>
+            {googleSetup && (
+              <div className="signup-google-setup-notice" role="status">
+                <Info aria-hidden="true" />
+                <p>
+                  Google signed you in, but that Google account does not have an AptFindr account yet.
+                  Tick the terms and press <strong>Sign Up with Google</strong> to finish creating your account.
+                </p>
+              </div>
+            )}
             {error && (
               <div className="signup-message" role="alert">
                 <div className="signup-error-alert"><AlertCircle aria-hidden="true" /><p>{error}</p></div>
@@ -289,7 +312,7 @@ export function Signup({ embedded = false, redirect = null }) {
                   {agreement}
                   {createButton}
                   <div className="signup-social-divider" aria-hidden="true"><span /><b>or</b><span /></div>
-                  <button type="button" className="signup-google-button" onClick={handleGoogleSignup} disabled={loading}><GoogleIcon />{busy === "google" ? "Connecting to Google..." : "Sign Up with Google"}</button>
+                  <button type="button" className="signup-google-button" onClick={handleGoogleSignup} disabled={loading}><GoogleIcon />{busy === "google" ? "Connecting to Google..." : googleSetup ? "Finish Creating Your Account with Google" : "Sign Up with Google"}</button>
                   {loginPrompt}
                 </>
               )}
