@@ -1,0 +1,96 @@
+/* Shared phone safeguards. Page-specific layouts keep their own breakpoints;
+   these rules prevent common overflow and touch-target issues at small widths. */
+@media (max-width: 640px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  :where(main, section, article, form, header, footer, aside, div) {
+    min-width: 0;
+  }
+
+  :where(img, picture, video, canvas, svg) {
+    max-width: 100%;
+  }
+
+  :where(input, select, textarea) {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  :where(button, a, input, select, textarea) {
+    touch-action: manipulation;
+  }
+
+  .ui-dialog-content,
+  .ui-alert-dialog-content {
+    width: min(calc(100vw - 24px), 32rem);
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .landing-login-overlay {
+    align-items: flex-start;
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+
+  .landing-login-modal {
+    width: 100%;
+    max-height: none;
+    margin: auto 0;
+    padding: 24px 20px;
+    border-radius: 14px;
+  }
+
+  .tenant-profile-danger-content,
+  .security-tab-danger-content,
+  .landlord-view-property-header,
+  .manage-rooms-table-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tenant-profile-delete-button,
+  .security-tab-delete-my-account,
+  .landlord-view-edit,
+  .manage-rooms-table-add-room {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .tenant-profile-danger-zone,
+  .security-tab-card-8 {
+    min-height: 0;
+    padding: 20px;
+  }
+
+  .manage-rooms-table-scroll,
+  .admin-verification-table-panel,
+  .admin-dashboard-table-scroll,
+  .admin-apartments-table-scroll,
+  .admin-reports-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-shell-content,
+  .landlord-property-view-shell .app-shell-content,
+  .landlord-manage-rooms .app-shell-content {
+    padding-inline: 12px;
+  }
+
+  .tenant-notifications-row,
+  .tenant-notifications-notification-filter,
+  .signup-landlord-actions,
+  .signup-review-dialog-actions {
+    width: 100%;
+  }
+}

@@ -134,3 +134,6 @@
 /* The public, linkable policy pages (/privacy-policy, /terms-of-service). */
 
 @import '../legal/policy_page.css';
+
+/* Shared phone safeguards must load after all page styles. */
+@import './mobile.css';
