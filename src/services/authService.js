@@ -826,14 +826,33 @@ export async function updateUser(userId, updates) {
             throw new Error(error.message);
         }
     }
+    // The address Supabase Auth knows about is the one used for sign-in and
+    // password reset, so an email change has to go through Auth (which emails a
+    // confirmation link) instead of being written to app_users directly. The
+    // database copies the confirmed address back into app_users.
+    let emailChangePending = false;
+    const requestedEmail = typeof updates.email === 'string' ? updates.email.trim().toLowerCase() : '';
+    if (requestedEmail) {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const currentAuthEmail = sessionData.session?.user?.email?.trim().toLowerCase() ?? '';
+        if (currentAuthEmail && requestedEmail !== currentAuthEmail) {
+            const { error: emailError } = await supabaseClient.auth.updateUser({ email: requestedEmail });
+            if (emailError) {
+                throw new Error(emailError.message);
+            }
+            emailChangePending = true;
+        }
+    }
     const payload = toUserPayload(updates);
+    // app_users.email mirrors auth.users and must never be written from here.
+    delete payload.email;
     const existing = await fetchUserById(userId);
     if (!existing) {
         throw new Error('User profile not found.');
     }
     if (Object.keys(payload).length === 0) {
         await ensureRoleProfile(userId, existing.role, updates);
-        return existing;
+        return { ...existing, emailChangePending };
     }
     const { data, error } = await supabaseClient.from(APP_USERS_TABLE).update(payload).eq('id', userId).select('*').single();
     if (error) {
@@ -842,7 +861,7 @@ export async function updateUser(userId, updates) {
     const user = normalizeUser(data);
     await ensureRoleProfile(user.id, user.role, { ...updates, isVerified: user.isVerified });
     persistCurrentUser(user);
-    return user;
+    return { ...user, emailChangePending };
 }
 export async function deleteUser(userId) {
     const current = await getCurrentAuthenticatedUser();

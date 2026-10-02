@@ -41,5 +41,8 @@ yarn-debug.log*
 .eslintcache
 .parcel-cache
 
-# Local Supabase migration export
+# Local Supabase SQL — never commit. This repo is public and these files
+# describe the RLS policies, triggers, and admin bootstrap accounts.
 supabase-master-migration.sql
+supabase-security-and-ui-fixes.sql
+*.sql

@@ -221,8 +221,9 @@ export const SecurityTab = ({
                     <h2>Two-Factor Authentication</h2>
 
                     <p>
-                        Add an extra layer of protection to your
-                        account.
+                        Not enforced at sign-in yet. Until it ships,
+                        protect your account with a strong, unique
+                        password and keep your email secure.
                     </p>
                 </div>
 
@@ -249,11 +250,18 @@ export const SecurityTab = ({
                         <div className="security-tab-section-actions">
                             <button
                                 type="button"
-                                onClick={handleSetup2FA}
+                                disabled
+                                title="Two-factor authentication is not enforced at sign-in yet."
                                 className="security-tab-enable-2-fa"
                             >
                                 Enable 2FA
                             </button>
+
+                            <p className="security-tab-text-7">
+                                Coming soon. Backup codes can still
+                                be generated, but they are not
+                                required when you sign in.
+                            </p>
                         </div>
                     </div>
                 ) : security.twoFactor &&
@@ -446,7 +454,7 @@ export const SecurityTab = ({
                             key: "trustedDevices",
                             label: "Remember Trusted Devices",
                             hint:
-                                "Skip 2FA on devices you've verified before.",
+                                "Coming soon — not used at sign-in yet.",
                         },
                     ].map(
                         ({
