@@ -45,14 +45,17 @@ import {
   fetchLandlordActivityPeople,
   fetchViewActivityForApartments,
   fetchLandlordProfile,
+  fetchLandlordFacebookLink,
   fetchNotifications,
   fetchViolations,
   fetchUserById,
   fetchUserPreferenceSections,
   fetchUsers,
+  normalizeLandlordFacebookUrl,
   markAllNotificationsRead,
   markNotificationRead,
   markNotificationUnread,
+  saveLandlordFacebookLink,
   saveUserPreferenceSection,
   submitAppealFollowupWithEvidence,
   updateUserProfile,
@@ -1884,6 +1887,7 @@ export function LandlordDashboard() {
             fetchLandlordProfile(user.id),
             fetchUserPreferenceSections(user.id),
             supabase.auth.mfa.listFactors(),
+            fetchLandlordFacebookLink(user.id),
           ]);
         } catch (error) {
           console.error("Failed to load landlord settings:", error);
@@ -1898,7 +1902,7 @@ export function LandlordDashboard() {
         }
 
 
-        const [userRow, landlordRow, preferenceSections, mfaFactors] = settingsData;
+        const [userRow, landlordRow, preferenceSections, mfaFactors, facebookLink] = settingsData;
         setSettingsLoadError(false);
 
         const fullName = (
@@ -1928,9 +1932,7 @@ export function LandlordDashboard() {
             user.mobileNumber ||
             "",
           middleInitial: String(userRow?.middle_initial ?? user?.middleInitial ?? ""),
-          facebookLink: typeof preferenceSections.landlordProfile?.facebookLink === "string"
-            ? preferenceSections.landlordProfile.facebookLink
-            : "",
+          facebookLink: typeof facebookLink === "string" ? facebookLink : "",
           bio: userRow?.bio || "",
           avatar:
             userRow?.avatar_url ||
@@ -2107,8 +2109,11 @@ export function LandlordDashboard() {
         return;
       }
 
-      if (!profile.facebookLink.trim()) {
-        toast.error("Facebook link is required");
+      let normalizedFacebookLink;
+      try {
+        normalizedFacebookLink = normalizeLandlordFacebookUrl(profile.facebookLink);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Enter a valid Facebook page or profile URL.");
         return;
       }
 
@@ -2226,16 +2231,10 @@ export function LandlordDashboard() {
             );
           }
 
-          await saveUserPreferenceSection(
-            user.id,
-            "landlordProfile",
-            { facebookLink: profile.facebookLink.trim() }
-          );
-
-
-          setSavedProfile(
-            profile
-          );
+          const savedFacebookLink = await saveLandlordFacebookLink(user.id, normalizedFacebookLink);
+          const nextSavedProfile = { ...profile, facebookLink: savedFacebookLink };
+          setProfile(nextSavedProfile);
+          setSavedProfile(nextSavedProfile);
 
 
           addAuditLog(

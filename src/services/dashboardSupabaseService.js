@@ -1241,6 +1241,49 @@ export async function fetchPublicLandlordById(userId) {
         return null;
     return toUserRow(data);
 }
+export async function fetchLandlordFacebookLink(userId) {
+    if (!userId)
+        return "";
+    const { data, error } = await supabase
+        .from("landlord_facebook_links")
+        .select("facebook_url")
+        .eq("user_id", userId)
+        .maybeSingle();
+    if (error)
+        throw new Error(error.message || "Unable to load the landlord Facebook link.");
+    return typeof data?.facebook_url === "string" ? data.facebook_url.trim() : "";
+}
+export function normalizeLandlordFacebookUrl(value) {
+    const raw = typeof value === "string" ? value.trim() : "";
+    if (!raw)
+        throw new Error("Facebook link is required.");
+    let url;
+    try {
+        url = new URL(raw);
+    }
+    catch {
+        throw new Error("Enter a valid Facebook page or profile URL.");
+    }
+    const host = url.hostname.toLowerCase();
+    if (url.protocol !== "https:" || url.username || url.password || url.port
+        || !(host === "facebook.com" || host.endsWith(".facebook.com"))) {
+        throw new Error("Use a secure HTTPS link to facebook.com.");
+    }
+    return url.href;
+}
+export async function saveLandlordFacebookLink(userId, value) {
+    if (!userId)
+        throw new Error("Your landlord account is not available. Please sign in again.");
+    const facebookUrl = normalizeLandlordFacebookUrl(value);
+    const { error } = await supabase.from("landlord_facebook_links").upsert({
+        user_id: userId,
+        facebook_url: facebookUrl,
+        updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+    if (error)
+        throw new Error(error.message || "Unable to save the landlord Facebook link.");
+    return facebookUrl;
+}
 export async function fetchPublicLandlordFacebookLink(userId) {
     if (!userId)
         return "";
