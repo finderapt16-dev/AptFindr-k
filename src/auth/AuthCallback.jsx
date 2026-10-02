@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { clearPendingGoogleOAuthFlow, describeGoogleAuthUser, exchangeAuthCode, finalizeGoogleSignup, getAuthUser, getExistingProfileForAuthUser, getPendingGoogleOAuthFlow, isGoogleAuthUser, isTenantRole, signOutAuthSession } from "@/services/authService";
+import { clearPendingGoogleOAuthFlow, exchangeAuthCode, getAuthUser, getExistingProfileForAuthUser, isGoogleAuthUser, isTenantRole, signOutAuthSession } from "@/services/authService";
 
-const dashboardPathForRole = (role) => isTenantRole(role) ? "/browse" : role === "admin" ? "/admin" : "/dashboard";
+const dashboardPathForRole = (role) => isTenantRole(role) ? "/dashboard?section=overview" : role === "admin" ? "/admin" : "/dashboard";
 
 // Shown on the sign-in screen once the emailed confirmation link has been opened.
 const EMAIL_CONFIRMED_MESSAGE = "Email confirmed! Sign in with the username and password you created.";
@@ -62,34 +62,13 @@ export function AuthCallback() {
             }
             try {
                 if (isGoogleAuthUser(data.user)) {
-                    const oauthFlow = getPendingGoogleOAuthFlow();
                     const existingProfile = await getExistingProfileForAuthUser(data.user);
-                    // A bare Google login must never invent a tenant or landlord
-                    // profile. Send the person back to sign in with an explicit
-                    // "create an account" notice instead of a silent redirect to a
-                    // blank role picker, and keep the Google session so the notice
-                    // can finish the account without a second trip to Google.
-                    if (!existingProfile && oauthFlow !== "signup") {
+                    if (!existingProfile) {
                         clearPendingGoogleOAuthFlow();
-                        if (active)
-                            navigate("/login", {
-                                replace: true,
-                                state: { googleSetup: describeGoogleAuthUser(data.user) },
-                            });
+                        if (active) navigate("/signup?google=setup", { replace: true });
                         return;
                     }
-                    // OAuth cannot carry arbitrary Supabase user metadata in the
-                    // signInWithOAuth request. For the explicit signup path, set
-                    // the agreed tenant metadata now and create the app profile.
-                    let createdProfile = null;
-                    if (!existingProfile) {
-                        createdProfile = await finalizeGoogleSignup(data.user, { termsAccepted: true });
-                    }
-                    // A newer auth request can win the hydration race and hand back
-                    // null even though the profile exists. Fall back to the profile
-                    // this callback just created rather than bouncing a finished
-                    // signup back to the sign-in screen.
-                    const profile = (await hydrateSession()) ?? createdProfile ?? existingProfile;
+                    const profile = await hydrateSession();
                     if (!profile)
                         throw new Error("The Google account profile is not available.");
                     clearPendingGoogleOAuthFlow();

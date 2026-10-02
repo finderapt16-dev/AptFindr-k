@@ -6,7 +6,7 @@ import { ACCOUNT_REVIEW_FIELDS, PERSONAL_REVIEW_FIELDS, normalizeSignupValues, v
 
 // This dialog edits only a local registration draft, never a created account.
 // It is portaled outside the signup form, so Enter cannot submit registration.
-export function SignupReviewDialog({ section, values, onSave, onClose, returnFocusRef }) {
+export function SignupReviewDialog({ section, values, onSave, onClose, returnFocusRef, emailReadOnly = false }) {
   const fields = section === "account" ? ACCOUNT_REVIEW_FIELDS : PERSONAL_REVIEW_FIELDS;
   const [draft, setDraft] = useState(() => Object.fromEntries(fields.map((field) => [field, values[field] ?? ""])));
   const [errors, setErrors] = useState({});
@@ -62,7 +62,7 @@ export function SignupReviewDialog({ section, values, onSave, onClose, returnFoc
             <form ref={formRef} className="signup-review-form" noValidate onSubmit={save}>
               {Object.values(errors).some(Boolean) && <p className="signup-review-error" role="alert">Please check the highlighted fields.</p>}
               {section === "account" ? (
-                <SignupAccountFields values={draft} onChange={changeField} errors={errors} idPrefix="signup-review-account" includePassword={false} emailLabel="Recovery Email" />
+                <SignupAccountFields values={draft} onChange={changeField} errors={errors} idPrefix="signup-review-account" includePassword={false} emailLabel="Email Address" emailReadOnly={emailReadOnly} />
               ) : (
                 <SignupPersonalFields values={draft} onChange={changeField} errors={errors} idPrefix="signup-review-personal" />
               )}

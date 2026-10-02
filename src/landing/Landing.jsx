@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useApartmentsContext } from "@/contexts/ApartmentsContext";
 
 import { isTenantVisibleApartment } from "@/utils/listingVisibility";
-import { isTenantRole } from "@/services/authService";
+import { isTenantRole, resetUnfinishedGoogleSignIn } from "@/services/authService";
 
 import {
     Home,
@@ -399,6 +399,11 @@ export function Landing() {
             setForgotPasswordOpen(false);
             setResetPasswordOpen(false);
             setLoginOpen(true);
+        } else if (location.pathname === "/signup") {
+            setLoginOpen(false);
+            setForgotPasswordOpen(false);
+            setResetPasswordOpen(false);
+            setSignupOpen(true);
         } else if (location.pathname === "/forgot-password") {
             setSignupOpen(false);
             setSignupRedirect(null);
@@ -411,6 +416,11 @@ export function Landing() {
             setLoginOpen(false);
             setForgotPasswordOpen(false);
             setResetPasswordOpen(true);
+        } else if (location.pathname === "/") {
+            setLoginOpen(false);
+            setSignupOpen(false);
+            setForgotPasswordOpen(false);
+            setResetPasswordOpen(false);
         }
     }, [location.pathname, location.key]);
 
@@ -608,6 +618,7 @@ export function Landing() {
                     event.key ===
                     "Escape" && !event.defaultPrevented
                 ) {
+                    void resetUnfinishedGoogleSignIn().catch(error => console.error("Unable to reset Google sign-in:", error));
                     setLoginOpen(
                         false
                     );
@@ -685,6 +696,7 @@ export function Landing() {
 
 
     const closeLogin = () => {
+        void resetUnfinishedGoogleSignIn().catch(error => console.error("Unable to reset Google sign-in:", error));
         setLoginOpen(
             false
         );
@@ -699,8 +711,10 @@ export function Landing() {
     };
 
     const closeSignup = () => {
+        void resetUnfinishedGoogleSignIn().catch(error => console.error("Unable to reset Google sign-in:", error));
         setSignupOpen(false);
         setSignupRedirect(null);
+        if (location.pathname === "/signup") navigate("/", { replace: true });
     };
 
     const closeForgotPassword = () => {
@@ -1884,6 +1898,7 @@ export function Landing() {
                         }
                     >
                         <Signup
+                            onClose={closeSignup}
                             embedded
                             redirect={
                                 signupRedirect

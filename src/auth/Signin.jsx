@@ -463,13 +463,8 @@ export function Login({
                  * them through the provider again.
                  */
                 if (result?.needsAccount) {
-                    setGoogleSetup({
-                        email: result.google?.email ?? "",
-                        name: result.google?.name ?? "",
-                    });
-                    setSetupTermsAccepted(false);
+                    navigate("/signup?google=setup", { replace: true });
                     setLoading(false);
-
                     return;
                 }
             } catch (googleError) {
@@ -489,85 +484,7 @@ export function Login({
        CREATE THE MISSING ACCOUNT FOR A SIGNED-IN GOOGLE USER
     ===================================================== */
 
-    const completeGoogleAccount =
-        async () => {
-            if (setupBusy) {
-                return;
-            }
-
-            if (!setupTermsAccepted) {
-                setError("You must agree to the Terms of Service and Privacy Policy to create an account.");
-
-                return;
-            }
-
-            setError("");
-            setSetupBusy(true);
-
-            try {
-                const created =
-                    await signupWithGoogle({
-                        termsAccepted: true,
-                    });
-
-                /*
-                 * No result means Supabase is sending the browser to Google, so
-                 * the buttons stay locked until the callback returns.
-                 */
-                if (!created) {
-                    return;
-                }
-
-                /*
-                 * Hydrate the shared auth context before navigating: protected
-                 * routes bounce anybody the context does not know yet, so relying
-                 * on the freshly created profile alone would throw the visitor
-                 * straight back to the sign-in screen.
-                 */
-                const profile =
-                    (await hydrateSession()) ?? created.profile;
-
-                if (!profile) {
-                    throw new Error("Google signed in, but AptFindr could not load your new account. Please try again.");
-                }
-
-                clearPendingGoogleOAuthFlow();
-                setGoogleSetup(null);
-                setSetupTermsAccepted(false);
-                setPassword("");
-
-                if (typeof onSuccess === "function") {
-                    onSuccess(profile);
-
-                    return;
-                }
-
-                if (redirectTo) {
-                    navigate(redirectTo, { replace: true });
-
-                    return;
-                }
-
-                navigate(
-                    profile.role === "admin"
-                        ? "/admin"
-                        : isTenantRole(profile.role)
-                            ? "/browse"
-                            : "/dashboard",
-                    { replace: true }
-                );
-            } catch (setupError) {
-                console.error("[AUTH] Google account creation from sign-in failed", setupError);
-                setError(
-                    setupError instanceof Error && setupError.message
-                        ? setupError.message
-                        : "We could not create your account with Google. Please try again."
-                );
-            } finally {
-                setSetupBusy(false);
-            }
-        };
-
+    const completeGoogleAccount = () => navigate("/signup?google=setup");
 
     /*
      * Somebody signed in with the wrong Google account: drop the session and go
@@ -768,7 +685,7 @@ export function Login({
                             </p>
 
                             <p className="login-google-setup-hint">
-                                Agree to the terms below and AptFindr will create the account for this Google user and sign you straight in.
+                                Continue to choose Tenant or Landlord and complete your account details.
                             </p>
 
                         </div>

@@ -1183,25 +1183,6 @@ export async function fetchUsers() {
     }
     return safeJsonParse(readCachedValue("users"), []);
 }
-/**
- * Names of the people who viewed or favorited the signed-in landlord's own
- * apartments. app_users is row-scoped by RLS, so the Activity tab cannot read
- * those rows directly; this RPC returns only id, name and role.
- */
-export async function fetchLandlordActivityPeople(apartmentIds = []) {
-    const { data, error } = await supabase.rpc("fn_get_landlord_activity_people", {
-        p_apartment_ids: apartmentIds.length > 0 ? apartmentIds : null,
-    });
-    if (error) {
-        console.error("Error fetching landlord activity people:", error);
-        return [];
-    }
-    return (data ?? []).map((row) => ({
-        id: String(row.id ?? ""),
-        name: String(row.name ?? ""),
-        role: row.role ?? "",
-    })).filter((row) => row.id.length > 0);
-}
 export async function fetchUserById(userId) {
     const user = await fetchSingleRowByColumn("app_users", "id", userId);
     return user ? toUserRow(user) : null;

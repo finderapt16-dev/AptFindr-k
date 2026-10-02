@@ -42,7 +42,6 @@ import {
   deleteNotification,
   fetchAppealsByLandlord,
   fetchFavoritesForApartments,
-  fetchLandlordActivityPeople,
   fetchViewActivityForApartments,
   fetchLandlordProfile,
   fetchNotifications,
@@ -955,7 +954,6 @@ export function LandlordDashboard() {
           views,
           ratings,
           users,
-          activityPeople,
         ] = await Promise.all([
           fetchFavoritesForApartments(
             apartmentIds
@@ -967,9 +965,6 @@ export function LandlordDashboard() {
             apartmentIds
           ),
           fetchUsers(),
-          fetchLandlordActivityPeople(
-            apartmentIds
-          ),
         ]);
 
 
@@ -977,17 +972,7 @@ export function LandlordDashboard() {
           setFavoriteRows(favorites);
           setViewRows(views);
           setRatingRows(ratings);
-          // The landlord's own row (with verification fields) comes from
-          // fetchUsers(); the viewer/favoriter names come from the RPC because
-          // app_users rows are scoped by RLS.
-          const peopleById = new Map();
-          [...users, ...activityPeople].forEach((person) => {
-            const id = person?.id;
-            if (id && !peopleById.has(id)) {
-              peopleById.set(id, person);
-            }
-          });
-          setFavoriteUsers([...peopleById.values()]);
+          setFavoriteUsers(users);
         }
       } catch (error) {
         console.error(
@@ -2188,26 +2173,23 @@ export function LandlordDashboard() {
           };
 
 
-          const updatedAccount =
-            await updateUser(
-              user.id,
-              {
-                name: updatedUser.name,
-                email:
-                  updatedUser.email,
-                mobileNumber:
-                  updatedUser.mobileNumber,
-              }
-            );
+          await updateUser(
+            user.id,
+            {
+              name: updatedUser.name,
+              email:
+                updatedUser.email,
+              mobileNumber:
+                updatedUser.mobileNumber,
+            }
+          );
 
 
           const synced =
             await updateUserProfile({
               id: user.id,
-              // app_users.email mirrors auth.users and is only written by the
-              // database once Supabase confirms a new address.
               email:
-                user.email,
+                updatedUser.email,
               name:
                 updatedUser.name,
               role: "landlord",
@@ -2245,9 +2227,7 @@ export function LandlordDashboard() {
 
 
           toast.success(
-            updatedAccount?.emailChangePending
-              ? "Profile updated. Check your new email for a confirmation link before signing in with it."
-              : "Profile updated successfully!"
+            "Profile updated successfully!"
           );
         } catch (error) {
           const message =

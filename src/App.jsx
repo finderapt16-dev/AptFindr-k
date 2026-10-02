@@ -18,7 +18,6 @@ const NotFound = lazy(() => import("./landing/NotFound").then((module) => ({ def
 const PrivacyPolicyPage = lazy(() => import("./legal/PolicyPage").then((module) => ({ default: module.PrivacyPolicyPage })));
 const TermsOfServicePage = lazy(() => import("./legal/PolicyPage").then((module) => ({ default: module.TermsOfServicePage })));
 // Authentication and shared account pages
-const Signup = lazy(() => import("./auth/Signup").then((module) => ({ default: module.Signup })));
 const AuthCallback = lazy(() => import("./auth/AuthCallback").then((module) => ({ default: module.AuthCallback })));
 const Dashboard = lazy(() => import("./auth/Dashboard").then((module) => ({ default: module.Dashboard })));
 const Settings = lazy(() => import("./components/Settings").then((module) => ({ default: module.Settings })));
@@ -59,11 +58,12 @@ function PublicLandingRoute() {
     </ApartmentsProvider>);
 }
 export const router = createBrowserRouter([
-    // Public landing and standalone authentication pages
+    // Public authentication forms share the landing-page modal presentation.
     { path: "/", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
     // Keep direct login links on the landing page so they use the same modal
     // experience as the Sign In button on the home screen.
     { path: "/login", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
+    { path: "/signup", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
     { path: "/forgot-password", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
     { path: "/reset-password", element: <PublicLandingRoute />, errorElement: <RouteErrorBoundary /> },
     { path: "/auth/callback", element: <PageLoader><AuthCallback /></PageLoader>, errorElement: <RouteErrorBoundary /> },
@@ -98,8 +98,6 @@ export const router = createBrowserRouter([
             // Admin: overview, notifications, landlords, apartments, reports, appeals, admininfo.
             { path: "dashboard", element: <ProtectedRoute><PageLoader>{roleDashboard}</PageLoader></ProtectedRoute> },
             { path: "admin", element: <ProtectedRoute allowedRoles={["admin"]}><PageLoader>{roleDashboard}</PageLoader></ProtectedRoute> },
-            // Authentication.
-            { path: "signup", element: <PageLoader><Signup /></PageLoader> },
             { path: "*", element: <PageLoader><NotFound /></PageLoader> },
         ],
     },

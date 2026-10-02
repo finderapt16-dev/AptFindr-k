@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AlertCircle, ArrowLeft, ArrowRight, Building2, ChevronRight, Home, Info, Pencil, Users } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { useAuth } from "@/contexts/AuthContext";
-import { clearPendingGoogleOAuthFlow, isTenantRole, signupWithGoogle } from "@/services/authService";
+import { clearPendingGoogleOAuthFlow, finalizeGoogleSignup, getAuthUser, isGoogleAuthUser, isTenantRole, signupWithGoogle } from "@/services/authService";
 import { SignupAccountFields, SignupPersonalFields } from "./SignupFields";
 import { SignupReviewDialog } from "./SignupReviewDialog";
 import { SignupAgreement, SignupPolicyDialog } from "./SignupPolicyDialog";
@@ -45,7 +45,7 @@ function ReviewCard({ title, rows, onEdit, disabled }) {
   );
 }
 
-export function Signup({ embedded = false, redirect = null }) {
+export function Signup({ embedded = false, redirect = null, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { signup, hydrateSession } = useAuth();
@@ -55,11 +55,9 @@ export function Signup({ embedded = false, redirect = null }) {
   const requestedRedirect = (typeof redirect === "string" ? redirect : null) ?? query.get("redirect");
   const redirectTo = requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//") ? requestedRedirect : null;
   const loginPath = redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : "/login";
-  // Reachable from /signup?google=setup: Google already signed the visitor in,
-  // but no AptFindr account exists for that Google user yet. Land them on the
-  // tenant card, which is the only card Google can create, and say why.
-  const googleSetup = !embedded && query.get("google") === "setup";
+  const googleSetup = query.get("google") === "setup";
 
+  const [googleIdentity, setGoogleIdentity] = useState(null);
   const [values, setValues] = useState(INITIAL_VALUES);
   const [landlordStep, setLandlordStep] = useState(1);
   const [error, setError] = useState("");
@@ -84,10 +82,18 @@ export function Signup({ embedded = false, redirect = null }) {
   }, [landlordStep, values.role]);
 
   useEffect(() => {
-    // Google accounts can only become tenants, and the Google button lives on
-    // that card, so do not leave the visitor on a role chooser they cannot use.
     if (!googleSetup) return;
-    setValues((current) => (current.role ? current : { ...current, role: "tenant" }));
+    let active = true;
+    void getAuthUser().then(({ data, error }) => {
+      if (!active) return;
+      if (error || !isGoogleAuthUser(data.user) || !data.user.email_confirmed_at) {
+        setError("Your Google session has expired. Sign in with Google again.");
+        return;
+      }
+      setGoogleIdentity(data.user);
+      setValues(current => ({ ...current, email: data.user.email }));
+    }).catch(() => { if (active) setError("Unable to verify your Google session. Please sign in again."); });
+    return () => { active = false; };
   }, [googleSetup]);
 
   const changeField = (field, value) => {
@@ -143,6 +149,10 @@ export function Signup({ embedded = false, redirect = null }) {
 
   const createAccount = async () => {
     if (submissionInFlightRef.current || (isLandlord && landlordStep !== 3)) return;
+    if (googleSetup && !googleIdentity) {
+      setError("Sign in with Google again to verify your email before continuing.");
+      return;
+    }
     const normalized = normalizeSignupValues(values);
     const accountErrors = validateAccountDetails(normalized);
     if (Object.keys(accountErrors).length) {
@@ -167,7 +177,8 @@ export function Signup({ embedded = false, redirect = null }) {
     submissionInFlightRef.current = true;
     setBusy("account");
     try {
-      const result = await signup({
+      const input = {
+        ...normalized,
         name: isLandlord ? getSignupFullName(normalized) : normalized.username,
         username: normalized.username,
         email: normalized.email,
@@ -178,7 +189,16 @@ export function Signup({ embedded = false, redirect = null }) {
         mobileNumber: isLandlord ? normalized.mobileNumber : "",
         termsAccepted,
         landlordVerificationAccepted: isLandlord ? termsAccepted : undefined,
-      });
+      };
+      if (googleSetup) {
+        await finalizeGoogleSignup(googleIdentity, input);
+        const profile = await hydrateSession();
+        if (!profile) throw new Error("Your account was saved. Please sign in again to continue.");
+        clearPendingGoogleOAuthFlow();
+        navigate(dashboardPathForRole(profile.role), { replace: true });
+        return;
+      }
+      const result = await signup(input);
       if (!result.success) {
         setError(result.error || "Signup failed.");
       } else if (result.signup?.existingAccount) {
@@ -202,7 +222,7 @@ export function Signup({ embedded = false, redirect = null }) {
       }
     } catch (submitError) {
       console.error("[AUTH] Unexpected signup UI failure", submitError);
-      setError("We could not confirm that registration completed. Try signing in, resending verification, or resetting your password before registering again.");
+      setError(submitError instanceof Error ? submitError.message : "Unable to finish registration. Please try again.");
     } finally {
       submissionInFlightRef.current = false;
       setBusy(null);
@@ -224,16 +244,17 @@ export function Signup({ embedded = false, redirect = null }) {
 
   const handleGoogleSignup = async () => {
     if (submissionInFlightRef.current) return;
-    if (!tenantTermsAccepted) {
-      setError("You must agree to the Terms of Service and Privacy Policy to continue.");
-      focusField("termsAccepted");
-      return;
-    }
     setError("");
     submissionInFlightRef.current = true;
     setBusy("google");
     try {
       const googleSignup = await signupWithGoogle({ termsAccepted: tenantTermsAccepted });
+      if (googleSignup?.needsAccount) {
+        navigate("/signup?google=setup");
+        submissionInFlightRef.current = false;
+        setBusy(null);
+        return;
+      }
       if (googleSignup?.profile) {
         // The account and its profile already exist at this point. Hydrating the
         // shared context can lose a race with another auth request, and that must
@@ -275,8 +296,7 @@ export function Signup({ embedded = false, redirect = null }) {
               <div className="signup-google-setup-notice" role="status">
                 <Info aria-hidden="true" />
                 <p>
-                  Google signed you in, but that Google account does not have an AptFindr account yet.
-                  Tick the terms and press <strong>Sign Up with Google</strong> to finish creating your account.
+                  Google has verified your email{googleIdentity ? ` (${googleIdentity.email})` : ""}. Choose Tenant or Landlord, complete the form, and press <strong>Create Account</strong>. Your password also lets you sign in with your username.
                 </p>
               </div>
             )}
@@ -302,16 +322,16 @@ export function Signup({ embedded = false, redirect = null }) {
                       <ChevronRight className="signup-account-type-chevron" aria-hidden="true" />
                     </button>
                   ))}
-                  <Link to="/" className="signup-home-link"><Home aria-hidden="true" /> Back to Home</Link>
+                  <Link to="/" className="signup-home-link" onClick={embedded && onClose ? (event) => { event.preventDefault(); onClose(); } : undefined}><Home aria-hidden="true" /> Back to Home</Link>
                 </div>
               )}
               {values.role === "tenant" && (
                 <>
-                  <div className="signup-tenant-simple-form"><SignupAccountFields values={values} onChange={changeField} errors={fieldErrors} disabled={loading} idPrefix="tenant" /></div>
+                  <div className="signup-tenant-simple-form"><SignupAccountFields values={values} onChange={changeField} errors={fieldErrors} disabled={loading} idPrefix="tenant" emailReadOnly={googleSetup} /></div>
                   {agreement}
                   {createButton}
-                  <div className="signup-social-divider" aria-hidden="true"><span /><b>or</b><span /></div>
-                  <button type="button" className="signup-google-button" onClick={handleGoogleSignup} disabled={loading}><GoogleIcon />{busy === "google" ? "Connecting to Google..." : googleSetup ? "Finish Creating Your Account with Google" : "Sign Up with Google"}</button>
+                  {!googleSetup && <><div className="signup-social-divider" aria-hidden="true"><span /><b>or</b><span /></div>
+                  <button type="button" className="signup-google-button" onClick={handleGoogleSignup} disabled={loading}><GoogleIcon />{busy === "google" ? "Connecting to Google..." : googleSetup ? "Finish Creating Your Account with Google" : "Sign Up with Google"}</button></>}
                   {loginPrompt}
                 </>
               )}
@@ -333,7 +353,7 @@ export function Signup({ embedded = false, redirect = null }) {
                     <h2 ref={stepHeadingRef} id="signup-step-title" tabIndex={-1} className="signup-landlord-panel-title">{LANDLORD_STEPS[landlordStep - 1]}</h2>
                     {landlordStep === 1 && (
                       <>
-                        <SignupAccountFields values={values} onChange={changeField} errors={fieldErrors} disabled={loading} idPrefix="landlord" />
+                        <SignupAccountFields values={values} onChange={changeField} errors={fieldErrors} disabled={loading} idPrefix="landlord" emailReadOnly={googleSetup} />
                         <button type="submit" className="signup-primary-button signup-landlord-continue" disabled={loading}>Continue <ArrowRight aria-hidden="true" /></button>
                         {loginPrompt}
                       </>
@@ -363,7 +383,7 @@ export function Signup({ embedded = false, redirect = null }) {
           </section>
         </div>
       </div>
-      {reviewEditor && <SignupReviewDialog key={reviewEditor} section={reviewEditor} values={values} onSave={(draft) => setValues((current) => ({ ...current, ...draft }))} onClose={() => setReviewEditor(null)} returnFocusRef={reviewTriggerRef} />}
+      {reviewEditor && <SignupReviewDialog emailReadOnly={googleSetup} key={reviewEditor} section={reviewEditor} values={values} onSave={(draft) => setValues((current) => ({ ...current, ...draft }))} onClose={() => setReviewEditor(null)} returnFocusRef={reviewTriggerRef} />}
       {policy && <SignupPolicyDialog policy={policy} role={isLandlord ? "landlord" : "tenant"} onClose={() => setPolicy(null)} returnFocusRef={policyTriggerRef} />}
     </div>
   );
