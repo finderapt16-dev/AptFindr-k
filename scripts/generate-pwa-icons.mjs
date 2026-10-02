@@ -5,6 +5,8 @@ import sharp from "sharp";
 const publicDirectory = fileURLToPath(new URL("../public/", import.meta.url));
 const sourceLogo = `${publicDirectory}aptfindr-logo-source.png`;
 const preparedLogo = `${publicDirectory}aptfindr-logo.png`;
+const sourceWordmark = `${publicDirectory}aptfindr-wordmark-source.png`;
+const preparedWordmark = `${publicDirectory}aptfindr-wordmark.png`;
 
 // Preserve the supplied blue mark exactly while turning only its
 // white canvas and pale neutral logo backdrop into transparency.
@@ -21,15 +23,25 @@ for (let y = 0; y < info.height; y += 1) {
     const isWhiteCanvas = darkest >= 245;
     const isPaleNeutralBackdrop = darkest >= 235 && lightest - darkest <= 18;
     if (isExportFrame || isWhiteCanvas || isPaleNeutralBackdrop) data[offset + 3] = 0;
-    if (data[offset + 3] < 96) data[offset + 3] = 0;
-    if (data[offset + 3] > 0) {
-      data[offset] = 69;
-      data[offset + 1] = 142;
-      data[offset + 2] = 238;
-    }
   }
 }
 await sharp(data, { raw: info }).trim({ background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toFile(preparedLogo);
+
+// Keep the supplied AptFindr wordmark intact, removing only its white canvas.
+const { data: wordmarkData, info: wordmarkInfo } = await sharp(sourceWordmark)
+  .ensureAlpha()
+  .raw()
+  .toBuffer({ resolveWithObject: true });
+for (let offset = 0; offset < wordmarkData.length; offset += wordmarkInfo.channels) {
+  const red = wordmarkData[offset];
+  const green = wordmarkData[offset + 1];
+  const blue = wordmarkData[offset + 2];
+  if (Math.min(red, green, blue) >= 245) wordmarkData[offset + 3] = 0;
+}
+await sharp(wordmarkData, { raw: wordmarkInfo })
+  .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  .png()
+  .toFile(preparedWordmark);
 
 const logo = await readFile(preparedLogo);
 await mkdir(`${publicDirectory}icons`, { recursive: true });

@@ -2222,3 +2222,65 @@
 @media (min-width: 80rem) {
   .favorites-section-grid-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Use the same header dimensions and type scale as tenant Settings. */
+.tenant-favorites-hero,
+.favorites-section-section {
+  width: 100%;
+  max-width: 1400px;
+  min-height: 130px;
+  margin: 15px auto 0;
+  padding: 40px 64px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #ffffff;
+  box-sizing: border-box;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+}
+
+.favorites-section-container {
+  max-width: 1400px;
+}
+
+.favorites-panel-9,
+.favorites-section-content {
+  max-width: none;
+}
+
+.favorites-section-content {
+  display: block;
+}
+
+.favorites-section-panel,
+.favorites-section-panel-2 {
+  display: none;
+}
+
+.favorites-your-favorites,
+.favorites-section-your-favorites {
+  margin: 0;
+  color: #1f1f1f;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: normal;
+}
+
+.favorites-text-4,
+.favorites-section-apartments-you-ve-saved-for-later {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+@media (max-width: 640px) {
+  .tenant-favorites-hero,
+  .favorites-section-section {
+    min-height: 120px;
+    padding: 24px;
+  }
+}

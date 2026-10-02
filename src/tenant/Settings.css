@@ -89,6 +89,9 @@
     justify-content: space-between;
 
     gap: 32px;
+
+    background-color: #ffffff;
+    background-image: none;
 }
 
 .tenant-profile-heading h1 {

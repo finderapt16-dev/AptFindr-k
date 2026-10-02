@@ -60,13 +60,7 @@ export function MobileNavigation({ active = "apartments", unreadCount = 0 }) {
             <div className="app-sidebar">
               <div className="app-sidebar-brand">
                 <Link to="/browse" onClick={() => setOpen(false)} className="tenant-mobile-navigation-row">
-                  <div className="tenant-mobile-navigation-card">
-                    <img src="/aptfindr-logo.png?v=7" alt="" className="tenant-mobile-navigation-image" aria-hidden="true"/>
-                  </div>
-                  <div>
-                    <span className="tenant-mobile-navigation-apt-findr">AptFindr</span>
-                    <p className="tenant-mobile-navigation-la-paz-iloilo-city">La Paz, Iloilo City</p>
-                  </div>
+                  <img src="/aptfindr-wordmark.png?v=2" alt="AptFindr" className="tenant-mobile-navigation-wordmark"/>
                 </Link>
               </div>
 

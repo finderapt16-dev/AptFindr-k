@@ -84,39 +84,22 @@
 
 .landing-brand {
   align-items: center;
-  gap: .625rem;
   min-height: 2.5rem;
   display: flex;
 }
 
-:where(.landing-brand > :not(:last-child)) {
-  margin-inline: 0;
-}
-
-.landing-brand-logo {
-  border-radius: 1rem;
-  width: 2.5rem;
+.landing-brand-wordmark {
+  width: clamp(8.75rem, 22vw, 12.5rem);
   height: auto;
-  max-height: 2.5rem;
+  max-height: 3rem;
   object-fit: contain;
-  object-position: center;
+  object-position: left center;
   flex: 0 0 auto;
   display: block;
-  transition-property: all;
-  transition-duration: .15s;
-  transition-timing-function: cubic-bezier(.4, 0, .2, 1);
-}
-
-.landing-brand-copy {
-  align-self: stretch;
-  min-height: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
 @media (hover: hover) {
-  .landing-brand:hover .landing-brand-logo {
+  .landing-brand:hover .landing-brand-wordmark {
     scale: 1.05;
   }
 }
@@ -1161,6 +1144,15 @@
   gap: .75rem;
   margin-bottom: 1rem;
   display: flex;
+}
+
+.landing-footer-wordmark {
+  width: min(12.5rem, 100%);
+  height: auto;
+  max-height: 3.25rem;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
 }
 
 .landing-footer-logo {

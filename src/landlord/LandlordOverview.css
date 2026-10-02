@@ -7,9 +7,9 @@
   /* Main dashboard content */
   .ld-simple-dashboard {
     width: 100%;
-    max-width: 1004px;
-    margin: 0 auto;
-    padding: 0 0 40px;
+    max-width: 1400px;
+    margin: 15px auto 40px;
+    padding: 0;
   }
 
   /* ==========================================================
@@ -18,18 +18,22 @@
 
   .ld-simple-heading {
     width: 100%;
-    margin: 0 0 16px;
-    padding: 28px 46px 26px;
-    border: 1px solid #dce3ea;
-    border-radius: 7px;
+    min-height: 130px;
+    margin: 0 0 24px;
+    padding: 40px 64px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
     background: #ffffff;
   }
 
   .ld-simple-heading h1 {
     margin: 0;
-    color: #111827;
-    font-size: 20px;
-    line-height: 24px;
+    color: #1f1f1f;
+    font-size: 24px;
+    line-height: 1.2;
     font-weight: 700;
     letter-spacing: 0;
   }
@@ -37,8 +41,8 @@
   .ld-simple-heading p {
     margin: 5px 0 0;
     color: #64748b;
-    font-size: 11px;
-    line-height: 16px;
+    font-size: 14px;
+    line-height: 20px;
   }
 
 
@@ -746,7 +750,7 @@
 
 @media (min-width: 1200px) {
   .ld-simple-dashboard {
-    max-width: 1004px;
+    max-width: 1400px;
   }
 }
 

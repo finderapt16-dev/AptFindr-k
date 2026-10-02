@@ -1,7 +1,6 @@
 import { AlertTriangle, Bell, Heart, HelpCircle, LogOut, Search, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogoutConfirmation } from "@/components/LogoutConfirmation";
-import { AppLogo } from "@/components/AppLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/tenant/useFavorites";
 
@@ -102,16 +101,7 @@ export function Sidebar({ active = "apartments", unreadCount = 0, tenantNotifica
     return (<aside className="app-sidebar">
       <div className="app-sidebar-brand">
         <Link to="/browse" onClick={closeSidebar} className="tenant-sidebar-row">
-          <div className="tenant-sidebar-card">
-            <AppLogo className="tenant-sidebar-app-logo"/>
-          </div>
-
-          <div>
-            <span className="tenant-sidebar-apt-findr">AptFindr</span>
-            <p className="tenant-sidebar-la-paz-iloilo-city">
-              La Paz, Iloilo City
-            </p>
-          </div>
+          <img src="/aptfindr-wordmark.png?v=2" alt="AptFindr" className="tenant-sidebar-wordmark"/>
         </Link>
       </div>
 

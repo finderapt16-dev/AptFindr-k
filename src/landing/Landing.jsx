@@ -1,4 +1,3 @@
-import { AppLogo } from "@/components/AppLogo";
 import { LandingListingsSection } from "./LandingApartmentPreview";
 import { POLICY_ROUTES } from "@/legal/policyMeta";
 
@@ -1183,23 +1182,11 @@ export function Landing() {
                             className="landing-brand"
                         >
 
-                            <AppLogo
-                                className="landing-brand-logo"
+                            <img
+                                src="/aptfindr-wordmark.png?v=2"
+                                alt="AptFindr"
+                                className="landing-brand-wordmark"
                             />
-
-
-                            <div className="landing-brand-copy">
-
-                                <span className="landing-brand-name">
-                                    AptFindr
-                                </span>
-
-
-                                <p className="landing-brand-location">
-                                    La Paz, Iloilo City
-                                </p>
-
-                            </div>
 
                         </Link>
 
@@ -1697,9 +1684,11 @@ export function Landing() {
 
                             <div className="landing-footer-brand">
 
-                                <span className="landing-brand-name">
-                                    AptFindr
-                                </span>
+                                <img
+                                    src="/aptfindr-wordmark.png?v=2"
+                                    alt="AptFindr"
+                                    className="landing-footer-wordmark"
+                                />
 
                             </div>
 

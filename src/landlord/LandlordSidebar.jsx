@@ -2,7 +2,6 @@ import "./LandlordSidebar.css";
 import { Bell, HelpCircle, LayoutGrid, ListPlus, LogOut, Settings, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { LogoutConfirmation } from "@/components/LogoutConfirmation";
-import { AppLogo } from "@/components/AppLogo";
 
 const mainItems = [
   { label: "My Properties", section: "overview", icon: LayoutGrid },
@@ -44,8 +43,7 @@ export function LandlordSidebar({ user, activeSection, unreadNotifications = 0, 
   return <aside className="app-sidebar landlord-sidebar">
     <button type="button" onClick={() => selectSection("overview")} className="app-sidebar-brand landlord-sidebar-brand">
       <span className="landlord-sidebar-brand-row">
-        <span className="landlord-sidebar-logo-card"><AppLogo className="landlord-sidebar-app-logo" /></span>
-        <span><strong className="landlord-sidebar-apt-findr">AptFindr</strong><small className="landlord-sidebar-city">La Paz, Iloilo City</small></span>
+        <img src="/aptfindr-wordmark.png?v=2" alt="AptFindr" className="landlord-sidebar-wordmark" />
       </span>
     </button>
 

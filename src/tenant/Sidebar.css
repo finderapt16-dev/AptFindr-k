@@ -29,8 +29,16 @@
 
 .tenant-sidebar-row {
   align-items: center;
-  gap: calc(var(--spacing, .25rem) * 2.5);
   display: flex;
+}
+
+.tenant-sidebar-wordmark {
+  width: min(9.5rem, 100%);
+  height: auto;
+  max-height: 2.75rem;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
 }
 
 .tenant-sidebar-card {

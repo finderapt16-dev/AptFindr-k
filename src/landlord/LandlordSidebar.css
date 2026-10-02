@@ -62,6 +62,15 @@
   gap: 11px;
 }
 
+.landlord-sidebar-wordmark {
+  display: block;
+  width: min(10rem, 100%);
+  height: auto;
+  max-height: 2.75rem;
+  object-fit: contain;
+  object-position: left center;
+}
+
 .landlord-sidebar-logo-card {
   display: grid;
 

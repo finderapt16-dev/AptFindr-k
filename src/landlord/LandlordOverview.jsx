@@ -684,8 +684,10 @@ export const LandlordOverview = ({
   return (
     <div className="ld-simple-dashboard">
       <header className="ld-simple-heading">
-        <h1>Landlord Dashboard</h1>
-        <p>Monitor your property and tenant engagement.</p>
+        <div>
+          <h1>Landlord Dashboard</h1>
+          <p>Monitor your property and tenant engagement.</p>
+        </div>
       </header>
 
       <section className="ld-properties-card">

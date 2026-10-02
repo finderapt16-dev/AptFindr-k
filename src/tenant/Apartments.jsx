@@ -31,7 +31,6 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { useApartmentsContext } from "@/contexts/ApartmentsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { isTenantRole } from "@/services/authService";
-import { getTimeBasedGreeting } from "@/tenant/tenantGreeting";
 
 import {
     fetchApartmentRatings,
@@ -1044,12 +1043,6 @@ function TenantBrowse() {
         ).length;
 
 
-    const tenantGreeting =
-        getTimeBasedGreeting(
-            user?.name
-        );
-
-
     const hasActiveApartmentFilters =
         Boolean(
             searchQuery.trim() ||
@@ -1452,10 +1445,6 @@ function TenantBrowse() {
                         <div className="app-shell-content app-shell-content-mobile-nav">
                             <section className="apartment-browse-section-3">
     <div className="apartment-browse-panel-11">
-        <p className="apartment-browse-text-6">
-            {tenantGreeting}
-        </p>
-
         <h1 className="apartment-browse-available-apartments">
             Apartments
         </h1>

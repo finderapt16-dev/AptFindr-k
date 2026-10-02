@@ -303,9 +303,6 @@ function BrowseMetric({ icon: Icon, value, label, }) {
 export const FavoritesOverview = ({ favoriteApartments, visibleFavoriteApartments, favoriteFilter, setFavoriteFilter, favoriteSort, setFavoriteSort, favoriteView, setFavoriteView, removingFavoriteId, removeFavorite, ratingSummary, ratingsLoading, navigate, }) => (<div className="favorites-section-container">
     <section className="favorites-section-section">
       <div className="favorites-section-content">
-        <div className="favorites-section-card">
-          <Heart className="favorites-section-heart-icon"/>
-        </div>
         <div>
           <h1 className="favorites-section-your-favorites">Your Favorites</h1>
           <p className="favorites-section-apartments-you-ve-saved-for-later">Apartments you've saved for later</p>

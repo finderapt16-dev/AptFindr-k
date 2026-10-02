@@ -149,7 +149,7 @@
 .tenant-browse form:first-of-type button { border-color: var(--tenant-border) !important; color: var(--tenant-ink) !important; background: #fff !important; box-shadow: none !important; }
 .tenant-browse form:first-of-type button svg { color: var(--tenant-accent); }
 
-.tenant-browse main section:nth-of-type(1) {
+.tenant-browse main section:nth-of-type(1):not(.apartment-browse-section-3):not(.tenant-favorites-hero):not(.favorites-section-section):not(.tenant-notifications-section) {
   min-height: 220px;
   margin-top: 24px !important;
   border: 1px solid #f2f6fa;
@@ -159,14 +159,13 @@
 .tenant-browse main .tenant-profile-settings > section.tenant-profile-summary {
   background: #fff !important;
 }
-.tenant-browse main section:nth-of-type(1) > div:first-child { max-width: 58%; }
-.tenant-browse main section:nth-of-type(1) > div:first-child > div:first-child {
+.tenant-browse main section:nth-of-type(1):not(.apartment-browse-section-3):not(.tenant-favorites-hero):not(.favorites-section-section):not(.tenant-notifications-section) > div:first-child { max-width: 58%; }
+.tenant-browse main section:nth-of-type(1):not(.apartment-browse-section-3):not(.tenant-favorites-hero):not(.favorites-section-section):not(.tenant-notifications-section) > div:first-child > div:first-child {
   border-color: var(--tenant-border) !important;
   border-radius: 999px !important;
   color: var(--tenant-accent) !important;
 }
-.tenant-browse main section:nth-of-type(1) p { color: var(--tenant-muted) !important; font-size: 16px !important; }
-.tenant-browse main .tenant-favorites-hero { min-height: 160px; margin-top: 0 !important; }
+.tenant-browse main section:nth-of-type(1):not(.apartment-browse-section-3):not(.tenant-favorites-hero):not(.favorites-section-section):not(.tenant-notifications-section) p { color: var(--tenant-muted) !important; font-size: 16px !important; }
 
 .tenant-browse {
   z-index: 50;
@@ -184,13 +183,87 @@
 .tenant-summary-available { background:#059669; color:#fff; }
 
 @media (max-width: 767px) {
-  .tenant-browse main section:nth-of-type(1) { min-height: 0; }
-  .tenant-browse main section:nth-of-type(1) > div:first-child { max-width: 100%; }
+  .tenant-browse main section:nth-of-type(1):not(.apartment-browse-section-3):not(.tenant-favorites-hero):not(.favorites-section-section):not(.tenant-notifications-section) { min-height: 0; }
+  .tenant-browse main section:nth-of-type(1):not(.apartment-browse-section-3):not(.tenant-favorites-hero):not(.favorites-section-section):not(.tenant-notifications-section) > div:first-child { max-width: 100%; }
 }
 
 .tenant-sidebar-apt-findr,
 .tenant-mobile-navigation-apt-findr {
   color: var(--apt-text) !important;
+}
+
+/* Page headers must use the same complete card treatment as Settings. */
+.tenant-browse main .apartment-browse-section-3,
+.tenant-browse main .tenant-favorites-hero,
+.tenant-browse main .favorites-section-section,
+.tenant-browse main .tenant-notifications-section {
+  width: 100% !important;
+  max-width: 1400px !important;
+  min-height: 130px !important;
+  margin: 15px auto 24px !important;
+  padding: 40px 64px !important;
+  box-sizing: border-box !important;
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 32px !important;
+}
+
+.tenant-browse main .apartment-browse-section-3::before,
+.tenant-browse main .apartment-browse-section-3::after,
+.tenant-browse main .tenant-favorites-hero::before,
+.tenant-browse main .tenant-favorites-hero::after,
+.tenant-browse main .favorites-section-section::before,
+.tenant-browse main .favorites-section-section::after,
+.tenant-browse main .tenant-notifications-section::before,
+.tenant-browse main .tenant-notifications-section::after {
+  display: none !important;
+}
+
+.tenant-browse main .apartment-browse-section-3 > div:first-child,
+.tenant-browse main .tenant-favorites-hero > div:first-child,
+.tenant-browse main .favorites-section-section > div:first-child,
+.tenant-browse main .tenant-notifications-section > div:first-child {
+  max-width: none !important;
+}
+
+.tenant-browse main .apartment-browse-section-3 h1,
+.tenant-browse main .tenant-favorites-hero h1,
+.tenant-browse main .favorites-section-section h1,
+.tenant-browse main .tenant-notifications-section h1 {
+  margin: 0 !important;
+  color: #1f1f1f !important;
+  font-size: 24px !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  letter-spacing: normal !important;
+}
+
+.tenant-browse main .apartment-browse-section-3 p,
+.tenant-browse main .tenant-favorites-hero p,
+.tenant-browse main .favorites-section-section p,
+.tenant-browse main .tenant-notifications-section p {
+  margin: 5px 0 0 !important;
+  color: #64748b !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+}
+
+@media (max-width: 640px) {
+  .tenant-browse main .apartment-browse-section-3,
+  .tenant-browse main .tenant-favorites-hero,
+  .tenant-browse main .favorites-section-section,
+  .tenant-browse main .tenant-notifications-section {
+    min-height: 120px !important;
+    padding: 24px !important;
+  }
 }
 
 .tenant-sidebar-la-paz-iloilo-city,
