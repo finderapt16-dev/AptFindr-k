@@ -112,6 +112,8 @@
 ========================================= */
 
 .market-details {
+  width: 100%;
+  box-sizing: border-box;
   padding: 20px;
 
   background: #ffffff;
@@ -873,5 +875,60 @@
     color: #64748b;
     font-size: 14px;
     line-height: 20px;
+  }
+}
+
+/* Match the dashboard content grid instead of using a separate page gutter. */
+@media (min-width: 681px) {
+  .landlord-market-trends .market-trends-page {
+    width: 100%;
+    max-width: 1400px;
+    margin: 15px auto 40px;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+
+@media (min-width: 681px) and (max-width: 1100px) {
+  .landlord-market-trends .market-trends-page {
+    max-width: calc(100% - 32px);
+  }
+}
+
+@media (max-width: 680px) {
+  .landlord-market-trends .market-trends-page {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0 0 28px;
+    box-sizing: border-box;
+  }
+
+  /* Match the compact landlord dashboard header. */
+  .landlord-market-trends .market-trends-header {
+    min-height: 0;
+    margin: 0 0 16px;
+    padding: 18px 20px;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 0;
+    background: #ffffff;
+    box-shadow: none;
+  }
+
+  .landlord-market-trends .market-trends-header h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 20px;
+    line-height: 1.18;
+    font-weight: 700;
+  }
+
+  .landlord-market-trends .market-trends-header p {
+    max-width: 285px;
+    margin: 7px 0 0;
+    color: #52657a;
+    font-size: 14px;
+    line-height: 1.45;
   }
 }

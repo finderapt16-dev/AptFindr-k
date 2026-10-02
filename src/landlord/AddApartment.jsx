@@ -100,10 +100,10 @@ export function AddApartment() {
     const [validationErrors, setValidationErrors] = useState({});
     const totalSteps = 4;
     const stepConfig = [
-        { number: 1, title: "Property Information", progressDescription: "Basic details", description: "Let's start with the basic details about your property." },
-        { number: 2, title: "Location Details", progressDescription: "Address & map", description: "Where is your property located?" },
-        { number: 3, title: "Amenities & House Rules", progressDescription: "Features & policies", description: "Select the amenities, utilities, and policies for your property." },
-        { number: 4, title: "Property Verification", progressDescription: "Verification", description: "Submit details and verification documents." },
+        { number: 1, title: "Property Information", description: "Let's start with the basic details about your property." },
+        { number: 2, title: "Location Details", description: "Where is your property located?" },
+        { number: 3, title: "Amenities & House Rules", description: "Select the amenities, utilities, and policies for your property." },
+        { number: 4, title: "Property Verification", description: "Submit details and verification documents." },
     ];
     const [formData, setFormData] = useState({ ...INITIAL_FORM_DATA });
     const [locationLookupRequest, setLocationLookupRequest] = useState(0);
@@ -697,7 +697,7 @@ export function AddApartment() {
 
         <main className="app-shell-main landlord-add-property-main">
           <div className="landlord-add-property add-apartment-page">
-            <div className="app-shell-content add-apartment-page-content">
+            <div className="app-shell-content add-apartment-page-content add-apartment-flow-container">
         <div className="add-apartment-panel-4">
           <h1 className="add-apartment-add-property">Add Property</h1>
           <p className="add-apartment-text-4">Submit property information for review, then manage individual rooms separately.</p>
@@ -728,8 +728,8 @@ export function AddApartment() {
           </Alert>)}
 
         <div className="add-apartment-container">
-          <div className="add-apartment-row-4">
-            {stepConfig.map((step, idx) => (<div key={step.number} className="add-apartment-row-5">
+          <div className="add-apartment-stepper">
+            {stepConfig.map((step, idx) => (<div key={step.number} className="add-apartment-step-item">
                 <button type="button" onClick={() => handleStepClick(step.number)} disabled={isSubmitting} aria-label={`Go to step ${step.number}: ${step.title}`} aria-current={currentStep === step.number ? "step" : undefined} className={`add-apartment-button-3 ${currentStep >= step.number
                 ? "add-apartment-button-4"
                 : "add-apartment-button-5"}`}>
@@ -738,16 +738,14 @@ export function AddApartment() {
                 {idx < stepConfig.length - 1 && (<div className={`add-apartment-panel-5 ${currentStep > step.number
                     ? "add-apartment-panel-6"
                     : "add-apartment-panel-7"}`}/>)}
-              </div>))}
-          </div>
-          <div className="add-apartment-grid">
-            {stepConfig.map((step) => (<button key={step.number} type="button" onClick={() => handleStepClick(step.number)} disabled={isSubmitting} aria-label={`Go to ${step.title}`} className={`add-apartment-button-6 ${currentStep === step.number
+                <button type="button" onClick={() => handleStepClick(step.number)} disabled={isSubmitting} aria-label={`Go to ${step.title}`} className={`add-apartment-button-6 ${currentStep === step.number
                 ? "add-apartment-button-7"
                 : currentStep > step.number
                     ? "add-apartment-button-8"
                     : "add-apartment-button-9"}`}>
-                <span>{step.title}</span><small>{step.progressDescription}</small>
-              </button>))}
+                  <span>{step.title}</span>
+                </button>
+              </div>))}
           </div>
         </div>
 

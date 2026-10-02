@@ -2371,8 +2371,7 @@
 .landlord-add-property .add-apartment-panel-7 { background: #dfe6ee; }
 .landlord-add-property .add-apartment-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
 .landlord-add-property .add-apartment-button-6 { border: 0; padding: 0; background: transparent; color: #8a94a3; font-size: 12px; font-weight: 650; text-align: center; }
-.landlord-add-property .add-apartment-button-6 span, .landlord-add-property .add-apartment-button-6 small { display: block; }
-.landlord-add-property .add-apartment-button-6 small { margin-top: 3px; color: #9aa5b3; font-size: 10px; font-weight: 500; }
+.landlord-add-property .add-apartment-button-6 span { display: block; }
 .landlord-add-property .add-apartment-button-7, .landlord-add-property .add-apartment-button-8 { color: #168dca; }
 .landlord-add-property .add-apartment-card-5 { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; box-shadow: 0 3px 12px rgba(18,38,63,.045); }
 .landlord-add-property .add-apartment-card-header { padding: 28px 30px 18px; border-bottom: 1px solid #edf0f4; }
@@ -2425,7 +2424,6 @@
 .landlord-add-property .add-apartment-panel-5 { height: 1px; margin: 0 8px; }
 .landlord-add-property .add-apartment-grid { gap: 4px; margin-top: 6px; }
 .landlord-add-property .add-apartment-button-6 { font-size: 10px; line-height: 1.1; font-weight: 700; }
-.landlord-add-property .add-apartment-button-6 small { margin-top: 2px; font-size: 8px; }
 .landlord-add-property .add-apartment-card-5 { border-color: #dfe5ec; border-radius: 7px; box-shadow: 0 1px 4px rgba(20, 33, 61, .035); }
 .landlord-add-property .add-apartment-card-header { padding: 15px 18px 11px; }
 .landlord-add-property .add-apartment-card-title { font-size: 15px; font-weight: 750; }
@@ -2582,7 +2580,6 @@
   .landlord-add-property .add-apartment-button-3 { width: 17px; height: 17px; flex-basis: 17px; font-size: 8px; }
   .landlord-add-property .add-apartment-panel-5 { margin: 0 5px; }
   .landlord-add-property .add-apartment-button-6 { font-size: 7px; }
-  .landlord-add-property .add-apartment-button-6 small { font-size: 6px; }
   .landlord-add-property .add-apartment-card-header { padding: 11px 10px 8px; }
   .landlord-add-property .add-apartment-card-title { font-size: 12px; }
   .landlord-add-property .add-apartment-card-header [class*="description"] { font-size: 7px; }
@@ -2626,7 +2623,6 @@
 .landlord-add-property .add-apartment-container { padding: 16px 12px 20px; }
 .landlord-add-property .add-apartment-button-3 { width: 32px; height: 32px; flex-basis: 32px; font-size: 14px; }
 .landlord-add-property .add-apartment-button-6 { font-size: 12px; }
-.landlord-add-property .add-apartment-button-6 small { font-size: 11px; }
 .landlord-add-property .add-apartment-card-header { padding: 20px 24px 14px; }
 .landlord-add-property .add-apartment-card-header { position: relative; padding-right: 64px; }
 .landlord-add-property .add-apartment-close-wizard { position: absolute; top: 15px; right: 18px; display: inline-grid; width: 32px; height: 32px; place-items: center; padding: 0; border: 1px solid #d8e2ec; border-radius: 50%; background: #ffffff; color: #667085; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease; }
@@ -2679,7 +2675,6 @@
   .landlord-add-property .add-apartment-container { padding: 12px 0 16px; }
   .landlord-add-property .add-apartment-button-3 { width: 28px; height: 28px; flex-basis: 28px; font-size: 12px; }
   .landlord-add-property .add-apartment-button-6 { font-size: 10px; }
-  .landlord-add-property .add-apartment-button-6 small { font-size: 9px; }
   .landlord-add-property .add-apartment-card-header,
   .landlord-add-property .add-apartment-card-content { padding-left: 14px; padding-right: 14px; }
   .landlord-add-property .add-apartment-card-header { padding-right: 54px; }
@@ -2705,4 +2700,110 @@
   .landlord-add-property .add-apartment-cancel,
   .landlord-add-property .add-apartment-next,
   .landlord-add-property .add-apartment-button-14 { min-width: 0; flex: 1; min-height: 42px; font-size: 12px; }
+}
+
+/* Keep every progress circle and its title on the same horizontal center. */
+.landlord-add-property .add-apartment-stepper {
+  --add-property-step-circle: 32px;
+  display: flex;
+  width: 100%;
+}
+
+.landlord-add-property .add-apartment-step-item {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.landlord-add-property .add-apartment-step-item .add-apartment-button-3 {
+  z-index: 1;
+  width: var(--add-property-step-circle);
+  height: var(--add-property-step-circle);
+  min-width: var(--add-property-step-circle);
+  flex: 0 0 var(--add-property-step-circle);
+}
+
+.landlord-add-property .add-apartment-step-item .add-apartment-panel-5 {
+  position: absolute;
+  z-index: 0;
+  top: calc(var(--add-property-step-circle) / 2);
+  left: calc(50% + (var(--add-property-step-circle) / 2));
+  width: calc(100% - var(--add-property-step-circle));
+  height: 2px;
+  margin: 0;
+  flex: none;
+  border-radius: 0;
+  pointer-events: none;
+}
+
+.landlord-add-property .add-apartment-step-item .add-apartment-button-6 {
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+  margin-top: 10px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: center;
+}
+
+.landlord-add-property .add-apartment-step-item .add-apartment-button-6 span {
+  display: block;
+  max-width: 11rem;
+  margin-inline: auto;
+}
+
+@media (max-width: 640px) {
+  .landlord-add-property .add-apartment-stepper {
+    --add-property-step-circle: 18px;
+  }
+
+  .landlord-add-property .add-apartment-step-item .add-apartment-panel-5 {
+    height: 1px;
+  }
+
+  .landlord-add-property .add-apartment-step-item .add-apartment-button-6 {
+    margin-top: 6px;
+    padding-inline: 1px;
+    font-size: 8px;
+    line-height: 1.1;
+    font-weight: 700;
+  }
+
+}
+
+/* The header, stepper, and every step card share one horizontal page grid. */
+.landlord-add-property .add-apartment-flow-container {
+  width: 100%;
+  max-width: 860px;
+  margin-inline: auto;
+  padding-inline: 0;
+  box-sizing: border-box;
+}
+
+.landlord-add-property .add-apartment-flow-container > .add-apartment-panel-4,
+.landlord-add-property .add-apartment-flow-container > .add-apartment-container,
+.landlord-add-property .add-apartment-flow-container > .add-apartment-card-5 {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  box-sizing: border-box;
+}
+
+/* Do not inset the stepper within the shared page grid. */
+.landlord-add-property .add-apartment-flow-container > .add-apartment-container {
+  padding-inline: 0;
+}
+
+@media (max-width: 768px) {
+  .landlord-add-property .add-apartment-flow-container {
+    max-width: none;
+  }
 }

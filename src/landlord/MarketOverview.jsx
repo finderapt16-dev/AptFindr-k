@@ -1455,9 +1455,11 @@ export function MarketOverview() {
             MAIN CONTENT
         ================================================= */}
 
-        <main className="app-shell-main">
+        <div className="app-shell-main">
 
-          <div className="market-trends-page">
+          <main className="app-shell-content app-shell-content-mobile-nav">
+
+            <div className="market-trends-page">
 
 
             {/* =============================================
@@ -1977,9 +1979,11 @@ export function MarketOverview() {
 
             ) : null}
 
-          </div>
+            </div>
 
-        </main>
+          </main>
+
+        </div>
 
       </div>
 
