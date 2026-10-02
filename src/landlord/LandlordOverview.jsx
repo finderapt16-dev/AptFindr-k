@@ -786,10 +786,8 @@ export const LandlordOverview = ({
                 );
 
               return (
-                <article
-                  className="ld-property-row"
-                  key={apartment.id}
-                >
+                <div className="ld-property-with-engagement" key={apartment.id}>
+                <article className="ld-property-row">
                   <div className="ld-property-image">
                     {apartment.image ? (
                       <img
@@ -886,7 +884,7 @@ export const LandlordOverview = ({
                       <Link
                         to={`/apartment/${apartment.id}`}
                         state={{
-                          returnTo: "/dashboard?section=overview",
+                          returnTo: "/landlord/dashboard?section=overview",
                           backLabel: "Back to My Properties",
                         }}
                         className="ld-view-property-action"
@@ -902,23 +900,14 @@ export const LandlordOverview = ({
                     </div>
                   </div>
                 </article>
+                <PropertyEngagement apartment={apartment}/>
+                </div>
               );
             })}
           </div>
         )}
       </section>
 
-      {/* ======================================================
-          PROPERTY ENGAGEMENT
-      ======================================================= */}
-
-      {!isLoadingApartments &&
-        myApartments.map((apartment) => (
-          <PropertyEngagement
-            apartment={apartment}
-            key={`engagement-${apartment.id}`}
-          />
-        ))}
     </div>
   );
 };

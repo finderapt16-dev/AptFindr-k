@@ -19,7 +19,6 @@ const PrivacyPolicyPage = lazy(() => import("./legal/PolicyPage").then((module) 
 const TermsOfServicePage = lazy(() => import("./legal/PolicyPage").then((module) => ({ default: module.TermsOfServicePage })));
 // Authentication and shared account pages
 const AuthCallback = lazy(() => import("./auth/AuthCallback").then((module) => ({ default: module.AuthCallback })));
-const Dashboard = lazy(() => import("./auth/Dashboard").then((module) => ({ default: module.Dashboard })));
 const Settings = lazy(() => import("./components/Settings").then((module) => ({ default: module.Settings })));
 // Tenant
 const TenantDashboard = lazy(() => import("@/tenant/Dashboard").then((module) => ({ default: module.Dashboard })));
@@ -34,8 +33,33 @@ const ManageRooms = lazy(() => import("./landlord/ManageRooms").then((module) =>
 // Admin
 const AdminDashboard = lazy(() => import("@/admin/AdminDashboard").then((module) => ({ default: module.AdminDashboard })));
 const AdminApartmentDetail = lazy(() => import("./admin/AdminApartmentDetail").then((module) => ({ default: module.AdminApartmentDetail })));
-const roleDashboard = <Dashboard tenant={<TenantDashboard />} landlord={<LandlordDashboard />} admin={<AdminDashboard />}/>;
 const APARTMENT_LOGIN_MESSAGE = "Please sign in or create an account to view apartment details.";
+
+function dashboardPathForRole(role) {
+    if (role === "admin") return "/admin";
+    return isTenantRole(role) ? "/browse" : "/landlord/dashboard";
+}
+
+// The overview shown in the first screenshot is retired. Tenant accounts start
+// on the Apartments page; landlords retain their separate management portal.
+function TenantDashboardRoute() {
+    const location = useLocation();
+    const section = new URLSearchParams(location.search).get("section");
+    if (!section || section === "overview") {
+        return <Navigate to="/browse" replace />;
+    }
+    return <PageLoader><TenantDashboard /></PageLoader>;
+}
+
+// Old saved links can still use /dashboard, but it is no longer a page that
+// chooses a dashboard after it loads.
+function LegacyDashboardRedirect() {
+    const { user } = useAuth();
+    const location = useLocation();
+    const destination = dashboardPathForRole(user?.role);
+    return <Navigate to={isTenantRole(user?.role) ? destination : `${destination}${location.search}`} replace />;
+}
+
 function PublicLandingRoute() {
     const { user, isLoading } = useAuth();
     const location = useLocation();
@@ -50,7 +74,7 @@ function PublicLandingRoute() {
         return <div className="auth-status-page auth-session-loading">Checking your session...</div>;
     }
     if (location.pathname === "/login" && user?.role) {
-        const destination = user.role === "admin" ? "/admin" : isTenantRole(user.role) ? "/browse" : "/dashboard";
+        const destination = dashboardPathForRole(user.role);
         return <Navigate to={destination} replace />;
     }
     return (<ApartmentsProvider>
@@ -92,12 +116,17 @@ export const router = createBrowserRouter([
             // Tenant favorites and shared account settings.
             { path: "favorites", element: <ProtectedRoute allowedRoles={["tenant"]}><PageLoader><Favorites /></PageLoader></ProtectedRoute> },
             { path: "settings", element: <ProtectedRoute><PageLoader><Settings /></PageLoader></ProtectedRoute> },
-            // Role dashboards: sections remain query parameters, not new URLs.
+            // Role dashboards have separate URLs. Their sections remain query
+            // parameters, not new URLs.
             // Tenant: overview, suggested, popular, favorites, notifications, report, help, settings.
             // Landlord: overview, properties, activity, notifications, settings, help.
             // Admin: overview, notifications, landlords, apartments, reports, appeals, admininfo.
-            { path: "dashboard", element: <ProtectedRoute><PageLoader>{roleDashboard}</PageLoader></ProtectedRoute> },
-            { path: "admin", element: <ProtectedRoute allowedRoles={["admin"]}><PageLoader>{roleDashboard}</PageLoader></ProtectedRoute> },
+            { path: "tenant/dashboard", element: <ProtectedRoute allowedRoles={["tenant"]}><TenantDashboardRoute /></ProtectedRoute> },
+            { path: "landlord/dashboard", element: <ProtectedRoute allowedRoles={["landlord"]}><PageLoader><LandlordDashboard /></PageLoader></ProtectedRoute> },
+            { path: "admin", element: <ProtectedRoute allowedRoles={["admin"]}><PageLoader><AdminDashboard /></PageLoader></ProtectedRoute> },
+            // Compatibility for bookmarks and older internal links. This renders
+            // no dashboard page; it immediately routes to the role-specific one.
+            { path: "dashboard", element: <ProtectedRoute><LegacyDashboardRedirect /></ProtectedRoute> },
             { path: "*", element: <PageLoader><NotFound /></PageLoader> },
         ],
     },

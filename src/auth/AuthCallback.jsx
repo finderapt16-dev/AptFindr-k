@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { clearPendingGoogleOAuthFlow, exchangeAuthCode, getAuthUser, getExistingProfileForAuthUser, isGoogleAuthUser, isTenantRole, signOutAuthSession } from "@/services/authService";
 
-const dashboardPathForRole = (role) => isTenantRole(role) ? "/dashboard?section=overview" : role === "admin" ? "/admin" : "/dashboard";
+const dashboardPathForRole = (role) => isTenantRole(role) ? "/browse" : role === "admin" ? "/admin" : "/landlord/dashboard";
 
 // Shown on the sign-in screen once the emailed confirmation link has been opened.
 const EMAIL_CONFIRMED_MESSAGE = "Email confirmed! Sign in with the username and password you created.";

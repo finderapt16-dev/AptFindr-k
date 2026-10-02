@@ -408,7 +408,7 @@ export function Login({
                     )
                 ) {
                     navigate(
-                        "/browse",
+                    "/browse",
                         {
                             replace: true,
                         }
@@ -418,7 +418,7 @@ export function Login({
                 }
 
                 navigate(
-                    "/dashboard",
+                    "/landlord/dashboard",
                     {
                         replace: true,
                     }

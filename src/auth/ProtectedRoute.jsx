@@ -25,7 +25,12 @@ export default function ProtectedRoute({ children, allowedRoles, preserveReturnD
       </div>);
     }
     if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-        return <Navigate to="/dashboard" replace/>;
+        const dashboardPath = user.role === "admin"
+            ? "/admin"
+            : user.role === "landlord"
+                ? "/landlord/dashboard"
+                : "/browse";
+        return <Navigate to={dashboardPath} replace/>;
     }
     return <>{children}</>;
 }

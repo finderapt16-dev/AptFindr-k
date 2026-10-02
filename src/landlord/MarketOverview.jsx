@@ -1310,7 +1310,7 @@ export function MarketOverview() {
         ) => {
 
           navigate(
-            `/dashboard?section=${section}`
+            `/landlord/dashboard?section=${section}`
           );
 
           setSidebarOpen(

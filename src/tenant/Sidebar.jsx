@@ -68,7 +68,7 @@ export function Sidebar({ active = "apartments", unreadCount = 0, tenantNotifica
             closeSidebar();
             return;
         }
-        navigate(`/dashboard?section=${section}`);
+        navigate(`/tenant/dashboard?section=${section}`);
         closeSidebar();
     };
     const isActive = (section) => currentSection === section;

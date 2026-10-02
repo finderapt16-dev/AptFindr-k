@@ -53,7 +53,7 @@ export function Notifications({ state }) {
         }
         const actionUrl = resolveActionUrl(item);
         if (actionUrl)
-            navigate(actionUrl, { state: { returnTo: "/dashboard?section=notifications", backLabel: "Back to Notifications" } });
+            navigate(actionUrl, { state: { returnTo: "/tenant/dashboard?section=notifications", backLabel: "Back to Notifications" } });
     };
     const handleMarkAllRead = async () => {
         if (isMarkingAllRead || unreadCount === 0)

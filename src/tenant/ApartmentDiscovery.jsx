@@ -29,7 +29,7 @@ export const SuggestedSection = ({ hasPersonalizationPreferences, preferencesLoa
     {preferencesLoading ? (<div className="suggested-section-card-2"><Loader2 className="suggested-section-loader2-icon"/></div>) : !hasPersonalizationPreferences ? (<EmptyState icon={Sparkles} message="Set your preferences to receive personalized apartment suggestions." actionLabel="Set Preferences" action={() => navigate("/browse?preferences=open")}/>) : suggestedApartments.length > 0 ? (<div className="suggested-section-grid">
         {suggestedApartments.map((apartment) => (<div key={apartment.id} className="suggested-card">
             <Badge className="suggested-section-suggested">Recommended</Badge>
-            <ApartmentCard apartment={apartment} ratingStats={ratingSummary.byApartment.get(apartment.id)} ratingsLoading={ratingsLoading} detailState={{ returnTo: "/dashboard?section=suggested", backLabel: "Back to Recommended" }}/>
+            <ApartmentCard apartment={apartment} ratingStats={ratingSummary.byApartment.get(apartment.id)} ratingsLoading={ratingsLoading} detailState={{ returnTo: "/tenant/dashboard?section=suggested", backLabel: "Back to Recommended" }}/>
           </div>))}
       </div>) : (<EmptyState icon={Sparkles} message="No apartments currently match your preferences." actionLabel="Adjust Preferences" action={() => navigate("/browse?preferences=open")}/>)}
   </div>);
@@ -50,7 +50,7 @@ export const PopularSection = ({ popularApartments, ratingSummary, ratingsLoadin
     {popularApartments.length > 0 ? (<div className="popular-section-grid">
         {popularApartments.map((apartment) => (<div key={apartment.id} className="popular-card">
             <Badge className="popular-section-popular">Popular</Badge>
-            <ApartmentCard apartment={apartment} ratingStats={ratingSummary.byApartment.get(apartment.id)} ratingsLoading={ratingsLoading} detailState={{ returnTo: "/dashboard?section=popular", backLabel: "Back to Popular" }}/>
+            <ApartmentCard apartment={apartment} ratingStats={ratingSummary.byApartment.get(apartment.id)} ratingsLoading={ratingsLoading} detailState={{ returnTo: "/tenant/dashboard?section=popular", backLabel: "Back to Popular" }}/>
           </div>))}
       </div>) : (<EmptyState icon={TrendingUp} message="No popular apartments available right now."/>)}
   </div>);

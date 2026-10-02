@@ -80,14 +80,14 @@ export function MobileNavigation({ active = "apartments", unreadCount = 0 }) {
                 <p className="tenant-mobile-navigation-main">Main</p>
                 <NavLink icon={Search} label="Apartments" to="/browse" section="apartments"/>
                 <NavLink icon={Heart} label="My Favorites" to="/favorites" section="favorites" badge={favorites.length}/>
-                <NavLink icon={Bell} label="Notifications" to="/dashboard?section=notifications" section="notifications" badge={unreadCount}/>
+                <NavLink icon={Bell} label="Notifications" to="/tenant/dashboard?section=notifications" section="notifications" badge={unreadCount}/>
               </nav>
 
               <nav className="tenant-mobile-navigation-nav-2">
                 <p className="tenant-mobile-navigation-account">Account</p>
-                <NavLink icon={Settings} label="Settings" to="/dashboard?section=settings" section="settings"/>
-                <NavLink icon={TriangleAlert} label="Report a Problem" to="/dashboard?section=report" section="report"/>
-                <NavLink icon={HelpCircle} label="Help" to="/dashboard?section=help" section="help"/>
+                <NavLink icon={Settings} label="Settings" to="/tenant/dashboard?section=settings" section="settings"/>
+                <NavLink icon={TriangleAlert} label="Report a Problem" to="/tenant/dashboard?section=report" section="report"/>
+                <NavLink icon={HelpCircle} label="Help" to="/tenant/dashboard?section=help" section="help"/>
               </nav>
 
               <div className="tenant-mobile-navigation-panel-3">

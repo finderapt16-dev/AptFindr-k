@@ -650,7 +650,7 @@ export function AddApartment() {
             await deletePropertyDraft(user.id);
             setDraftStatus("idle");
             toast.success("Property submitted successfully and is awaiting admin review.");
-            navigate("/dashboard");
+            navigate("/landlord/dashboard");
         }
         catch (error) {
             console.error("Failed to submit apartment:", error);
@@ -674,12 +674,12 @@ export function AddApartment() {
         }
     };
     if (user?.role !== "landlord") {
-        return <Navigate to="/dashboard" replace/>;
+        return <Navigate to="/browse" replace/>;
     }
     return (<div className="app-shell landlord-shell landlord-add-property-shell">
       <div className="app-shell-frame">
         <aside className="app-shell-sidebar landlord-add-property-sidebar">
-          <LandlordSidebar user={user} verified={user?.isVerified === true} activeSection="add-property" onSectionChange={(section) => navigate(`/dashboard?section=${section}`)} onLogout={() => {
+          <LandlordSidebar user={user} verified={user?.isVerified === true} activeSection="add-property" onSectionChange={(section) => navigate(`/landlord/dashboard?section=${section}`)} onLogout={() => {
                 logout?.();
                 navigate("/", { replace: true });
             }}/>
@@ -688,7 +688,7 @@ export function AddApartment() {
         {sidebarOpen && <div className="app-sidebar-overlay landlord-add-property-overlay" onClick={() => setSidebarOpen(false)} />}
         <aside className={`app-sidebar-drawer landlord-add-property-drawer ${sidebarOpen ? "is-open" : ""}`} aria-label="Landlord navigation">
           <button type="button" aria-label="Close navigation" className="app-sidebar-close" onClick={() => setSidebarOpen(false)}><X /></button>
-          <LandlordSidebar user={user} verified={user?.isVerified === true} activeSection="add-property" onSectionChange={(section) => { setSidebarOpen(false); navigate(`/dashboard?section=${section}`); }} onClose={() => setSidebarOpen(false)} onLogout={() => {
+          <LandlordSidebar user={user} verified={user?.isVerified === true} activeSection="add-property" onSectionChange={(section) => { setSidebarOpen(false); navigate(`/landlord/dashboard?section=${section}`); }} onClose={() => setSidebarOpen(false)} onLogout={() => {
                 logout?.();
                 navigate("/", { replace: true });
             }}/>
@@ -760,7 +760,7 @@ export function AddApartment() {
               onClick={() => {
                 if (hasDraftContent && !window.confirm("Leave Add Property? Your entered details will remain saved as a draft."))
                   return;
-                navigate("/dashboard");
+                navigate("/landlord/dashboard");
               }}
             >
               <X aria-hidden="true" />
@@ -1084,7 +1084,7 @@ export function AddApartment() {
           onAccept={dismissGuidelines}
           onClose={() => {
                 dismissGuidelines();
-                navigate("/dashboard?section=overview");
+                navigate("/landlord/dashboard?section=overview");
             }}
         />
       )}

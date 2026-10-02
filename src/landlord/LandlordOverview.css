@@ -178,6 +178,11 @@
     margin: 0;
   }
 
+  .ld-property-with-engagement {
+    display: grid;
+    gap: 14px;
+  }
+
 
   /* ==========================================================
      PROPERTY ROW

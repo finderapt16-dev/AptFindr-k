@@ -368,7 +368,7 @@ export function Settings({ embedded = false } = {}) {
             <HelpCircle className="settings-style-34"/>
             <p className="settings-style-35">Need help?</p>
             <p className="settings-style-36">If you need assistance, please visit our Help Center.</p>
-            <Button variant="outline" onClick={() => navigate("/dashboard?section=help")} className="settings-style-37">
+            <Button variant="outline" onClick={() => navigate(`${isTenantAccount ? "/tenant/dashboard" : "/landlord/dashboard"}?section=help`)} className="settings-style-37">
               Go to Help Center
             </Button>
           </div>
@@ -528,7 +528,7 @@ export function Settings({ embedded = false } = {}) {
               <button className="settings-style-85">
                 <Bell className="settings-style-86"/>
               </button>
-              <button onClick={() => navigate("/dashboard?section=help")} className="settings-style-87">
+              <button onClick={() => navigate(`${isTenantAccount ? "/tenant/dashboard" : "/landlord/dashboard"}?section=help`)} className="settings-style-87">
                 <HelpCircle className="settings-style-88"/>
               </button>
               </div>}

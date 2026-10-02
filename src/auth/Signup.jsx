@@ -18,7 +18,7 @@ const INITIAL_VALUES = {
 const LANDLORD_STEPS = ["Account Details", "Personal Information", "Review"];
 
 const dashboardPathForRole = (role) =>
-  isTenantRole(role) ? "/dashboard?section=overview" : "/dashboard";
+  isTenantRole(role) ? "/browse" : "/landlord/dashboard";
 
 function GoogleIcon() {
   return (
@@ -261,7 +261,7 @@ export function Signup({ embedded = false, redirect = null, onClose }) {
         // never throw a finished Google signup back to the sign-in screen.
         const profile = (await hydrateSession()) ?? googleSignup.profile;
         clearPendingGoogleOAuthFlow();
-        navigate(isTenantRole(profile.role) ? redirectTo || dashboardPathForRole(profile.role) : profile.role === "admin" ? "/admin" : "/dashboard", { replace: true });
+        navigate(isTenantRole(profile.role) ? redirectTo || dashboardPathForRole(profile.role) : profile.role === "admin" ? "/admin" : "/landlord/dashboard", { replace: true });
       }
       // Otherwise Supabase is redirecting the browser to Google; keep actions locked.
     } catch (googleError) {

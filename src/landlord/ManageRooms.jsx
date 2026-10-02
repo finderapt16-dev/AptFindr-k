@@ -523,7 +523,7 @@ export function ManageRooms({ propertyId }) {
         maintenance: rooms.filter((room) => statusForRoom(room) === "maintenance").length,
     }), [rooms]);
     if (user?.role !== "landlord")
-        return <Navigate to="/dashboard" replace/>;
+        return <Navigate to="/browse" replace/>;
     const canManage = property && property.landlordId === user.id;
 
     // Called by a card's Save button. `existing` is the saved room, or null for a new one.
@@ -606,7 +606,7 @@ export function ManageRooms({ propertyId }) {
           <DoorOpen className="manage-rooms-door-open-icon"/>
           <h1 className="manage-rooms-property-not-available">Property Not Available</h1>
           <p className="manage-rooms-text">This property could not be found or is not assigned to your account.</p>
-          <Button onClick={() => navigate("/dashboard?section=overview")}>Back to My Properties</Button>
+          <Button onClick={() => navigate("/landlord/dashboard?section=overview")}>Back to My Properties</Button>
         </div>
       </div>);
     }
@@ -716,7 +716,7 @@ export function ManageRooms({ propertyId }) {
         <LandlordSidebar
           user={user}
           activeSection="overview"
-          onSectionChange={(section) => navigate(section === "overview" ? "/dashboard" : `/dashboard?section=${section}`)}
+          onSectionChange={(section) => navigate(section === "overview" ? "/landlord/dashboard" : `/landlord/dashboard?section=${section}`)}
           onLogout={handleLogout}
         />
       </aside>
@@ -728,7 +728,7 @@ export function ManageRooms({ propertyId }) {
             <LandlordSidebar
               user={user}
               activeSection="overview"
-              onSectionChange={(section) => navigate(section === "overview" ? "/dashboard" : `/dashboard?section=${section}`)}
+              onSectionChange={(section) => navigate(section === "overview" ? "/landlord/dashboard" : `/landlord/dashboard?section=${section}`)}
               onClose={() => setSidebarOpen(false)}
               onLogout={handleLogout}
             />

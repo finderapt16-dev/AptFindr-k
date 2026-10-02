@@ -668,7 +668,9 @@ export function Landing() {
     const dashboardPath =
         user?.role === "admin"
             ? "/admin"
-            : "/dashboard";
+            : isTenantRole(user?.role)
+                ? "/browse"
+                : "/landlord/dashboard";
 
 
     /* =====================================================
@@ -811,7 +813,7 @@ export function Landing() {
 
 
             navigate(
-                "/dashboard",
+                "/landlord/dashboard",
                 {
                     replace: true,
                 }

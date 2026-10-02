@@ -511,7 +511,7 @@ export const MyPropertyCard = ({
             <Link
               to={`/apartment/${apartment.id}`}
               state={{
-                returnTo: "/dashboard",
+                returnTo: "/landlord/dashboard",
                 backLabel:
                   "Back to My Properties",
               }}

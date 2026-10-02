@@ -1451,7 +1451,17 @@
 
 .apartment-detail-aside {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
+
+.apartment-detail-aside > * { margin: 0 !important; }
+.apartment-detail-aside > .property-inline-section:has(.apartment-detail-safety-rules) { order: 1; }
+.apartment-detail-aside > .apartment-detail-section-3:has(.apartment-detail-utilities-title) { order: 2; }
+.apartment-detail-aside > .apartment-detail-aside-location { order: 3; }
+.apartment-detail-aside > .tenant-apartment-rating-summary,
+.apartment-detail-aside > .apartment-detail-section-6 { order: 4; }
 
 :where(.apartment-detail-aside > :not(:last-child)) {
   margin-block-start: calc(calc(var(--spacing, .25rem) * 5) * 0);
@@ -3083,7 +3093,7 @@
   display: none;
 }
 
-/* The location card belongs directly below Property Details in the side column. */
+/* Keep the Figma sidebar order: rules, utilities, then location. */
 .apartment-detail-panel-11 > .property-inline-section:last-child,
 .apartment-detail-panel-11 > .apartment-detail-section-4:last-child {
   display: none;
@@ -3205,6 +3215,8 @@
 .landlord-view-prices, .landlord-view-address { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }.landlord-view-prices label, .landlord-view-address label { display: grid; gap: 4px; color: #718096; font-size: 10px; font-weight: 600; }
 .landlord-view-map { height: 210px; overflow: hidden; border: 1px solid #dce3ea; border-radius: 5px; }.landlord-view-map .leaflet-container { height: 100%; }.landlord-view-map-empty { display: grid; place-items: center; gap: 6px; height: 210px; border: 1px solid #dce3ea; border-radius: 5px; background: #f3f5f7; color: #718096; font-size: 12px; text-align: center; }.landlord-view-map-empty svg { width: 25px; color: #16a5e1; }
 .landlord-view-rules { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }.landlord-view-rules span { min-height: 28px; display: grid; place-items: center; padding: 4px 7px; border: 1px solid #dce3ea; border-radius: 5px; color: #526171; font-size: 10px; text-align: center; }
+.landlord-view-utilities { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }.landlord-view-utilities span { min-height: 28px; display: grid; place-items: center; padding: 4px 7px; border: 1px solid #dce3ea; border-radius: 5px; color: #526171; font-size: 10px; text-align: center; }.landlord-view-utilities span:only-child { grid-column: 1 / -1; }
+.apartment-detail-utilities-title { margin: 0 0 10px; font-size: 15px; }.apartment-detail-utilities { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }.apartment-detail-utilities span { min-height: 30px; display: grid; place-items: center; padding: 4px 7px; border: 1px solid #dce3ea; border-radius: 5px; color: #526171; background: #fff; font-size: 11px; text-align: center; }.apartment-detail-utilities span:only-child { grid-column: 1 / -1; }
 @media (max-width: 850px) { .landlord-view-property-grid { grid-template-columns: 1fr; }.landlord-view-main-photo { height: min(52vw, 300px); }.landlord-view-property-page { padding-top: 8px; } }
 @media (max-width: 560px) { .landlord-view-property-header { flex-direction: column; }.landlord-view-edit { width: 100%; }.landlord-view-prices, .landlord-view-address { grid-template-columns: 1fr; }.landlord-view-thumbnails button { height: 58px; }.landlord-view-card { padding: 12px; } }
 

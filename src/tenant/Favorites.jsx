@@ -145,7 +145,7 @@ export function Favorites() {
         }
     };
     if (user?.role === "admin") {
-        return <Navigate to="/dashboard" replace/>;
+        return <Navigate to="/admin" replace/>;
     }
     const FavoriteCard = ({ apartment }) => {
         const status = apartment.status ?? "available";
@@ -379,7 +379,7 @@ export const FavoritesOverview = ({ favoriteApartments, visibleFavoriteApartment
       </Button>
     </section>
   </div>);
-const FavoriteApartmentCard = ({ apartment, ratingSummary, ratingsLoading, }) => (<ApartmentCard apartment={apartment} ratingStats={ratingSummary.byApartment.get(apartment.id)} ratingsLoading={ratingsLoading} detailState={{ returnTo: "/dashboard?section=favorites", backLabel: "Back to Favorites" }}/>);
+const FavoriteApartmentCard = ({ apartment, ratingSummary, ratingsLoading, }) => (<ApartmentCard apartment={apartment} ratingStats={ratingSummary.byApartment.get(apartment.id)} ratingsLoading={ratingsLoading} detailState={{ returnTo: "/tenant/dashboard?section=favorites", backLabel: "Back to Favorites" }}/>);
 const SavedInfoPill = ({ icon: Icon, value, label, tone, }) => (<div className="info-pill-row">
     <span className={`info-pill-row-2 ${tone}`}>
       <Icon className="info-pill-icon-icon"/>

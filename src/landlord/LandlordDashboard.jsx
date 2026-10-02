@@ -44,17 +44,14 @@ import {
   fetchFavoritesForApartments,
   fetchViewActivityForApartments,
   fetchLandlordProfile,
-  fetchLandlordFacebookLink,
   fetchNotifications,
   fetchViolations,
   fetchUserById,
   fetchUserPreferenceSections,
   fetchUsers,
-  normalizeLandlordFacebookUrl,
   markAllNotificationsRead,
   markNotificationRead,
   markNotificationUnread,
-  saveLandlordFacebookLink,
   saveUserPreferenceSection,
   submitAppealFollowupWithEvidence,
   updateUserProfile,
@@ -1344,7 +1341,7 @@ export function LandlordDashboard() {
     switch (notification.type) {
       case "property_reported":
         navigate(
-          `/dashboard?section=notifications&report=${
+          `/landlord/dashboard?section=notifications&report=${
             payload?.report_id || ""
           }`
         );
@@ -1353,7 +1350,7 @@ export function LandlordDashboard() {
 
       case "violation_issued":
         navigate(
-          `/dashboard?section=notifications&violation=${
+          `/landlord/dashboard?section=notifications&violation=${
             payload?.violation_id || ""
           }`
         );
@@ -1362,7 +1359,7 @@ export function LandlordDashboard() {
 
       case "appeal_status_updated":
         navigate(
-          `/dashboard?section=notifications&appeal=${
+          `/landlord/dashboard?section=notifications&appeal=${
             payload?.appeal_id || ""
           }`
         );
@@ -1381,7 +1378,7 @@ export function LandlordDashboard() {
             {
               state: {
                 returnTo:
-                  "/dashboard?section=notifications",
+                  "/landlord/dashboard?section=notifications",
                 backLabel:
                   "Back to Notifications",
               },
@@ -1872,7 +1869,6 @@ export function LandlordDashboard() {
             fetchLandlordProfile(user.id),
             fetchUserPreferenceSections(user.id),
             supabase.auth.mfa.listFactors(),
-            fetchLandlordFacebookLink(user.id),
           ]);
         } catch (error) {
           console.error("Failed to load landlord settings:", error);
@@ -1887,7 +1883,7 @@ export function LandlordDashboard() {
         }
 
 
-        const [userRow, landlordRow, preferenceSections, mfaFactors, facebookLink] = settingsData;
+        const [userRow, landlordRow, preferenceSections, mfaFactors] = settingsData;
         setSettingsLoadError(false);
 
         const fullName = (
@@ -1917,7 +1913,9 @@ export function LandlordDashboard() {
             user.mobileNumber ||
             "",
           middleInitial: String(userRow?.middle_initial ?? user?.middleInitial ?? ""),
-          facebookLink: typeof facebookLink === "string" ? facebookLink : "",
+          facebookLink: typeof preferenceSections.landlordProfile?.facebookLink === "string"
+            ? preferenceSections.landlordProfile.facebookLink
+            : "",
           bio: userRow?.bio || "",
           avatar:
             userRow?.avatar_url ||
@@ -2094,11 +2092,8 @@ export function LandlordDashboard() {
         return;
       }
 
-      let normalizedFacebookLink;
-      try {
-        normalizedFacebookLink = normalizeLandlordFacebookUrl(profile.facebookLink);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Enter a valid Facebook page or profile URL.");
+      if (!profile.facebookLink.trim()) {
+        toast.error("Facebook link is required");
         return;
       }
 
@@ -2213,10 +2208,16 @@ export function LandlordDashboard() {
             );
           }
 
-          const savedFacebookLink = await saveLandlordFacebookLink(user.id, normalizedFacebookLink);
-          const nextSavedProfile = { ...profile, facebookLink: savedFacebookLink };
-          setProfile(nextSavedProfile);
-          setSavedProfile(nextSavedProfile);
+          await saveUserPreferenceSection(
+            user.id,
+            "landlordProfile",
+            { facebookLink: profile.facebookLink.trim() }
+          );
+
+
+          setSavedProfile(
+            profile
+          );
 
 
           addAuditLog(
