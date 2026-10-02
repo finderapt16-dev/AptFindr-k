@@ -8,19 +8,58 @@
  * - Anti-abuse measures
  */
 import { supabase } from "@/services/supabaseClient";
+// Client-side gate that matches the bucket's allowed_mime_types / file_size_limit.
+// The bucket enforces the same rules, this just fails fast with a clear message.
+const ALLOWED_EVIDENCE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+const ALLOWED_EVIDENCE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "pdf"]);
+const MIME_EXTENSION_FALLBACK = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "application/pdf": "pdf",
+};
+const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
+/**
+ * Resolves a safe extension + content type for an evidence upload. Returns null
+ * when the file is not an allowed image/PDF or is too large. The extension that
+ * actually reaches storage is always chosen from this allow-list, never taken
+ * verbatim from the uploaded filename.
+ */
+function resolveEvidenceFile(input) {
+    const mimeType = String(input.mimeType ?? input.file?.type ?? "").trim().toLowerCase();
+    if (!ALLOWED_EVIDENCE_TYPES.has(mimeType))
+        return null;
+    const rawExtension = String(input.fileName ?? "").split(".").pop()?.trim().toLowerCase() ?? "";
+    const extension = ALLOWED_EVIDENCE_EXTENSIONS.has(rawExtension)
+        ? rawExtension
+        : MIME_EXTENSION_FALLBACK[mimeType];
+    const size = Number(input.file?.size ?? 0);
+    if (!Number.isFinite(size) || size <= 0 || size > MAX_EVIDENCE_BYTES)
+        return null;
+    return { mimeType, extension };
+}
 /**
  * Upload evidence file to Supabase Storage and create record in report_evidence table
  */
 export async function uploadReportEvidence(input) {
     try {
+        const resolvedFile = resolveEvidenceFile(input);
+        if (!resolvedFile) {
+            console.error("Rejected report evidence: unsupported file type, extension, or size.", {
+                fileName: input.fileName,
+                mimeType: input.mimeType ?? input.file?.type,
+                size: input.file?.size,
+            });
+            return null;
+        }
         // Upload file to storage bucket
-        const fileExt = input.fileName.split(".").pop();
-        const bucketPath = `${input.reportId}/${Date.now()}-${Math.random().toString(36).slice(2, 11)}.${fileExt || "bin"}`;
+        const bucketPath = `${input.reportId}/${Date.now()}-${Math.random().toString(36).slice(2, 11)}.${resolvedFile.extension}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from("report-evidence")
             .upload(bucketPath, input.file, {
             cacheControl: "3600",
             upsert: false,
+            contentType: resolvedFile.mimeType,
         });
         if (uploadError || !uploadData) {
             console.error("Storage upload error:", uploadError);

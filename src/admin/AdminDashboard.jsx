@@ -4,6 +4,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { validateSignupPassword } from "@/auth/signupValidation";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateApartmentPublication } from "@/services/apartmentsService";
 import { archiveAppeal, archiveReport, createAuditLog, createViolation, deleteNotification, deleteViolation as deleteViolationRecord, fetchAdminActivityLogs, fetchAdminReports, fetchApartments, fetchArchivedAppeals, fetchArchivedReports, fetchLandlordWithDetails, fetchNotifications, fetchPendingAppeals, fetchRecentActivityLogs, fetchReportWithDetails, fetchSupportTicketById, fetchUserById, fetchUsers, fetchViolations, markAllNotificationsRead, markNotificationRead, markNotificationUnread, notifyReportDismissed, notifyReportResolved, permanentlyDeleteAppeal, permanentlyDeleteNotification, permanentlyDeleteReport, restoreAppeal, restoreReport, unarchiveNotification, updateReportStatus, updateUserProfile } from "@/services/dashboardSupabaseService";
@@ -924,8 +925,9 @@ export function AdminDashboard() {
             toast.error("All password fields are required");
             return;
         }
-        if (newPassword.length < 6) {
-            toast.error("New password must be at least 6 characters");
+        const passwordError = validateSignupPassword(newPassword);
+        if (passwordError) {
+            toast.error(passwordError);
             return;
         }
         if (newPassword !== confirmPassword) {
@@ -1928,7 +1930,7 @@ export function AdminDashboard() {
               </div>
               <div className="admin-dashboard-panel-19">
                 <label className="admin-dashboard-new-password">New Password</label>
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password (minimum 6 characters)" className="admin-dashboard-input-6"/>
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password (8+ chars, mixed case, number, symbol)" className="admin-dashboard-input-6"/>
               </div>
               <div className="admin-dashboard-panel-19">
                 <label className="admin-dashboard-confirm-password">Confirm Password</label>

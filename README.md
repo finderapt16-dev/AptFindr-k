@@ -35,7 +35,9 @@ See [the tenant source guide](docs/TENANT_STRUCTURE.md) for tenant page location
 
 ## Supabase
 
-The local `supabase-master-migration.sql` is intentionally ignored and must not be committed. Run the current migration manually in the Supabase SQL Editor when required. Configure production Site URL, allowed `/auth/callback` and `/reset-password` redirects, and custom SMTP in Supabase.
+SQL is kept out of version control on purpose — this repository is public, and the migration files describe the RLS policies, triggers, and admin bootstrap accounts. `supabase-master-migration.sql` and `supabase-security-and-ui-fixes.sql` are listed in `.gitignore` (`*.sql`); keep them local and run them manually in the Supabase SQL Editor.
+
+Run the current migration in the Supabase SQL Editor when required. Configure production Site URL, allowed `/auth/callback` and `/reset-password` redirects, and custom SMTP in Supabase.
 
 ### Google OAuth profile setup
 

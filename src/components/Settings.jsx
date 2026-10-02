@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { validateSignupPassword } from "@/auth/signupValidation";
 import { deleteUser as deleteUserAccount, isTenantRole } from "@/services/authService";
 import { fetchUserPreferenceSections, fetchUserProfileDetails, saveUserPreferenceSection, updateUserProfile, uploadUserAvatar } from "@/services/dashboardSupabaseService";
 import { Settings as TenantSettings } from "@/tenant/Settings";
@@ -214,7 +215,7 @@ export function Settings({ embedded = false } = {}) {
         }
         try {
             const name = `${profile.firstName.trim()} ${profile.middleInitial.trim() ? `${profile.middleInitial.trim()}. ` : ""}${profile.lastName.trim()}`.trim();
-            await updateUser(user.id, {
+            const updatedAccount = await updateUser(user.id, {
                 name,
                 email: profile.email.trim(),
                 mobileNumber: profile.mobile.trim(),
@@ -225,7 +226,9 @@ export function Settings({ embedded = false } = {}) {
             });
             const updated = await updateUserProfile({
                 id: user.id,
-                email: profile.email.trim(),
+                // app_users.email mirrors auth.users and is only written by the
+                // database once Supabase confirms a new address.
+                email: user.email,
                 name,
                 role: user.role,
                 mobile: profile.mobile.trim(),
@@ -255,7 +258,9 @@ export function Settings({ embedded = false } = {}) {
                     }));
                 }
             }
-            toast.success("Profile updated successfully!");
+            toast.success(updatedAccount?.emailChangePending
+                ? "Profile updated. Check your new email for a confirmation link before signing in with it."
+                : "Profile updated successfully!");
         }
         catch (error) {
             const message = error instanceof Error ? error.message : "Unable to update profile.";
@@ -265,8 +270,9 @@ export function Settings({ embedded = false } = {}) {
     const handlePasswordChange = async () => {
         if (!user)
             return;
-        if (passwordForm.next.length < 6) {
-            toast.error("New password must be at least 6 characters.");
+        const passwordError = validateSignupPassword(passwordForm.next);
+        if (passwordError) {
+            toast.error(passwordError);
             return;
         }
         if (passwordForm.next !== passwordForm.confirm) {
