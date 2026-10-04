@@ -1,5 +1,5 @@
 import "./ManageRooms.css";
-import { ArrowLeft, BedDouble, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, DoorOpen, ImagePlus, MapPin, Menu, MoreVertical, Pencil, Plus, Star, Upload, Users, Wrench, X, } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, DoorOpen, ImagePlus, Menu, MoreVertical, Pencil, Plus, Star, Upload, Users, Wrench, X } from "lucide-react";
 import { LandlordSidebar } from "@/landlord/LandlordSidebar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";

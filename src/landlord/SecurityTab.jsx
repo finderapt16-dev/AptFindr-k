@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 
 import {
     SettingsField as Field,
-    SettingsSectionTitle as SectionTitle,
     SettingsInput,
     SettingsSelect,
     SettingsToggle as Toggle,

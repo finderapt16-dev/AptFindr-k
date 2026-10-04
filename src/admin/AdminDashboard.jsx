@@ -6,18 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateApartmentPublication } from "@/services/apartmentsService";
-import { archiveAppeal, archiveReport, createAuditLog, createViolation, deleteNotification, deleteViolation as deleteViolationRecord, fetchAdminActivityLogs, fetchAdminReports, fetchApartments, fetchArchivedAppeals, fetchArchivedReports, fetchLandlordWithDetails, fetchNotifications, fetchPendingAppeals, fetchRecentActivityLogs, fetchReportWithDetails, fetchSupportTicketById, fetchUserById, fetchUsers, fetchViolations, markAllNotificationsRead, markNotificationRead, markNotificationUnread, notifyReportDismissed, notifyReportResolved, permanentlyDeleteAppeal, permanentlyDeleteNotification, permanentlyDeleteReport, restoreAppeal, restoreReport, unarchiveNotification, updateReportStatus, updateUserProfile } from "@/services/dashboardSupabaseService";
+import { archiveAppeal, archiveReport, createAuditLog, createViolation, deleteNotification, deleteViolation as deleteViolationRecord, fetchAdminActivityLogs, fetchAdminReports, fetchApartments, fetchArchivedAppeals, fetchArchivedReports, fetchLandlordWithDetails, fetchNotifications, fetchPendingAppeals, fetchReportWithDetails, fetchSupportTicketById, fetchUserById, fetchUsers, fetchViolations, markAllNotificationsRead, markNotificationRead, markNotificationUnread, notifyReportDismissed, notifyReportResolved, permanentlyDeleteAppeal, permanentlyDeleteNotification, permanentlyDeleteReport, restoreAppeal, restoreReport, unarchiveNotification, updateReportStatus, updateUserProfile } from "@/services/dashboardSupabaseService";
 import { getReportEvidence } from "@/services/reportEvidenceService";
 import { supabase } from "@/services/supabaseClient";
 import { formatAuditLogForDisplay, formatNotificationType, safeNotificationText } from "@/utils/auditLogDisplay";
-import { Activity, AlertOctagon, AlertTriangle, Archive, Bell, BellRing, Building2, Calendar, CheckCheck, CheckCircle2, ChevronRight, CircleHelp, ClipboardList, Clock, Edit2, Eye, FileText, Flag, History, Lock, Mail, MailOpen, Menu, Phone, RefreshCw, RotateCcw, Save, Search, Settings, Shield, ShieldAlert, ShieldCheck, Smartphone, Trash2, User as UserIcon, Users, X, XCircle } from "lucide-react";
+import { Activity, AlertOctagon, AlertTriangle, Archive, Bell, BellRing, Calendar, CheckCheck, CheckCircle2, ChevronRight, CircleHelp, ClipboardList, Clock, Edit2, Eye, FileText, Flag, History, Lock, Mail, MailOpen, Menu, Phone, RefreshCw, RotateCcw, Save, Search, Settings, Shield, ShieldAlert, Smartphone, Trash2, User as UserIcon, Users, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { AdminApartments } from './AdminApartments';
 import { AdminAppeals } from './AdminAppeals';
 import { AdminLandlordVerification } from './AdminLandlordVerification';
-import { activityTimestamp, ArchiveEmpty, canPublishForLandlord, formatOptionalDate, getLandlordVerificationStatus, isAdminModule, NOTICE_TYPES, NotificationEmpty, OverviewEmpty, SectionHeading, SettingsField, SettingsSectionTitle, text, toAdminProfileState, toEvidenceItem, VIOLATION_TYPES } from './adminDashboardHelpers';
+import { ArchiveEmpty, canPublishForLandlord, formatOptionalDate, getLandlordVerificationStatus, isAdminModule, NOTICE_TYPES, NotificationEmpty, SettingsField, SettingsSectionTitle, text, toAdminProfileState, toEvidenceItem, VIOLATION_TYPES } from './adminDashboardHelpers';
 import { AdminReports } from './AdminReports';
 import { AdminSidebar } from './AdminSidebar';
 export function AdminDashboard() {
@@ -43,9 +43,6 @@ export function AdminDashboard() {
     // landlords
     const [landlords, setLandlords] = useState([]);
     const [verifyAction, setVerifyAction] = useState(null);
-    const [landlordSearch, setLandlordSearch] = useState("");
-    const [landlordStatusFilter, setLandlordStatusFilter] = useState("all");
-    const [landlordSort, setLandlordSort] = useState("newest");
     // Loading states for action prevention
     const [deletingNotifId, setDeletingNotifId] = useState(null);
     const [isMarkingAllNotifs, setIsMarkingAllNotifs] = useState(false);
@@ -113,7 +110,6 @@ export function AdminDashboard() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [activityLogOpen, setActivityLogOpen] = useState(false);
     const [activityLogs, setActivityLogs] = useState([]);
-    const [recentActivityLogs, setRecentActivityLogs] = useState([]);
     const [isLoadingActivity, setIsLoadingActivity] = useState(false);
     // admin notifications (new property submissions)
     const [adminNotifs, setAdminNotifs] = useState([]);
@@ -398,12 +394,8 @@ export function AdminDashboard() {
         setActivityLogOpen(true);
         setIsLoadingActivity(true);
         try {
-            const [adminLogs, platformLogs] = await Promise.all([
-                fetchAdminActivityLogs(user.id),
-                fetchRecentActivityLogs(),
-            ]);
+            const adminLogs = await fetchAdminActivityLogs(user.id);
             setActivityLogs(adminLogs);
-            setRecentActivityLogs(platformLogs);
         } catch (error) {
             console.error("Unable to load admin activity logs:", error);
             toast.error("Activity log could not be loaded. Please try again.");
@@ -508,7 +500,7 @@ export function AdminDashboard() {
         let active = true;
         const loadData = async () => {
             try {
-                const [loadedReports, loadedViolations, loadedNotifications, loadedApartments, loadedAppeals, loadedArchivedReports, loadedArchivedAppeals, loadedActivityLogs, loadedUsers] = await Promise.all([
+                const [loadedReports, loadedViolations, loadedNotifications, loadedApartments, loadedAppeals, loadedArchivedReports, loadedArchivedAppeals, loadedUsers] = await Promise.all([
                     fetchAdminReports(),
                     fetchViolations(),
                     user?.id ? fetchNotifications(user.id, true) : Promise.resolve([]),
@@ -516,7 +508,6 @@ export function AdminDashboard() {
                     fetchPendingAppeals(),
                     fetchArchivedReports(),
                     fetchArchivedAppeals(),
-                    fetchRecentActivityLogs(),
                     fetchUsers(),
                 ]);
                 if (!active) return;
@@ -527,7 +518,6 @@ export function AdminDashboard() {
                 setAppeals(loadedAppeals);
                 setArchivedReports(loadedArchivedReports);
                 setArchivedAppeals(loadedArchivedAppeals);
-                setRecentActivityLogs(loadedActivityLogs);
                 setLandlords(loadedUsers.filter((account) => account.role === "landlord"));
             } catch (error) {
                 console.error("Unable to load admin dashboard data:", error);
@@ -578,7 +568,6 @@ export function AdminDashboard() {
             void fetchPendingAppeals().then(setAppeals);
             void fetchArchivedReports().then(setArchivedReports);
             void fetchArchivedAppeals().then(setArchivedAppeals);
-            void fetchRecentActivityLogs().then(setRecentActivityLogs);
             void loadAdminNotifications();
         };
         const channel = supabase
@@ -982,18 +971,6 @@ export function AdminDashboard() {
         setViolationModal({ open: true, mode, landlordId, landlordName, apartmentTitle, reportId, apartmentId, sourceModule });
     };
     const getLandlordForApt = (apt) => landlords.find((l) => l.id === apt.landlordId) ?? null;
-    const violationsForLandlord = (lid) => violations.filter((v) => {
-        const violationLandlordId = text(v.landlordId ?? v.landlord_id);
-        return violationLandlordId === lid && v.active !== false;
-    });
-    const verifiedCount = landlords.filter((l) => l.isVerified ?? l.is_verified).length;
-    const pendingCount = landlords.filter((landlord) => {
-        if (landlord.isVerified ?? landlord.is_verified)
-            return false;
-        const statuses = [landlord.landlord_status, landlord.verification_status, landlord.status]
-            .map((value) => String(value ?? "").trim().toLowerCase());
-        return !statuses.includes("rejected");
-    }).length;
     const pendingReports = reports.filter((r) => r.status === "pending").length;
     const activeAppealsCount = appeals.filter((appeal) => appeal.status === "pending" || appeal.status === "under_review" || appeal.status === "needs_information").length;
     const unreadNotifsCount = adminNotifs.filter((n) => {
@@ -1127,151 +1104,6 @@ export function AdminDashboard() {
     // ── Sidebar ───────────────────────────────────────────────────────────────
     const PortalSidebarContent = () => (<AdminSidebar activeSection={activeSection} isSupportView={activeSection === "support"} pendingReports={pendingReports} activeAppealsCount={activeAppealsCount} unreadNotifsCount={unreadNotifsCount} navigateToAdminModule={navigateToAdminModule} navigateToSupport={navigateToSupport} handleLogout={handleLogout}/>);
     // ── Section: Notifications ────────────────────────────────────────────────
-    const renderOverview = () => {
-        const pendingAppealCount = appeals.filter((appeal) => ["pending", "under_review", "needs_information"].includes(String(appeal.status ?? "").toLowerCase())).length;
-        const pendingReviewCount = allApartments.filter((apartment) => String(apartment.approval_status ?? "").toLowerCase() === "pending").length;
-        const pendingLandlords = landlords.filter((landlord) => {
-            if (landlord.isVerified ?? landlord.is_verified)
-                return false;
-            const statuses = [landlord.landlord_status, landlord.verification_status, landlord.status].map((value) => String(value ?? "").toLowerCase());
-            return !statuses.includes("rejected");
-        });
-        const getReportApartment = (report) => allApartments.find((apartment) => apartment.id === (report.apartmentId ?? report.apartment_id));
-        const getReportTitle = (report) => report.apartment_title ?? report.apartment ?? getReportApartment(report)?.title ?? "Apartment listing";
-        const priorityTasks = [
-            ...pendingLandlords.map((landlord) => ({ id: `landlord-${landlord.id}`, section: "landlords", icon: ShieldAlert, type: "Landlord Verification", context: `${landlord.name || "Unnamed landlord"} submitted verification information.`, timestamp: activityTimestamp(landlord.created_at), action: "Review" })),
-            ...allApartments.filter((apartment) => String(apartment.approval_status ?? "").toLowerCase() === "pending").map((apartment) => ({ id: `apartment-${apartment.id}`, section: "apartments", icon: Building2, type: "Apartment Review", context: `${apartment.title || "Untitled apartment"} is waiting for review.`, timestamp: activityTimestamp(apartment.createdAt ?? apartment.created_at), action: "Review" })),
-            ...reports.filter((report) => report.status === "pending").map((report) => ({ id: `report-${report.id}`, section: "reports", icon: Flag, type: "Report Review", context: `${getReportTitle(report)} has an unresolved report.`, timestamp: activityTimestamp(report.submittedAt ?? report.submitted_at), action: "View" })),
-            ...appeals.filter((appeal) => ["pending", "under_review", "needs_information"].includes(String(appeal.status ?? "").toLowerCase())).map((appeal) => ({ id: `appeal-${appeal.id}`, section: "appeals", icon: FileText, type: "Appeal Review", context: `${landlords.find((landlord) => landlord.id === appeal.landlord_id)?.name || "Landlord"} has an appeal waiting for review.`, timestamp: activityTimestamp(appeal.submitted_at ?? appeal.created_at), action: "Review" })),
-        ].sort((left, right) => new Date(left.timestamp ?? 0).getTime() - new Date(right.timestamp ?? 0).getTime()).slice(0, 6);
-        const getNotificationActivityMeta = (notification) => {
-            const category = getNotificationCategory(notification);
-            if (category === "reports")
-                return { icon: Flag, tone: "admin-tone-report-icon", section: "reports" };
-            if (category === "appeals")
-                return { icon: FileText, tone: "admin-tone-info-icon", section: "appeals" };
-            if (category === "landlord")
-                return { icon: Users, tone: "admin-tone-warning-badge", section: "landlords" };
-            return { icon: Bell, tone: "admin-tone-muted-icon", section: "notifications" };
-        };
-        const activity = [
-            ...reports.map((report) => ({
-                id: `report-${report.id}`, timestamp: activityTimestamp(report.submittedAt ?? report.submitted_at),
-                title: "Report submitted",
-                detail: `${getReportTitle(report)}${report.reporter_name ?? report.reporter ? ` by ${report.reporter_name ?? report.reporter}` : ""}`,
-                icon: Flag,
-                tone: "admin-tone-report-icon", section: "reports",
-            })),
-            ...allApartments.map((apartment) => ({
-                id: `apartment-${apartment.id}`, timestamp: activityTimestamp(apartment.createdAt ?? apartment.created_at),
-                title: "Apartment added",
-                detail: `${apartment.title}${landlords.find((landlord) => landlord.id === apartment.landlordId)?.name ? ` by ${landlords.find((landlord) => landlord.id === apartment.landlordId)?.name}` : ""}`,
-                icon: Building2,
-                tone: "admin-tone-success-icon", section: "apartments",
-            })),
-            ...violations.map((violation) => ({
-                id: `violation-${violation.id}`, timestamp: activityTimestamp(violation.issuedAt ?? violation.issued_at),
-                title: violation.mode === "notice" ? "Notice issued" : "Violation issued",
-                detail: [violation.landlordName, violation.apartmentTitle].filter(Boolean).join(" - "),
-                icon: violation.mode === "notice" ? Bell : AlertOctagon,
-                tone: violation.mode === "notice" ? "admin-tone-warning-badge" : "admin-tone-danger-icon",
-                section: "landlords",
-            })),
-            ...appeals.map((appeal) => ({
-                id: `appeal-${appeal.id}`, timestamp: activityTimestamp(appeal.submitted_at ?? appeal.created_at),
-                title: "Appeal submitted",
-                detail: landlords.find((landlord) => landlord.id === appeal.landlord_id)?.name ?? "Landlord appeal",
-                icon: FileText, tone: "admin-tone-info-icon", section: "appeals",
-            })),
-            ...adminNotifs.filter((notification) => !notification.is_deleted).map((notification) => {
-                const meta = getNotificationActivityMeta(notification);
-                return {
-                    id: `notification-${notification.id}`,
-                    timestamp: activityTimestamp(notification.createdAt ?? notification.created_at),
-                    title: safeNotificationText(notification.title, "Notification received"),
-                    detail: safeNotificationText(notification.message, "Administrative notification"),
-                    icon: meta.icon,
-                    tone: meta.tone,
-                    section: meta.section,
-                };
-            }),
-            ...recentActivityLogs.map((log) => {
-                const displayLog = formatAuditLogForDisplay(log);
-                return {
-                    id: `audit-${log.id}`,
-                    timestamp: activityTimestamp(log.created_at),
-                    title: displayLog.title,
-                    detail: displayLog.detail,
-                    icon: History,
-                    tone: "admin-tone-violet-icon",
-                    section: "admininfo",
-                };
-            }),
-        ].filter((item) => item.timestamp)
-            .sort((left, right) => new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime())
-            .slice(0, 10);
-        const itemMotion = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
-        return (<div className="admin-dashboard-container-2">
-        <header className="admin-dashboard-header">
-          <div className="admin-dashboard-panel-4">
-            <h1 className="admin-dashboard-title">{"Admin Dashboard"}</h1>
-            <p className="admin-dashboard-text">{"Monitor platform activity and manage items that require administrative attention."}</p>
-          </div>
-          <div className="admin-dashboard-row-8">
-            <button onClick={() => navigateToAdminModule("notifications")} title="Notifications" className="admin-dashboard-button">
-              <Bell className="admin-dashboard-bell-icon"/>
-              {unreadNotifsCount > 0 && <span className="admin-dashboard-span-3">{unreadNotifsCount}</span>}
-            </button>
-            <button onClick={() => navigateToAdminModule("admininfo")} className="admin-dashboard-button-2">
-              {user?.avatar ? <img src={user.avatar} alt="" className="admin-dashboard-image"/> : <span className="admin-dashboard-row-9">{user?.name?.[0]?.toUpperCase() ?? "A"}</span>}
-              <span className="admin-dashboard-span-4">{user?.name || "Admin"}</span>
-            </button>
-          </div>
-        </header>
-
-        <section className="admin-dashboard-section-3">
-          <SectionHeading title="Needs Attention" description="Items currently requiring administrative action."/>
-          <div className="admin-dashboard-grid-5">
-          {[
-                { label: "Pending Verifications", value: pendingCount, suffix: "Pending", action: "View Landlords", icon: ShieldAlert, section: "landlords" },
-                { label: "Pending Apartment Reviews", value: pendingReviewCount, suffix: "Pending", action: "View Apartments", icon: Building2, section: "apartments" },
-                { label: "Open Reports", value: pendingReports, suffix: "Open", action: "View Reports", icon: Flag, section: "reports" },
-                { label: "Pending Appeals", value: pendingAppealCount, suffix: "Pending", action: "View Appeals", icon: FileText, section: "appeals" },
-            ].map(({ label, value, suffix, action, icon: Icon, section }) => (<button key={label} onClick={() => isAdminModule(section) && navigateToAdminModule(section)} className="admin-dashboard-button-3">
-              <span className="admin-dashboard-row-10"><span className="admin-dashboard-row-11"><Icon className="admin-dashboard-icon-icon"/></span><span className="admin-dashboard-span-5"><span className="admin-dashboard-span-6">{label}</span><span className="admin-dashboard-row-12"><strong className="admin-dashboard-strong-6">{value}</strong><small className="admin-dashboard-small">{suffix}</small></span></span></span>
-              <span className="admin-dashboard-row-13">{action}<ChevronRight className="admin-dashboard-chevron-right-icon"/></span>
-            </button>))}
-          </div>
-        </section>
-
-        <AdminAnalyticsOverview />
-
-        <div className="admin-dashboard-grid-6">
-          <section className="admin-dashboard-section-4">
-            <SectionHeading title="Priority Tasks" description="Administrative actions currently waiting for review."/>
-            {priorityTasks.length === 0 ? <div className="admin-dashboard-panel-5"><CheckCircle2 className="admin-dashboard-check-circle2-icon"/><h3 className="admin-dashboard-you-re-all-caught-up">You're all caught up</h3><p className="admin-dashboard-text-5">No administrative actions are currently waiting for review.</p></div> : (<div className="admin-dashboard-panel">
-                {priorityTasks.map(({ id, section, icon: Icon, type, context, timestamp, action }) => (<div key={id} className="admin-dashboard-grid-7">
-                    <span className="admin-dashboard-row-14"><span className="admin-dashboard-row-15"><Icon className="admin-dashboard-icon-icon-2"/></span><span className="admin-dashboard-span-5"><strong className="admin-dashboard-strong-7">{type}</strong><span className="admin-dashboard-span-2">{context}</span><time className="admin-dashboard-time">{formatOptionalDate(timestamp, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</time></span></span>
-                    <button onClick={() => isAdminModule(section) && navigateToAdminModule(section)} className="admin-dashboard-button-4">{action}</button>
-                  </div>))}
-              </div>)}
-          </section>
-
-          <section className="admin-dashboard-section-4">
-            <SectionHeading title="Recent Activity" description="Latest platform and administrative activities."/>
-            {activity.length === 0 ? <OverviewEmpty icon={Clock} text="No recent activities."/> : (<div className="admin-dashboard-panel-6">
-                {activity.map(({ id, timestamp, title, detail, icon: Icon, tone, section }) => (<button key={id} onClick={() => isAdminModule(section) && navigateToAdminModule(section)} className="admin-dashboard-button-5">
-                    <span className={`admin-dashboard-row-16 ${tone}`}><Icon className="admin-dashboard-icon-icon-3"/></span>
-                    <span className="admin-dashboard-span"><span className="admin-dashboard-span-7">{title}</span><span className="admin-dashboard-span-8">{detail}</span></span>
-                    <span className="admin-dashboard-span-9">{formatOptionalDate(timestamp, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                  </button>))}
-              </div>)}
-          </section>
-        </div>
-
-      </div>);
-    };
-    // ── Section: Landlords ────────────────────────────────────────────────────
     const renderNotifications = () => {
         const notificationCenterItems = adminNotifs.filter((notification) => {
             const category = getNotificationCategory(notification);
@@ -1391,130 +1223,9 @@ export function AdminDashboard() {
         </section>
       </div>);
     };
-    // ── Section: Apartments ───────────────────────────────────────────────────
-    const renderLegacyLandlords = () => {
-        const normalizedSearch = landlordSearch.trim().toLowerCase();
-        const visibleLandlords = landlords
-            .filter((landlord) => {
-            const verified = (landlord.isVerified ?? landlord.is_verified) === true;
-            const hasActiveViolation = violationsForLandlord(text(landlord.id)).length > 0;
-            const matchesStatus = landlordStatusFilter === "all"
-                || (landlordStatusFilter === "violations" ? hasActiveViolation : landlordStatusFilter === "verified" ? verified : !verified);
-            const matchesSearch = !normalizedSearch || [landlord.name, landlord.email, landlord.id]
-                .some((value) => String(value ?? "").toLowerCase().includes(normalizedSearch));
-            return matchesStatus && matchesSearch;
-        })
-            .sort((left, right) => {
-            if (landlordSort === "name")
-                return String(left.name ?? "").localeCompare(String(right.name ?? ""));
-            const leftTime = new Date(String(left.created_at ?? 0)).getTime();
-            const rightTime = new Date(String(right.created_at ?? 0)).getTime();
-            return landlordSort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
-        });
-        const activeViolationCount = violations.filter((violation) => violation.active !== false).length;
-        const currentDate = new Date().toLocaleDateString("en-PH", {
-            weekday: "short", month: "short", day: "numeric", year: "numeric",
-        });
-        return (<div className="admin-dashboard-container-3">
-        <header className="admin-dashboard-header-2">
-          <div className="admin-dashboard-row-21">
-            <span className="admin-dashboard-row-22">
-              <Users className="admin-dashboard-users-icon"/>
-            </span>
-            <div>
-              <h1 className="admin-dashboard-landlord-verification">Landlord Verification</h1>
-              <p className="admin-dashboard-text-10">Review landlord credentials and verification status.</p>
-            </div>
-          </div>
-          <div className="admin-dashboard-row-23">
-            <button onClick={() => navigateToAdminModule("notifications")} title="Notifications" className="admin-dashboard-button-14">
-              <Bell className="admin-dashboard-bell-icon"/>
-              {unreadNotifsCount > 0 && <span className="admin-dashboard-span-3">{unreadNotifsCount}</span>}
-            </button>
-            <div className="admin-dashboard-card-4"><Calendar className="admin-dashboard-calendar-icon"/>{currentDate}</div>
-          </div>
-        </header>
-
-        <section className="admin-dashboard-section-6">
-          {[
-                { label: "Total Landlords", value: landlords.length, note: "Registered landlords", icon: Users, tone: "admin-tone-brand-icon" },
-                { label: "Pending Review", value: pendingCount, note: "Awaiting verification", icon: Clock, tone: "admin-tone-brand-icon" },
-                { label: "Verified", value: verifiedCount, note: "Verified landlords", icon: CheckCircle2, tone: "admin-tone-brand-icon" },
-                { label: "Violations", value: activeViolationCount, note: "Compliance information", icon: AlertTriangle, tone: "admin-tone-brand-icon" },
-            ].map(({ label, value, note, icon: Icon, tone }) => (<button key={label} type="button" onClick={() => label === "Violations" ? setLandlordStatusFilter("violations") : undefined} className={`admin-dashboard-button-15 ${label === "Violations" ? "admin-dashboard-button-16" : "admin-dashboard-button-17"}`}>
-              <span className={`admin-dashboard-row-24 ${tone}`}><Icon className="admin-dashboard-icon-icon"/></span>
-              <span className="admin-dashboard-span-5"><span className="admin-dashboard-span-16">{value}</span><span className="admin-dashboard-span-17">{label}</span><span className="admin-dashboard-span-18">{note}</span></span>
-            </button>))}
-        </section>
-
-        <section className="admin-dashboard-section-7">
-          <label className="admin-dashboard-label-2">
-            <Search className="admin-dashboard-search-icon-2"/>
-            <input value={landlordSearch} onChange={(event) => setLandlordSearch(event.target.value)} placeholder="Search landlords by name, email, or ID" className="admin-dashboard-input-2"/>
-          </label>
-          <select value={landlordStatusFilter} onChange={(event) => setLandlordStatusFilter(event.target.value)} className="admin-dashboard-select-2">
-            <option value="all">Verification Status: All</option><option value="pending">Verification Status: Pending</option><option value="verified">Verification Status: Verified</option><option value="violations">Verification Status: Violations</option>
-          </select>
-          <select value={landlordSort} onChange={(event) => setLandlordSort(event.target.value)} className="admin-dashboard-select-2">
-            <option value="newest">Sort by: Newest</option><option value="oldest">Sort by: Oldest</option><option value="name">Sort by: Name</option>
-          </select>
-        </section>
-
-        <section className="admin-dashboard-section-8">
-          {landlords.length === 0 ? (<OverviewEmpty icon={Users} text="No landlords registered yet."/>) : visibleLandlords.length === 0 ? (<OverviewEmpty icon={Search} text="No landlords match your current search or verification filter."/>) : (<div className="admin-dashboard-panel">
-              {visibleLandlords.map((landlord) => {
-                    const landlordViolations = violationsForLandlord(text(landlord.id));
-                    const verified = (landlord.isVerified ?? landlord.is_verified) === true;
-                    const permitNumber = landlord.permitNumber ?? landlord.permit_number;
-                    return (<article key={landlord.id} className="admin-dashboard-article-5" onClick={() => setSelectedLandlord(landlord)}>
-                    <div className="admin-dashboard-row-14">
-                      {landlord.avatar_url ? <img src={landlord.avatar_url} alt="" className="admin-dashboard-image-2"/> : <span className="admin-dashboard-row-25">{landlord.name?.[0]?.toUpperCase() ?? "L"}</span>}
-                      <div className="admin-dashboard-panel-4">
-                        <p className="admin-dashboard-landlord">Landlord</p>
-                        <h3 className="admin-dashboard-heading-4">{landlord.name || "Unnamed landlord"}</h3>
-                        <p className="admin-dashboard-text-11">{landlord.email || "No email provided"}</p>
-                        <div className="admin-dashboard-row-26">
-                          <span className="admin-dashboard-registered"><Calendar className="admin-dashboard-calendar-icon-2"/>Registered {formatOptionalDate(landlord.created_at, { month: "short", day: "numeric", year: "numeric" })}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="admin-dashboard-verification-status">Verification Status</p>
-                      <span className="admin-dashboard-card-5">
-                        {verified ? <CheckCircle2 className="admin-dashboard-check-circle2-icon-2"/> : <Clock className="admin-dashboard-clock-icon"/>}{getLandlordVerificationStatus(landlord)}
-                      </span>
-                      {landlordViolations.length > 0 && <p className="admin-dashboard-active">{landlordViolations.length} active {landlordViolations.length === 1 ? "violation" : "violations"}</p>}
-                    </div>
-
-                    <div className="admin-dashboard-panel-4">
-                      <p className="admin-dashboard-submitted-credential">Submitted Credential</p>
-                      {permitNumber ? <p className="admin-dashboard-permit"><span className="admin-dashboard-row-27"><FileText className="admin-dashboard-file-text-icon"/></span>Permit #{permitNumber}</p> : <p className="admin-dashboard-no-permit-information-submitted">No permit information submitted.</p>}
-                    </div>
-
-                    <div className="admin-dashboard-panel-8" onClick={(event) => event.stopPropagation()}>
-                      <Button size="sm" onClick={() => setSelectedLandlord(landlord)} className="admin-dashboard-review-details"><Eye className="admin-dashboard-eye-icon"/>Review Details</Button>
-                      <div className="admin-dashboard-grid-8">
-                      <Button size="sm" variant="outline" onClick={() => void requestVerification(landlord, !verified)} className="admin-dashboard-button-18">
-                        {verified ? <XCircle className="admin-dashboard-xcircle-icon"/> : <CheckCircle2 className="admin-dashboard-check-circle2-icon-3"/>}{verified ? "Revoke" : "Verify"}
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => openViolationModal("violation", text(landlord.id), text(landlord.name, "Landlord"), "General")} className="admin-dashboard-violation"><AlertOctagon className="admin-dashboard-alert-octagon-icon"/>Violation</Button>
-                      <Button variant="outline" size="sm" onClick={() => openViolationModal("notice", text(landlord.id), text(landlord.name, "Landlord"), "General")} className="admin-dashboard-notice"><BellRing className="admin-dashboard-bell-ring-icon"/>Notice</Button>
-                      </div>
-                      <p className="admin-dashboard-text-12">Verification · Administrative actions</p>
-                    </div>
-                  </article>);
-                })}
-            </div>)}
-        </section>
-
-        <section className="admin-dashboard-section-9">
-          <Shield className="admin-dashboard-shield-icon"/>
-          <div><p className="admin-dashboard-verification-requirements">Verification requirements</p><p className="admin-dashboard-text-13">Landlords may prepare property information, but their listings cannot be approved and published until verification is completed. Use violations for serious offenses and notices for warnings.</p></div>
-        </section>
-      </div>);
-    };
+    // ── Section: Landlords ────────────────────────────────────────────────────
     const renderLandlords = () => (<AdminLandlordVerification landlords={landlords} onViewVerification={setSelectedLandlord}/>);
+    // ── Section: Apartments ───────────────────────────────────────────────────
     const renderApartments = () => (<AdminApartments allApartments={allApartments} getApartmentReportCount={getApartmentReportCount} setActiveSection={handleSectionChange} unreadNotifsCount={unreadNotifsCount} aptSearch={aptSearch} setAptSearch={setAptSearch} aptStatusFilter={aptStatusFilter} setAptStatusFilter={setAptStatusFilter} aptPropertyTypeFilter={aptPropertyTypeFilter} setAptPropertyTypeFilter={setAptPropertyTypeFilter} aptSort={aptSort} setAptSort={setAptSort} filteredApts={filteredApts} aptFilter={aptFilter} getLandlordForApt={getLandlordForApt} setSelectedApt={setSelectedApt} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} setAptFilter={setAptFilter} violations={violations} openViolationModal={openViolationModal} selectedApt={selectedApt} reports={reports} setSelectedLandlord={setSelectedLandlord} resolveReport={resolveReport} dismissReport={dismissReport} handleApproveAndPublishApartment={handleApproveAndPublishApartment} publishingApartmentId={publishingApartmentId}/>);
     // ── Section: Reports ──────────────────────────────────────────────────────
     const renderReports = () => (<AdminReports reports={reports} reportArchiveView={reportArchiveView} archivedReports={archivedReports} reportSearch={reportSearch} allApartments={allApartments} reportStatusFilter={reportStatusFilter} reportTypeFilter={reportTypeFilter} reportSort={reportSort} selectedReport={selectedReport} selectedReportDetails={selectedReportDetails} setSelectedReport={setSelectedReport} setActiveSection={handleSectionChange} unreadNotifsCount={unreadNotifsCount} setViewingUserProfile={setViewingUserProfile} navigate={navigate} apartmentDetailBasePath={apartmentDetailBasePath} portalBasePath={portalBasePath} selectedReportEvidence={selectedReportEvidence} resolveReport={resolveReport} setDismissReportModal={setDismissReportModal} setCaseAction={setCaseAction} setReportSearch={setReportSearch} setReportStatusFilter={setReportStatusFilter} setReportTypeFilter={setReportTypeFilter} setReportSort={setReportSort} setReportArchiveView={setReportArchiveView} dismissReportModal={dismissReportModal} dismissReport={dismissReport} viewingUserProfile={viewingUserProfile}/>);
