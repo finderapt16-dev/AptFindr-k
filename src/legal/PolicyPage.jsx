@@ -85,9 +85,6 @@ export function PolicyPage({ kind }) {
 
   useDocumentMeta(`${kindLabel} - AptFindr`, description);
 
-  const otherKind = resolvedKind === "privacy" ? "terms" : "privacy";
-  const otherLabel = POLICY_KIND_LABEL[otherKind];
-
   const selectAudience = (next) => {
     if (next === audience) return;
     setSearchParams(next === "tenant" ? {} : { audience: next }, { replace: true });

@@ -1,5 +1,5 @@
 import "./EditProperty.css";
-import { ArrowLeft, Building2, ChevronLeft, ChevronRight, MapPin, Plus, X } from "lucide-react";
+import { ArrowLeft, Building2, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import { MultiImageUploader } from "@/components/MultiImageUploader";
 import { Button } from "@/components/ui/button";
 import { PropertyLocationPicker } from "@/landlord/PropertyLocationPicker";

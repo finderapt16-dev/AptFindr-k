@@ -1,9 +1,7 @@
-import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-export default function ProtectedRoute({ children, allowedRoles, preserveReturnDestination = false, loginMessage, }) {
+export default function ProtectedRoute({ children, allowedRoles }) {
     const { user, isAuthenticated, isLoading } = useAuth();
-    const location = useLocation();
     if (isLoading) {
         return (<div className="auth-status-page auth-session-loading">
         Checking your session...

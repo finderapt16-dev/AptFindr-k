@@ -16,7 +16,7 @@ import { VERIFICATION_DOCUMENT_TYPES, uploadVerificationDocuments, validateVerif
 import { deletePropertyDraft, fetchPropertyDraft, savePropertyDraft, } from "@/services/propertyDraftService";
 import { DEFAULT_LA_PAZ_MAP_CENTER, hasValidApartmentCoordinates, } from "@/utils/mapCoordinates";
 import { supabase } from "@/services/supabaseClient";
-import { AlertCircle, ArrowLeft, ArrowRight, Building2, Camera, Check, Cloud, CloudUpload, FileText, Home, ListChecks, MapPin, Plus, RotateCcw, ShieldCheck, Trash2, Upload, X, Menu, } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Building2, Camera, Check, Cloud, CloudUpload, FileText, MapPin, RotateCcw, ShieldCheck, Trash2, Upload, X, Menu } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -26,21 +26,9 @@ function isPropertyDraft(value) {
     const draft = value;
     return draft.version === 2 && typeof draft.savedAt === "string" && Number.isFinite(draft.currentStep);
 }
-const SUGGESTED_FEATURES = [
-    "Pet Friendly",
-    "Furnished",
-    "Semi-Furnished",
-    "Balcony",
-    "Garden",
-    "Storage Room",
-    "Near Market",
-    "Near Hospital",
-    "Near School",
-];
 const SUGGESTED_AMENITIES = [
     "Wi-Fi", "Laundry Area", "AC", "Parking", "CCTV", "Gym", "Study Lounge", "Balcony", "Pool", "Elevator",
 ];
-const PROPERTY_TYPES = ["Apartment", "Boarding House", "Dormitory", "Bedspace", "House", "Room for Rent"];
 const SUGGESTED_HOUSE_RULES = ["Students Only", "Visitors Allowed", "Cooking Allowed", "No Smoking", "No Alcohol", "Pets Allowed"];
 const propertyGuidelinesStorageKey = (userId) => `aptfindr:add-property-guidelines-seen:${userId ?? "anonymous"}`;
 const splitChoiceValues = (value) => String(value ?? "")
@@ -144,31 +132,6 @@ export function AddApartment() {
         setCustomRuleInput("");
     };
     const [featureInput, setFeatureInput] = useState("");
-    const addFeature = (value) => {
-        const trimmed = value.trim();
-        if (!trimmed)
-            return;
-        if (features.map((f) => f.toLowerCase()).includes(trimmed.toLowerCase())) {
-            toast.error("Feature already added");
-            return;
-        }
-        setFeatures((prev) => [...prev, trimmed]);
-        setFeatureInput("");
-        setValidationErrors((previous) => {
-            if (!previous.features)
-                return previous;
-            const next = { ...previous };
-            delete next.features;
-            return next;
-        });
-    };
-    const removeFeature = (index) => setFeatures((prev) => prev.filter((_, i) => i !== index));
-    const handleFeatureKeyDown = (e) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            addFeature(featureInput);
-        }
-    };
     const [verificationData, setVerificationData] = useState({ ...INITIAL_VERIFICATION_DATA });
     const [verificationDocuments, setVerificationDocuments] = useState([]);
     const [pendingDraft, setPendingDraft] = useState(null);

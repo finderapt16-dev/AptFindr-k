@@ -14,7 +14,7 @@ import { getImageUrl } from "@/utils/images";
 import { MobileNavigation } from "@/tenant/MobileNavigation";
 import { Sidebar } from "@/tenant/Sidebar";
 import { useTenantNotifications } from "@/tenant/useTenantNotifications";
-import { getAvailableRoomCount, getLowestAvailableRoomPrice, isTenantVisibleApartment, getAvailableRoomCount as getAvailableRooms } from "@/utils/listingVisibility";
+import { getAvailableRoomCount, getLowestAvailableRoomPrice, isTenantVisibleApartment } from "@/utils/listingVisibility";
 import { ApartmentRatingSummary } from "@/components/ApartmentRatingSummary";
 import { EmptyState } from "@/tenant/EmptyState";
 import { ApartmentCard } from "@/tenant/ApartmentDiscovery";
@@ -280,18 +280,6 @@ export function Favorites() {
       </div>
     </div>);
 }
-function InfoPill({ icon: Icon, value, label, tone, }) {
-    return (<div className="favorites-row-5">
-      <span className={`favorites-row-6 ${tone}`}>
-        <Icon className="favorites-icon-icon-2"/>
-      </span>
-      <div>
-        <p className="favorites-text-7">{value}</p>
-        <p className="favorites-text-8">{label}</p>
-      </div>
-    </div>);
-}
-
 function BrowseMetric({ icon: Icon, value, label, }) {
     return (<div className="apartment-browse-row-10">
       <Icon className="apartment-browse-icon-icon"/>
@@ -380,12 +368,3 @@ export const FavoritesOverview = ({ favoriteApartments, visibleFavoriteApartment
     </section>
   </div>);
 const FavoriteApartmentCard = ({ apartment, ratingSummary, ratingsLoading, }) => (<ApartmentCard apartment={apartment} ratingStats={ratingSummary.byApartment.get(apartment.id)} ratingsLoading={ratingsLoading} detailState={{ returnTo: "/tenant/dashboard?section=favorites", backLabel: "Back to Favorites" }}/>);
-const SavedInfoPill = ({ icon: Icon, value, label, tone, }) => (<div className="info-pill-row">
-    <span className={`info-pill-row-2 ${tone}`}>
-      <Icon className="info-pill-icon-icon"/>
-    </span>
-    <div>
-      <p className="info-pill-text">{value}</p>
-      <p className="info-pill-text-2">{label}</p>
-    </div>
-  </div>);

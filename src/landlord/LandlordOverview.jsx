@@ -7,7 +7,6 @@ import {
   Plus,
   CalendarDays,
   ChevronDown,
-  Building2,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -21,7 +20,6 @@ import { QuietStreetIllustration } from "@/landlord/MyProperties";
 
 export const LandlordOverview = ({
   myApartments,
-  user,
   isLoadingApartments,
   aptViews,
   aptFavs,
@@ -36,7 +34,6 @@ export const LandlordOverview = ({
   handleTogglePublication,
   deletingApartmentId,
   handleDeleteApartment,
-  onManageProperty,
 }) => {
   const [openPropertyMenuId, setOpenPropertyMenuId] = useState(null);
 
@@ -372,43 +369,6 @@ export const LandlordOverview = ({
       })
       .join(" ");
   };
-
-  /*
-   * ============================================================
-   * OVERALL PROPERTY TOTALS
-   * ============================================================
-   */
-
-  const totalViews = myApartments.reduce(
-    (sum, apartment) =>
-      sum + Number(aptViews(apartment.id) || 0),
-    0
-  );
-
-  const totalFavorites = myApartments.reduce(
-    (sum, apartment) =>
-      sum + Number(aptFavs(apartment.id) || 0),
-    0
-  );
-
-  const ratingValues = myApartments
-    .map((apartment) =>
-      ratingSummary?.byApartment?.get(apartment.id)
-    )
-    .filter(Boolean);
-
-  const totalRatingCount = ratingValues.reduce(
-    (sum, item) => sum + (item.count || 0),
-    0
-  );
-
-  const averageRating = totalRatingCount
-    ? ratingValues.reduce(
-        (sum, item) =>
-          sum + item.average * item.count,
-        0
-      ) / totalRatingCount
-    : 0;
 
   /*
    * ============================================================

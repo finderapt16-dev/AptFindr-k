@@ -15,7 +15,6 @@ import {
     isTenantRole,
     loginWithGoogle,
     resendSignupVerification,
-    signupWithGoogle,
     signOutAuthSession,
     clearPendingGoogleOAuthFlow,
 } from "@/services/authService";
@@ -69,10 +68,7 @@ export function Login({
     const location =
         useLocation();
 
-    const {
-        login,
-        hydrateSession,
-    } = useAuth();
+    const { login } = useAuth();
 
 
     /* =====================================================
